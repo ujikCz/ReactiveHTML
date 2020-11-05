@@ -52,4 +52,21 @@ That creates this element:
 
 ```
 
+### Render
+
+Render method render our virtual DOM to our page.
+
+First parameter is virtual DOM and the second is a real DOM from page.
+
+```
+
+scope.Render(
+  myFirstReactiveElementWithData, 
+  document.getElementById('someId')
+);
+
+```
+
+
+
 
