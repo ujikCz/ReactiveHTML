@@ -6,7 +6,7 @@ To create new reactiveHTML simple call its class.
 
 ```
 
-const scope = new reactiveHTML({});
+const scope = new reactiveHTML();
 
 ```
 
@@ -67,6 +67,18 @@ scope.Render(
 
 ```
 
+That replace the real DOM with virtual DOM
+
+#### The most simple application can looks like:
+
+```
+
+scope.Render(
+  scope.Element(f => `Hello, world!`), 
+  document.getElementById('someId')
+);
+
+```
 
 
 
