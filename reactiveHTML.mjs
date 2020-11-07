@@ -24,7 +24,7 @@
 
             if (findInTemplates) {
 
-                return Object.assign(vDOM, findInTemplates.virtualDOM);
+                return Object.assign(vDOM, fromElToObject(useNativeParser(findInTemplates.virtualDOM(classLink.data))));
 
             }
 
@@ -114,11 +114,11 @@
                             if (virtualElement.realDOM) {
 
                                 const newVNode = fromElToObject(useNativeParser(virtualElement.stringFunction(this.classLink.data)));
+                                process(newVNode, this.classLink);
                                 const patch = diff(virtualElement.vDOM, newVNode);
                                 patch(virtualElement.realDOM);
-                                process(virtualElement.vDOM, this.classLink);
                                 virtualElement.vDOM = newVNode;
-                                
+
                             }
                         });
 
@@ -170,7 +170,7 @@
 
                 const result = {
                     name,
-                    virtualDOM: templateElement
+                    virtualDOM: vDOMCache.find(f => f.vDOM === templateElement).stringFunction
                 };
 
                 this.components.push(result);
