@@ -1,5 +1,6 @@
-
 (function (w) {
+
+    "use strict";
 
     function defineReactiveHTMLClass() {
 
@@ -14,12 +15,16 @@
             const findInTemplates = classLink.components.find(search => search.name === vDOM.tagName);
 
             Array.from(vDOM.children).forEach(child => {
-                if (!isString(child)) process(child, classLink);
+                if (!isString(child)) {
+
+                    process(child, classLink);
+
+                }
             });
 
             if (findInTemplates) {
 
-                return Object.assign(vDOM, findInTemplates.template);
+                return Object.assign(vDOM, findInTemplates.virtualDOM);
 
             }
 
@@ -28,49 +33,29 @@
         }
 
 
-        function fromElToObject(element) {
+        function fromElToObject(element, classLink) {
+
+            if(element.nodeValue) return element.nodeValue; // means element is #text
 
             let vDOM = {
                 tagName: '',
                 attrs: {},
-                events: {},
                 children: [],
-                Append: function (vDOMchilds) {
-
-                    if (isString(vDOMchilds)) {
-
-                        this.children.push(vDOMchilds);
-
-                    } else {
-
-                        vDOMchilds.forEach(vDOMchild => {
-                            this.children.push(vDOMchild);
-                        });
-
-                    }
-
-                },
-
-                RemoveChild: function (vDOMchild) {
-
-                    const index = this.children.indexOf(vDOMchild);
-                    if (index !== -1) {
-                        this.children.splice(index, 1);
-                    }
-
-                },
-
-                On: function(event, callback) {
-
-                    this.event[event] = callback;
-
-                }
+                events: {}
             };
 
             vDOM.tagName = element.localName;
 
             Array.from(element.attributes).forEach(attribute => {
-                vDOM.attrs[attribute.nodeName] = attribute.nodeValue;
+                if(attribute.nodeName.startsWith('on')) {
+
+                    vDOM.events[attribute.nodeName.replace('on', '')] = new Function(`"use strict"; return(${ attribute.nodeValue })`).bind(classLink.data)();
+
+                } else {
+
+                    vDOM.attrs[attribute.nodeName] = attribute.nodeValue;
+
+                }
             });
 
             Array.from(element.childNodes).forEach(childNode => {
@@ -80,7 +65,7 @@
 
                 } else if (childNode.nodeType === Node.ELEMENT_NODE) {
 
-                    vDOM.children.push(fromElToObject(childNode));
+                    vDOM.children.push(fromElToObject(childNode, classLink));
 
                 }
             });
@@ -89,7 +74,16 @@
 
         }
 
+        function useNativeParser(string) {
 
+            const nativeParser = new DOMParser();
+            const parsed = nativeParser.parseFromString(string, 'text/xml');
+
+            return parsed.documentElement;
+
+        }
+ 
+        const vDOMCache = [];
 
         class ReactiveHTML {
 
@@ -116,15 +110,17 @@
                          */
                         target[key] = value;
 
-                        this.classLink.vDOMs.forEach(virtualElement => {
-                            if(virtualElement.realDOM) {
-                                const newVNode = this.classLink.Element(virtualElement.stringFunction);
+                        vDOMCache.forEach(virtualElement => {
+                            if (virtualElement.realDOM) {
+
+                                const newVNode = fromElToObject(useNativeParser(virtualElement.stringFunction(this.classLink.data)));
                                 const patch = diff(virtualElement.vDOM, newVNode);
                                 patch(virtualElement.realDOM);
+                                process(virtualElement.vDOM, this.classLink);
                                 virtualElement.vDOM = newVNode;
+                                
                             }
                         });
-
 
                         /*
                          * apply changes
@@ -136,58 +132,33 @@
 
                 this.components = [];
                 this.data = new Proxy(data, validator);
-                this.vDOMs = [];
 
             }
 
             Element(stringFunction) {
 
-                const vTREE = [];
+                const vDOMString = stringFunction(this.data); 
+                const parsedvDOM = useNativeParser(vDOMString);
+                const newVDOM = fromElToObject(parsedvDOM, this);
+                process(newVDOM, this);
 
-                const string = stringFunction(this.data);
+                vDOMCache.push({ vDOM: newVDOM, stringFunction, realDOM: null });
 
-                if (!string.length) return null;
-
-                const temp = document.createElement('template');
-                temp.innerHTML = string;
-
-                Array.from(temp.content.childNodes).forEach(fragmentChild => {
-                    if (fragmentChild.nodeType === Node.ELEMENT_NODE) {
-                        const vDOM = fromElToObject(fragmentChild);
-
-                        process(vDOM, this);
-
-                        this.vDOMs.push({
-                            vDOM,
-                            stringFunction
-                        });
-
-                        vTREE.push(vDOM);
-                    } else {
-
-                        vTREE.push(fragmentChild.nodeValue);
-
-                        this.vDOMs.push({
-                            vDOM: fragmentChild.nodeValue,
-                            stringFunction
-                        });
-
-                    }
-
-
-                });
-
-                if (vTREE.length < 2) return vTREE[0];
-
-                return vTREE;
+                return newVDOM;
 
             }
 
             Render(vDOM, element) {
 
-                const finded = this.vDOMs.find(f => f.vDOM === vDOM);
+                const renderedvDOM = render(vDOM);
 
-                const realDOM = this.Mount(render(vDOM), element);
+                const finded = vDOMCache.find(f => f.vDOM === vDOM);
+
+                const realDOM = mount(renderedvDOM, element);
+                
+                for(const [k, v] of Object.entries(vDOM.events)) {
+                    realDOM.addEventListener(k, v);
+                }
 
                 finded.realDOM = realDOM;
 
@@ -195,18 +166,11 @@
 
             }
 
-            Mount(templateElement, element) {
-
-                element.replaceWith(templateElement)
-                return templateElement;
-
-            }
-
             Component(name, templateElement) {
 
                 const result = {
                     name,
-                    template: templateElement
+                    virtualDOM: templateElement
                 };
 
                 this.components.push(result);
@@ -234,15 +198,10 @@
                     el.setAttribute(k, v);
                 }
 
-                for(const [k, v] of Object.entries(vDOM.events)) {
-                    el.addEventListener(k, v);
-                }
-
                 vDOM.children.forEach(child => {
                     const childEl = render(child);
                     el.appendChild(childEl);
                 });
-
 
                 return el;
 
@@ -250,6 +209,13 @@
 
         }
 
+
+        function mount(templateElement, element) {
+
+            element.replaceWith(templateElement)
+            return templateElement;
+
+        }
 
 
         const zip = (xs, ys) => {
