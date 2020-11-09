@@ -10,6 +10,16 @@
 
         }
 
+        function parseAllDataTypes(string) {
+
+            if(!Number.isNaN(Number.parseInt(string))) return Number.parseInt(string);
+
+            if(string === 'true' || string === 'false') return JSON.parse(string);
+
+            else return string;
+
+        }
+
         function fromElToObject(element) {
 
             if(element.nodeValue) return element.nodeValue; // means element is #text
@@ -85,7 +95,9 @@
                                 useNativeParser(this.classLink.__proto__.Element(data))
                             );
 
-                            console.log(vDOMCache.find(f => f.realDOM));
+                            if(oldVnode !== newVNode) {
+                                this.classLink.virtualDOM = newVNode;
+                            }
                     
                             return true;
                         }
@@ -107,7 +119,6 @@
                 }
 
                 as(string) {
-
                     this.componentName = string;
 
                     return this;
@@ -143,7 +154,7 @@
         function convertAttributesFromComponentToProps(componentVnode, props) {
 
             Object.entries(componentVnode.attrs).forEach( ([k, v]) => {
-                props[k] = v;
+                props[k] = parseAllDataTypes(v);
             });
 
             return props;
