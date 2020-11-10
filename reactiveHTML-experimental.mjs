@@ -35,8 +35,8 @@
 
             Array.from(element.attributes).forEach(attribute => {
 
-                if(attribute.nodeName.startsWith('on')) {
-                    
+                if (attribute.nodeName.startsWith('on')) {
+
                     const callbackFunction = new Function(`"use strict"; return(${ attribute.nodeValue })`)();
                     vDOM.events[attribute.nodeName.replace('on', '')] = callbackFunction.bind(classLink);
 
@@ -106,7 +106,7 @@
 
                             if (oldVnode !== newVNode) {
 
-                                if(this.classLink.realDOM) {
+                                if (this.classLink.realDOM) {
 
                                     const patch = diff(oldVnode, newVNode);
                                     this.classLink.realDOM = patch(this.classLink.realDOM);
@@ -114,7 +114,7 @@
                                 }
 
                                 this.classLink.virtualDOM = newVNode;
-                                
+
                             }
 
                             return true;
@@ -137,27 +137,45 @@
 
             },
 
-            Render: function (Vnode, element) {
+            Render: function (Vnode, element, flag = false) {
 
-                const rendered = render(Vnode.virtualDOM);
+                if (Array.isArray(Vnode)) {
+                    Vnode.forEach(oneVnode => {
+                        this.Render(oneVnode, element, flag);
+                    });
+                } else {
 
-                const realDOM = mount(
-                    rendered,
-                    element
-                );
+                    const rendered = render(Vnode.virtualDOM);
 
-                Vnode.realDOM = realDOM;
+                    const realDOM = mount(
+                        rendered,
+                        element,
+                        flag
+                    );
 
-                return realDOM;
+                    Vnode.realDOM = realDOM;
+
+                    return realDOM;
+
+                }
 
             }
 
         };
 
 
-        function mount(renderedVnode, element) {
+        function mount(renderedVnode, element, flag) {
 
-            element.replaceWith(renderedVnode);
+            if (!flag) {
+
+                element.replaceWith(renderedVnode);
+
+            } else {
+
+                element.appendChild(renderedVnode);
+
+            }
+
             return renderedVnode;
 
         }
