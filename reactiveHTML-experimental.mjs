@@ -20,7 +20,7 @@
 
         }
 
-        function fromElToObject(element) {
+        function fromElToObject(element, classLink) {
 
             if (element.nodeValue) return element.nodeValue; // means element is #text
 
@@ -28,13 +28,24 @@
                 tagName: '',
                 attrs: {},
                 children: [],
+                events: {}
             };
 
             vDOM.tagName = element.localName;
 
             Array.from(element.attributes).forEach(attribute => {
 
-                vDOM.attrs[attribute.nodeName] = attribute.nodeValue;
+                if(attribute.nodeName.startsWith('on')) {
+                    
+                    const callbackFunction = new Function(`"use strict"; return(${ attribute.nodeValue })`)();
+                    vDOM.events[attribute.nodeName.replace('on', '')] = callbackFunction.bind(classLink);
+
+                } else {
+
+                    vDOM.attrs[attribute.nodeName] = attribute.nodeValue;
+
+                }
+
 
             });
 
@@ -45,7 +56,7 @@
 
                 } else if (childNode.nodeType === Node.ELEMENT_NODE) {
 
-                    vDOM.children.push(fromElToObject(childNode));
+                    vDOM.children.push(fromElToObject(childNode, classLink));
 
                 }
             });
@@ -89,7 +100,8 @@
 
                             const oldVnode = this.classLink.virtualDOM;
                             const newVNode = fromElToObject(
-                                useNativeParser(this.classLink.__proto__.Element(data))
+                                useNativeParser(this.classLink.__proto__.Element(data)),
+                                this.classLink
                             );
 
                             if (oldVnode !== newVNode) {
@@ -114,7 +126,8 @@
                     this.virtualDOM = fromElToObject(
                         useNativeParser(
                             this.__proto__.Element(data)
-                        )
+                        ),
+                        this
                     );
 
                     convertComponentsIntoDefinition(this.virtualDOM, this.components, this.data);
@@ -197,8 +210,13 @@
             function renderElem(vDOM) {
 
                 const el = document.createElement(vDOM.tagName);
+
                 for (const [k, v] of Object.entries(vDOM.attrs)) {
                     el.setAttribute(k, v);
+                }
+
+                for (const [k, v] of Object.entries(vDOM.events)) {
+                    el.addEventListener(k, v);
                 }
 
                 vDOM.children.forEach(child => {
