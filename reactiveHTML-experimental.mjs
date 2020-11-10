@@ -12,9 +12,9 @@
 
         function parseAllDataTypes(string) {
 
-            if(!Number.isNaN(Number.parseInt(string))) return Number.parseInt(string);
+            if (!Number.isNaN(Number.parseInt(string))) return Number.parseInt(string);
 
-            if(string === 'true' || string === 'false') return JSON.parse(string);
+            if (string === 'true' || string === 'false') return JSON.parse(string);
 
             else return string;
 
@@ -22,7 +22,7 @@
 
         function fromElToObject(element) {
 
-            if(element.nodeValue) return element.nodeValue; // means element is #text
+            if (element.nodeValue) return element.nodeValue; // means element is #text
 
             let vDOM = {
                 tagName: '',
@@ -63,22 +63,19 @@
 
         }
 
-        const vDOMCache = [];
-
         const ReactiveHTML = {
 
             Component: class {
 
-                constructor(data = {}, componentsInUse = []) {
-                    this.components = componentsInUse;
-                    this.componentName = null;
+                constructor(data = {}, componentsInUse = {}) {
 
+                    this.components = componentsInUse;
 
                     const validator = {
                         classLink: this,
-                    
+
                         get(target, key) {
-                    
+
                             if (typeof target[key] === 'object' && target[key] !== null) {
                                 return new Proxy(target[key], validator)
                             } else {
@@ -89,16 +86,25 @@
                         set(target, key, value) {
 
                             target[key] = value;
-                            
+
                             const oldVnode = this.classLink.virtualDOM;
                             const newVNode = fromElToObject(
                                 useNativeParser(this.classLink.__proto__.Element(data))
                             );
 
-                            if(oldVnode !== newVNode) {
+                            if (oldVnode !== newVNode) {
+
+                                if(this.classLink.realDOM) {
+
+                                    const patch = diff(oldVnode, newVNode);
+                                    this.classLink.realDOM = patch(this.classLink.realDOM);
+
+                                }
+
                                 this.classLink.virtualDOM = newVNode;
+                                
                             }
-                    
+
                             return true;
                         }
                     };
@@ -113,30 +119,23 @@
 
                     convertComponentsIntoDefinition(this.virtualDOM, this.components, this.data);
 
-                    vDOMCache.push(this);
-
                     return this;
                 }
 
-                as(string) {
-                    this.componentName = string;
+            },
 
-                    return this;
+            Render: function (Vnode, element) {
 
-                }
+                const rendered = render(Vnode.virtualDOM);
 
-                Render(element) {
+                const realDOM = mount(
+                    rendered,
+                    element
+                );
 
-                    const rendered = render(this.virtualDOM);
+                Vnode.realDOM = realDOM;
 
-                    this.realDOM = mount(
-                        rendered, 
-                        element
-                    );
-
-                    return this.realDOM;
-
-                }
+                return realDOM;
 
             }
 
@@ -153,7 +152,7 @@
 
         function convertAttributesFromComponentToProps(componentVnode, props) {
 
-            Object.entries(componentVnode.attrs).forEach( ([k, v]) => {
+            Object.entries(componentVnode.attrs).forEach(([k, v]) => {
                 props[k] = parseAllDataTypes(v);
             });
 
@@ -161,29 +160,30 @@
 
         }
 
-        
+
         function convertComponentsIntoDefinition(vDOMchild, components, props) {
 
-            if(!isString(vDOMchild) && components.length) {
-            
-            const finded = components.find(f => f.componentName === vDOMchild.tagName);
-            if(finded) {
+            if (isString(vDOMchild) || (Object.keys(components).length === 0)) return;
 
-                convertAttributesFromComponentToProps(vDOMchild, finded.data);
-                return Object.assign(vDOMchild, finded.virtualDOM);
+            if (vDOMchild.tagName in components) {
+
+                const finded = Object.keys(components).find(f => f === vDOMchild.tagName);
+
+                convertAttributesFromComponentToProps(vDOMchild, components[finded].data);
+
+                return Object.assign(vDOMchild, components[finded].virtualDOM);
 
             } else {
 
-                    vDOMchild.children.forEach(child => {
-                        convertComponentsIntoDefinition(child, components, props);
-                    });
+                vDOMchild.children.forEach(child => {
+                    convertComponentsIntoDefinition(child, components, props);
+                });
 
-                }
-                
             }
+
         }
- 
-        
+
+
 
 
         function render(vDOM) {
@@ -312,7 +312,7 @@
                 return $node;
             };
         };
-        
+
         return ReactiveHTML;
     }
 
