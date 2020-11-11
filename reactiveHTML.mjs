@@ -10,52 +10,9 @@
 
         }
 
-        function process(vDOM, classLink) {
-
-            const findInTemplates = classLink.components.find(search => search.name === vDOM.tagName);
-
-            Array.from(vDOM.children).forEach(child => {
-                if (!isString(child)) {
-
-                    process(child, classLink);
-
-                }
-            });
-
-            if (findInTemplates) {
-
-                const vDOMComponent = fromElToObject(
-                    useNativeParser(
-                        findInTemplates.virtualDOM(classLink.data, fromAttrsToData(vDOM, classLink.data))
-                    )
-                );
-
-                return Object.assign(vDOM, vDOMComponent);
-
-            }
-
-            return vDOM;
-
-        }
-
-        function fromAttrsToData(componentVDOM) {
-            let data = {};
-
-            for(const [k, v] of Object.entries(componentVDOM.attrs)) {
-
-                data[k] = v;
-                delete componentVDOM.attrs[k];
-
-            }
-
-            return data;
-
-        }
-
-
         function fromElToObject(element, classLink) {
 
-            if(element.nodeValue) return element.nodeValue; // means element is #text
+            if (element.nodeValue) return element.nodeValue; // means element is #text
 
             let vDOM = {
                 tagName: '',
@@ -67,15 +24,19 @@
             vDOM.tagName = element.localName;
 
             Array.from(element.attributes).forEach(attribute => {
-                if(attribute.nodeName.startsWith('on')) {
 
-                    vDOM.events[attribute.nodeName.replace('on', '')] = new Function(`"use strict"; return(${ attribute.nodeValue })`).bind(classLink.data)();
+                if (attribute.nodeName.startsWith('on')) {
+
+                    const callbackFunction = new Function(`"use strict"; return(${ attribute.nodeValue })`)();
+                    vDOM.events[attribute.nodeName.replace('on', '')] = callbackFunction.bind(classLink);
 
                 } else {
 
                     vDOM.attrs[attribute.nodeName] = attribute.nodeValue;
 
                 }
+
+
             });
 
             Array.from(element.childNodes).forEach(childNode => {
@@ -102,95 +63,134 @@
             return parsed.documentElement;
 
         }
- 
-        const vDOMCache = [];
 
-        class ReactiveHTML {
+        const allComponents = {};
 
-            constructor(data = {}) {
+        const ReactiveHTML = {
 
-                const validator = {
-                    classLink: this,
+            Component: class {
 
-                    get(target, key) {
+                constructor(props = {}) {
 
-                        
+                    const validator = {
+                        classLink: this,
 
-                        if (typeof target[key] === 'object' && target[key] !== null) {
-                            return new Proxy(target[key], validator)
-                        } else {
-                            return target[key];
+                        get(target, key) {
+
+                            if (typeof target[key] === 'object' && target[key] !== null) {
+                                return new Proxy(target[key], validator)
+                            } else {
+                                return target[key];
+                            }
+
+                        },
+                        set(target, key, value) {
+
+
+                            target[key] = value;
+
+                            const newVNode = fromElToObject(
+                                useNativeParser(this.classLink.__proto__.Element(this.classLink.props)),
+                                this.classLink
+                            );
+                            convertComponentsIntoDefinition(newVNode, allComponents, this.classLink.props);
+
+                            if (this.classLink.virtualDOM !== newVNode) {
+
+                                if (this.classLink.realDOM) {
+
+                                    const patch = diff(this.classLink.virtualDOM, newVNode);
+                                    this.classLink.realDOM = patch(this.classLink.realDOM);
+
+                                }
+
+                                Object.assign(this.classLink.virtualDOM, newVNode); 
+                                
+                            }
+
+                            return true;
                         }
-                    },
-                    set(target, key, value) {
+                    };
 
-                        /*
-                         * observe value change and update element with new data
-                         */
-                        target[key] = value;
+                    this.props = new Proxy(props, validator);
 
-                        const filteredVDOMCache = vDOMCache.filter(f => f.realDOM);
+                    this.virtualDOM = fromElToObject(
+                        useNativeParser(
+                            this.__proto__.Element(props)
+                        ),
+                        this
+                    );
 
-                        filteredVDOMCache.forEach(virtualElement => {
+                    const componentName = this.__proto__.constructor.name;
 
-                            const newVNode = fromElToObject(useNativeParser(virtualElement.stringFunction(this.classLink.data)));
-                            process(newVNode, this.classLink);
-                            const patch = diff(virtualElement.vDOM, newVNode);
-                            patch(virtualElement.realDOM);
-                            virtualElement.vDOM = newVNode;
+                    allComponents[componentName] = this;
 
-                        });
+                    convertComponentsIntoDefinition(this.virtualDOM, allComponents, this.props);
 
-                        /*
-                         * apply changes
-                         */
+                    this.name = componentName;
+                    this.realDOM = null;
 
-                        return true;
-                    }
-                };
-
-                this.components = [];
-                this.data = new Proxy(data, validator);
-
-            }
-
-            Element(stringFunction, componentName = null) {
-
-                const vDOMString = stringFunction(this.data, ''); 
-                const parsedvDOM = useNativeParser(vDOMString);
-                const newVDOM = process(fromElToObject(parsedvDOM, this), this);
-
-                vDOMCache.push({ vDOM: newVDOM, stringFunction, realDOM: null });
-
-                if(componentName) {
-
-                    this.components.push({ name: componentName, virtualDOM: stringFunction });
-
+                    return this;
                 }
 
-                return newVDOM;
+            },
 
-            }
+            Render: function (Vnode, element) {
 
-            Render(vDOM, element) {
+                const rendered = render(Vnode.virtualDOM);
 
-                const renderedvDOM = render(vDOM);
+                const realDOM = mount(
+                    rendered,
+                    element
+                );
 
-                const finded = vDOMCache.find(f => f.vDOM === vDOM);
-
-                const realDOM = mount(renderedvDOM, element);
-                
-                for(const [k, v] of Object.entries(vDOM.events)) {
-                    realDOM.addEventListener(k, v);
-                }
-
-                finded.realDOM = realDOM;
+                Vnode.realDOM = realDOM;
 
                 return realDOM;
+
+            },
+
+            Await: function(callback) {
+
+               window.addEventListener('DOMContentLoaded', callback);
 
             }
 
         };
+
+
+        function mount(renderedVnode, element) {
+
+            element.appendChild(renderedVnode);
+
+            return renderedVnode;
+
+        }
+
+
+        function convertComponentsIntoDefinition(vDOMchild, components, props) {
+
+            if (isString(vDOMchild) || (Object.keys(components).length === 0)) return;
+
+            if (vDOMchild.tagName in components) {
+
+                const finded = Object.keys(components).find(f => f === vDOMchild.tagName);
+
+                console.log(components[finded]);
+
+                return Object.assign(vDOMchild, components[finded].virtualDOM);
+
+            } else {
+
+                vDOMchild.children.forEach(child => {
+                    convertComponentsIntoDefinition(child, components, props);
+                });
+
+            }
+
+        }
+
+
 
 
         function render(vDOM) {
@@ -199,7 +199,7 @@
                 return document.createTextNode(vDOM);
             }
 
-            return renderElem(vDOM, this);
+            return renderElem(vDOM);
 
             function renderElem(vDOM) {
 
@@ -207,6 +207,10 @@
 
                 for (const [k, v] of Object.entries(vDOM.attrs)) {
                     el.setAttribute(k, v);
+                }
+
+                for (const [k, v] of Object.entries(vDOM.events)) {
+                    el.addEventListener(k, v);
                 }
 
                 vDOM.children.forEach(child => {
@@ -219,15 +223,6 @@
             }
 
         }
-
-
-        function mount(templateElement, element) {
-
-            element.replaceWith(templateElement)
-            return templateElement;
-
-        }
-
 
         const zip = (xs, ys) => {
             const zipped = [];
