@@ -74,13 +74,13 @@
 
         }
 
+        const allComponents = {};
+
         const ReactiveHTML = {
 
             Component: class {
 
-                constructor(data = {}, componentsInUse = {}) {
-
-                    this.components = componentsInUse;
+                constructor(data = {}) {
 
                     const validator = {
                         classLink: this,
@@ -130,64 +130,38 @@
                         this
                     );
 
-                    convertComponentsIntoDefinition(this.virtualDOM, this.components, this.data);
+                    allComponents[this.__proto__.constructor.name] = this;
 
-                    return this;
+                    convertComponentsIntoDefinition(this.virtualDOM, allComponents, this.data);
+
+                    return { virtualDOM: this.virtualDOM, props: this.data, name: this.__proto__.constructor.name };
                 }
 
             },
 
-            Render: function (Vnode, element, flag = false) {
+            Render: function (Vnode, element) {
 
-                if (Array.isArray(Vnode)) {
-                    Vnode.forEach(oneVnode => {
-                        this.Render(oneVnode, element, flag);
-                    });
-                } else {
+                const rendered = render(Vnode.virtualDOM);
 
-                    const rendered = render(Vnode.virtualDOM);
+                const realDOM = mount(
+                    rendered,
+                    element
+                );
 
-                    const realDOM = mount(
-                        rendered,
-                        element,
-                        flag
-                    );
+                Vnode.realDOM = realDOM;
 
-                    Vnode.realDOM = realDOM;
-
-                    return realDOM;
-
-                }
+                return realDOM;
 
             }
 
         };
 
 
-        function mount(renderedVnode, element, flag) {
+        function mount(renderedVnode, element) {
 
-            if (!flag) {
-
-                element.replaceWith(renderedVnode);
-
-            } else {
-
-                element.appendChild(renderedVnode);
-
-            }
+            element.appendChild(renderedVnode);
 
             return renderedVnode;
-
-        }
-
-
-        function convertAttributesFromComponentToProps(componentVnode, props) {
-
-            Object.entries(componentVnode.attrs).forEach(([k, v]) => {
-                props[k] = parseAllDataTypes(v);
-            });
-
-            return props;
 
         }
 
@@ -199,8 +173,6 @@
             if (vDOMchild.tagName in components) {
 
                 const finded = Object.keys(components).find(f => f === vDOMchild.tagName);
-
-                convertAttributesFromComponentToProps(vDOMchild, components[finded].data);
 
                 return Object.assign(vDOMchild, components[finded].virtualDOM);
 
