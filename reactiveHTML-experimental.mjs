@@ -10,16 +10,6 @@
 
         }
 
-        function parseAllDataTypes(string) {
-
-            if (!Number.isNaN(Number.parseInt(string))) return Number.parseInt(string);
-
-            if (string === 'true' || string === 'false') return JSON.parse(string);
-
-            else return string;
-
-        }
-
         function fromElToObject(element, classLink) {
 
             if (element.nodeValue) return element.nodeValue; // means element is #text
@@ -98,6 +88,8 @@
 
                             target[key] = value;
 
+                            console.log(allComponents)
+
                             const newVNode = fromElToObject(
                                 useNativeParser(this.classLink.__proto__.Element(this.classLink.props)),
                                 this.classLink
@@ -117,6 +109,7 @@
                                 
                             }
 
+                            return true;
                         }
                     };
 
@@ -162,6 +155,7 @@
             }
 
         };
+
 
         function mount(renderedVnode, element) {
 
