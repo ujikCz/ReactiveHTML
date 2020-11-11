@@ -80,7 +80,7 @@
 
             Component: class {
 
-                constructor(data = {}) {
+                constructor(props = {}) {
 
                     const validator = {
                         classLink: this,
@@ -98,13 +98,13 @@
 
                             target[key] = value;
 
-                            const oldVnode = this.classLink.virtualDOM;
                             const newVNode = fromElToObject(
-                                useNativeParser(this.classLink.__proto__.Element(data)),
+                                useNativeParser(this.classLink.__proto__.Element(this.classLink.props)),
                                 this.classLink
                             );
+                            convertComponentsIntoDefinition(newVNode, allComponents, this.classLink.props);
 
-                            if (oldVnode !== newVNode) {
+                            if (this.classLink.virtualDOM !== newVNode) {
 
                                 if (this.classLink.realDOM) {
 
@@ -113,28 +113,29 @@
 
                                 }
 
-                                this.classLink.virtualDOM = newVNode;
-
+                                Object.assign(this.classLink.virtualDOM, newVNode); 
+                                
                             }
 
-                            return true;
                         }
                     };
 
-                    this.data = new Proxy(data, validator);
+                    this.props = new Proxy(props, validator);
 
                     this.virtualDOM = fromElToObject(
                         useNativeParser(
-                            this.__proto__.Element(data)
+                            this.__proto__.Element(props)
                         ),
                         this
                     );
 
-                    allComponents[this.__proto__.constructor.name] = this;
+                    const componentName = this.__proto__.constructor.name;
 
-                    convertComponentsIntoDefinition(this.virtualDOM, allComponents, this.data);
+                    allComponents[componentName] = this;
 
-                    return { virtualDOM: this.virtualDOM, props: this.data, name: this.__proto__.constructor.name };
+                    convertComponentsIntoDefinition(this.virtualDOM, allComponents, this.props);
+
+                    return { virtualDOM: this.virtualDOM, props: this.props, name: componentName };
                 }
 
             },
@@ -152,10 +153,15 @@
 
                 return realDOM;
 
+            },
+
+            Await: function(callback) {
+
+               window.addEventListener('DOMContentLoaded', callback);
+
             }
 
         };
-
 
         function mount(renderedVnode, element) {
 
