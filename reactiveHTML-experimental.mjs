@@ -64,7 +64,27 @@
 
         }
 
-        const allComponents = [];
+        function convertStringChildrenToObject(Vnode) {
+            if(isString(Vnode)) {
+                try {
+                    Vnode = JSON.parse(Vnode);
+                } catch(err) {
+                    
+                }
+            }
+
+            if(typeof Vnode === 'object' && Vnode !== null) {
+
+                Vnode.children = Vnode.children.map(child => convertStringChildrenToObject(child));
+
+            } else {
+
+                Vnode = Vnode.toString();
+
+            }
+
+            return Vnode;
+        }
 
         const ReactiveHTML = {
 
@@ -79,13 +99,8 @@
                         this
                     );
 
-                    const componentName = this.__proto__.constructor.name;
+                    this.virtualDOM = convertStringChildrenToObject(this.virtualDOM);
 
-                    allComponents.push(this);
-
-                    convertComponentsIntoDefinition(this.virtualDOM, allComponents, this.props);
-
-                    this.name = componentName;
                     this.realDOM = null;
                     this.props = props;
 
@@ -96,7 +111,7 @@
 
             Render: function (Vnode, element) {
 
-                /*const validator = {
+                const validator = {
                     classLink: Vnode,
 
                     get(target, key) {
@@ -113,11 +128,12 @@
 
                         target[key] = value;
 
-                        const newVNode = fromElToObject(
+                        let newVNode = fromElToObject(
                             useNativeParser(this.classLink.__proto__.Element(this.classLink.props)),
                             this.classLink
                         );
-                        convertComponentsIntoDefinition(newVNode, allComponents, this.classLink.props);
+
+                        newVNode = convertStringChildrenToObject(newVNode);
 
                         if (this.classLink.virtualDOM !== newVNode) {
 
@@ -136,7 +152,7 @@
                     }
                 };
 
-                Vnode.props = new Proxy(Vnode.props, validator);*/
+                Vnode.props = new Proxy(Vnode.props, validator);
 
                 const rendered = render(Vnode.virtualDOM);
 
@@ -148,6 +164,12 @@
                 Vnode.realDOM = realDOM;
 
                 return realDOM;
+
+            },
+
+            Export: function(Vnode) {
+
+                return JSON.stringify(Vnode.virtualDOM);
 
             },
 
@@ -167,29 +189,6 @@
             return renderedVnode;
 
         }
-
-
-        function convertComponentsIntoDefinition(vDOMchild, components, props) {
-            console.log(vDOMchild)
-            if (isString(vDOMchild) || components.length === 0) return;
-
-            const finded = components.find(f => f.virtualDOM === vDOMchild);
-
-            if (finded) {
-                //console.log(finded.virtualDOM, vDOMchild);
-                return Object.assign(vDOMchild, finded.virtualDOM);
-
-            } else {
-
-                vDOMchild.children.forEach(child => {
-                    convertComponentsIntoDefinition(child, components, props);
-                });
-
-            }
-
-        }
-
-
 
 
         function render(vDOM) {
