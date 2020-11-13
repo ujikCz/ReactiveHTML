@@ -27,12 +27,7 @@
 
                 if (attribute.nodeName.startsWith('on')) {
 
-                    const name = attribute.nodeName.replace('on', '');
-                    const callbackFunction = new Function(`"use strict"; return(${ attribute.nodeValue })`)();
-                    vDOM.events[name] = {
-                        func: callbackFunction,
-                        scope: classLink
-                    };
+                    vDOM.events[attribute.nodeName.replace('on', '')] = attribute.nodeValue;
 
                 } else {
 
@@ -69,26 +64,27 @@
         }
 
         function convertStringChildrenToObject(Vnode) {
-            let stringJSON;
-            if (isString(stringJSON)) {
+            let saveOriginalString = Vnode;
+
+            if (isString(Vnode)) {
                 try {
-                    stringJSON = JSON.parse(stringJSON);
+                    Vnode = JSON.parse(Vnode);
                 } catch (err) {
 
                 }
             }
 
-            if (typeof stringJSON === 'object' && stringJSON !== null) {
+            if (typeof Vnode === 'object' && Vnode !== null) {
 
-                stringJSON.children = stringJSON.children.map(child => convertStringChildrenToObject(child));
+                Vnode.children = Vnode.children.map(child => convertStringChildrenToObject(child));
 
             } else {
 
-                stringJSON = Vnode;
+                Vnode = saveOriginalString;
 
             }
 
-            return stringJSON;
+            return Vnode;
         }
 
         const ReactiveHTML = {
@@ -132,7 +128,7 @@
                                 this.classLink.virtualDOM = newVNode;
     
                             }
-    
+
                             return true;
                         }
                     };
@@ -213,7 +209,10 @@
                 }
 
                 for (const [k, v] of Object.entries(vDOM.events)) {
-                    el.addEventListener(k, e => v.func(e, v.scope));
+                    el.addEventListener(k, e => {
+                        const callbackFunction = new Function(`"use strict"; return(${ v })`)();
+                        callbackFunction(e, vDOM);
+                    });
                 }
 
                 vDOM.children.forEach(child => {
