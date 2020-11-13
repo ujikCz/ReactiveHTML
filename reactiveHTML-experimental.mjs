@@ -27,8 +27,12 @@
 
                 if (attribute.nodeName.startsWith('on')) {
 
+                    const name = attribute.nodeName.replace('on', '');
                     const callbackFunction = new Function(`"use strict"; return(${ attribute.nodeValue })`)();
-                    vDOM.events[attribute.nodeName.replace('on', '')] = callbackFunction.bind(classLink);
+                    vDOM.events[name] = {
+                        func: callbackFunction,
+                        scope: classLink
+                    };
 
                 } else {
 
@@ -209,7 +213,7 @@
                 }
 
                 for (const [k, v] of Object.entries(vDOM.events)) {
-                    el.addEventListener(k, v);
+                    el.addEventListener(k, e => v.func(e, v.scope));
                 }
 
                 vDOM.children.forEach(child => {
