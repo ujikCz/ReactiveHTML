@@ -6,13 +6,13 @@
 
         function isObject(object) {
 
-            return ( typeof object === 'object' && (object !== null || object !== undefined) );
+            return (typeof object === 'object' && (object !== null || object !== undefined));
 
         }
 
         function fromAttrsToEvents(Vnode) {
 
-            if(isObject(Vnode)) {
+            if (isObject(Vnode)) {
                 for (const [k, v] of Object.entries(Vnode.attrs)) {
                     if (k.startsWith('on')) {
                         Vnode.events[k.replace('on', '')] = v;
@@ -26,6 +26,24 @@
 
             return Vnode;
 
+        }
+
+        function flatChildren(Vnode) {
+
+            if (isObject(Vnode)) {
+                Vnode.children = flatten(Vnode.children);
+                Vnode.children.forEach(child => flatChildren(child));
+
+            }
+
+            return Vnode;
+
+        }
+
+        function flatten(arr) {
+            return arr.reduce(function (flat, toFlatten) {
+                return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
+            }, []);
         }
 
         const ReactiveHTML = {
@@ -52,7 +70,11 @@
 
                             target[key] = value;
 
-                            const newVNode = fromAttrsToEvents(this.classLink.__proto__.Element(this.classLink.props));
+                            const newVNode = fromAttrsToEvents(
+                                flatChildren(
+                                    this.classLink.__proto__.Element(this.classLink.props)
+                                )
+                            );
 
                             if (this.classLink.Vnode !== newVNode) {
 
@@ -73,9 +95,12 @@
 
                     this.props = new Proxy(props, validator);
 
-                    this.Vnode = fromAttrsToEvents(this.__proto__.Element(this.props));
+                    this.Vnode = fromAttrsToEvents(
+                        flatChildren(
+                            this.__proto__.Element(this.props)
+                        )
+                    );
                     //this.__proto__.OnCreate(this);
-
 
                     return this;
                 }
@@ -128,7 +153,7 @@
 
             CreateElement: function (tagName, attrs, ...children) {
 
-                if(attrs === null) attrs = {};
+                if (attrs === null) attrs = {};
 
                 return {
                     tagName,
@@ -175,12 +200,12 @@
                 for (const [k, v] of Object.entries(vDOM.events)) {
                     el.addEventListener(k, v);
                 }
-                
+
                 vDOM.children.forEach(child => {
                     const childEl = render(child);
                     el.appendChild(childEl);
                 });
-                
+
                 vDOM.realDOM = el;
 
                 return el;
@@ -260,7 +285,7 @@
                 };
             }
 
-            if ((!isObject(vOldNode) || !isObject(vNewNode))) {
+            if (typeof vOldNode === 'string' || typeof vNewNode === 'string') {
                 if (vOldNode !== vNewNode) {
                     return $node => {
                         const $newNode = render(vNewNode);
