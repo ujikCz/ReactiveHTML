@@ -6,31 +6,25 @@
 
         function isObject(object) {
 
-            return (typeof object === 'object' && object !== null);
+            return ( typeof object === 'object' && (object !== null || object !== undefined) );
 
         }
 
-        function proc(Vnode) {
-            Vnode.events = {};
-            for (const [k, v] of Object.entries(Vnode.attrs)) {
-                if (k.startsWith('on')) {
+        function fromAttrsToEvents(Vnode) {
 
+            if(isObject(Vnode)) {
+                for (const [k, v] of Object.entries(Vnode.attrs)) {
+                    if (k.startsWith('on')) {
+                        Vnode.events[k.replace('on', '')] = v;
+                        delete Vnode.attrs[k];
+                    }
                 }
-            }
-        }
 
-        function convertChildrenArraysToObjects(Vnode) {
+                Vnode.children = Vnode.children.map(VnodeChild => fromAttrsToEvents(VnodeChild));
 
-            if (isObject(Vnode)) {
-                console.log(Vnode)
-                Vnode.children.flat();
-                Vnode.children.forEach(child => {
-
-                    convertChildrenArraysToObjects(child);
-
-                });
             }
 
+            return Vnode;
 
         }
 
@@ -47,7 +41,7 @@
 
                         get(target, key) {
 
-                            if (typeof target[key] === 'object' && target[key] !== null) {
+                            if (isObject(target[key])) {
                                 return new Proxy(target[key], validator)
                             } else {
                                 return target[key];
@@ -58,7 +52,7 @@
 
                             target[key] = value;
 
-                            const newVNode = this.classLink.__proto__.Element(this.classLink.props);
+                            const newVNode = fromAttrsToEvents(this.classLink.__proto__.Element(this.classLink.props));
 
                             if (this.classLink.Vnode !== newVNode) {
 
@@ -79,8 +73,7 @@
 
                     this.props = new Proxy(props, validator);
 
-                    this.Vnode = this.__proto__.Element(this.props);
-
+                    this.Vnode = fromAttrsToEvents(this.__proto__.Element(this.props));
                     //this.__proto__.OnCreate(this);
 
 
@@ -133,12 +126,15 @@
 
             },
 
-            CreateElement: function (tagName, attrs = null, ...children) {
+            CreateElement: function (tagName, attrs, ...children) {
+
+                if(attrs === null) attrs = {};
 
                 return {
                     tagName,
                     attrs,
-                    children
+                    children,
+                    events: {}
                 }
 
             },
@@ -172,27 +168,19 @@
 
                 const el = document.createElement(vDOM.tagName);
 
-                if (vDOM.attrs) {
-                    for (const [k, v] of Object.entries(vDOM.attrs)) {
-                        if (k.startsWith('on')) {
-
-                            el.addEventListener(k.replace('on', ''), v);
-
-                        } else {
-
-                            el.setAttribute(k, v);
-
-                        }
-                    }
+                for (const [k, v] of Object.entries(vDOM.attrs)) {
+                    el.setAttribute(k, v);
                 }
 
-                if (vDOM.children) {
-                    vDOM.children.forEach(child => {
-                        const childEl = render(child);
-                        el.appendChild(childEl);
-                    });
+                for (const [k, v] of Object.entries(vDOM.events)) {
+                    el.addEventListener(k, v);
                 }
-
+                
+                vDOM.children.forEach(child => {
+                    const childEl = render(child);
+                    el.appendChild(childEl);
+                });
+                
                 vDOM.realDOM = el;
 
                 return el;
@@ -212,7 +200,6 @@
 
         const diffAttrs = (oldAttrs, newAttrs) => {
             const patches = [];
-
             // set new attributes
             for (const [k, v] of Object.entries(newAttrs)) {
                 patches.push($node => {
@@ -273,7 +260,7 @@
                 };
             }
 
-            if (typeof vOldNode === 'string' || typeof vNewNode === 'string') {
+            if ((!isObject(vOldNode) || !isObject(vNewNode))) {
                 if (vOldNode !== vNewNode) {
                     return $node => {
                         const $newNode = render(vNewNode);
