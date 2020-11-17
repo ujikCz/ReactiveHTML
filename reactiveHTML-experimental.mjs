@@ -4,87 +4,46 @@
 
     function defineReactiveHTMLClass() {
 
-        function isString(string) {
+        function isObject(object) {
 
-            return (typeof string === 'string' || string instanceof String);
-
-        }
-
-        function fromElToObject(element, classLink) {
-
-            if (element.nodeValue) return element.nodeValue; // means element is #text
-
-            let vDOM = {
-                tagName: '',
-                attrs: {},
-                children: [],
-                events: {}
-            };
-
-            vDOM.tagName = element.localName;
-
-            Array.from(element.attributes).forEach(attribute => {
-
-                if (attribute.nodeName.startsWith('on')) {
-
-                    vDOM.events[attribute.nodeName.replace('on', '')] = attribute.nodeValue;
-
-                } else {
-
-                    vDOM.attrs[attribute.nodeName] = attribute.nodeValue;
-
-                }
-
-
-            });
-
-            Array.from(element.childNodes).forEach(childNode => {
-                if (childNode.nodeType === Node.TEXT_NODE) {
-
-                    vDOM.children.push(childNode.nodeValue);
-
-                } else if (childNode.nodeType === Node.ELEMENT_NODE) {
-
-                    vDOM.children.push(fromElToObject(childNode, classLink));
-
-                }
-            });
-
-            return vDOM;
+            return (typeof object === 'object' && object !== null);
 
         }
 
-        function useNativeParser(string) {
+        function fromAttrsToEvents(Vnode) {
 
-            const temp = document.createElement('template');
-            temp.innerHTML = string;
-
-            return temp.content.children[0];
-
-        }
-
-        function convertStringChildrenToObject(Vnode) {
-            let saveOriginalString = Vnode;
-
-            if (isString(Vnode)) {
-                try {
-                    Vnode = JSON.parse(Vnode);
-                } catch (err) {
-
+            if (isObject(Vnode)) {
+                for (const [k, v] of Object.entries(Vnode.attrs)) {
+                    if (k.startsWith('on')) {
+                        Vnode.events[k.replace('on', '')] = v;
+                        delete Vnode.attrs[k];
+                    }
                 }
-            }
 
-            if (typeof Vnode === 'object' && Vnode !== null) {
-
-                Vnode.children = Vnode.children.map(child => convertStringChildrenToObject(child));
-
-            } else {
-
-                Vnode = saveOriginalString;
+                Vnode.children = Vnode.children.map(VnodeChild => fromAttrsToEvents(VnodeChild));
 
             }
 
             return Vnode;
+
+        }
+
+        function flatChildren(Vnode) {
+
+            if (isObject(Vnode)) {
+                Vnode.children = flatten(Vnode.children);
+                Vnode.children.forEach(child => flatChildren(child));
+
+            }
+
+            return Vnode;
+
+        }
+
+        function flatten(arr) {
+            return arr.reduce(function (flat, toFlatten) {
+                return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
+            }, []);
         }
 
         const ReactiveHTML = {
@@ -93,94 +52,147 @@
 
                 constructor(props = {}) {
 
+                    applyLifecycle(this.__proto__.OnInit, props);
+
                     const validator = {
                         classLink: this,
-    
-                        get(target, key) {
-    
-                            if (typeof target[key] === 'object' && target[key] !== null) {
-                                return new Proxy(target[key], validator)
+
+                        get(target, key, receiver) {
+                            
+                            if (isObject(target[key])) {
+
+                                return new Proxy(Reflect.get(...arguments), validator); 
+
                             } else {
-                                return target[key];
-                            }
-    
+
+                                return Reflect.get(...arguments);
+
+                            }                       
+                            
                         },
-                        set(target, key, value) {
-    
-                            target[key] = value;
-    
-                            const newVNode = convertStringChildrenToObject(
-                                fromElToObject(
-                                    useNativeParser(this.classLink.__proto__.Element(this.classLink.props)),
-                                    this.classLink
+                        set(target, key, value, receiver) {
+
+                            Object.assign(receiver, Reflect.set(...arguments));
+
+                            applyLifecycle(this.classLink.__proto__.onChange, this.classLink);
+                            
+                            const newVNode = fromAttrsToEvents(
+                                flatChildren(
+                                    this.classLink.__proto__.Element(this.classLink.props)
                                 )
                             );
-        
-                            if (this.classLink.virtualDOM !== newVNode) {
-    
-                                if (this.classLink.realDOM) {
-    
-                                    const patch = diff(this.classLink.virtualDOM, newVNode);
-                                    this.classLink.realDOM = patch(this.classLink.realDOM);
-    
+
+                            if (this.classLink.Vnode !== newVNode) {
+
+                                if (this.classLink.Vnode.realDOM) {
+
+                                    const patch = diff(this.classLink.Vnode, newVNode);
+                                    this.classLink.Vnode.realDOM = patch(this.classLink.Vnode.realDOM);
+
                                 }
-    
-                                this.classLink.virtualDOM = newVNode;
-    
+
+                                Object.assign(this.classLink.Vnode, newVNode);
+
                             }
 
-                            return true;
+                            return receiver;
                         }
                     };
-    
+
                     this.props = new Proxy(props, validator);
 
-                    this.virtualDOM = convertStringChildrenToObject(
-                        fromElToObject(
-                            useNativeParser(
-                                this.__proto__.Element(props)
-                            ),
-                            this
+                    this.Vnode = fromAttrsToEvents(
+                        flatChildren(
+                            this.__proto__.Element(this.props)
                         )
                     );
 
-                    this.realDOM = null;
+                    applyLifecycle(this.__proto__.OnVnodeCreate, this);
 
                     return this;
                 }
 
             },
 
-            Render: function (Vnode, element) {
+            Render: function (classLink, element) {
 
-                
+                const rendered = render(classLink.Vnode);
 
-                const rendered = render(Vnode.virtualDOM);
+                applyLifecycle(classLink.__proto__.OnRender, classLink);
 
-                const realDOM = mount(
+                return mount(
                     rendered,
                     element
                 );
 
-                Vnode.realDOM = realDOM;
-
-                return realDOM;
-
             },
 
-            Export: function (Vnode) {
-
-                return JSON.stringify(Vnode.virtualDOM);
-
-            },
-
-            Await: function (callback) {
+            Ready: function (callback) {
 
                 window.addEventListener('DOMContentLoaded', callback);
+
+            },
+
+            Await: function (selector, callback) {
+
+                const observer = new MutationObserver(function (mutations, me) {
+                    for (var i = 0; i < mutations.length; i++) {
+                        for (var j = 0; j < mutations[i].addedNodes.length; j++) {
+                            // We're iterating through _all_ the elements as the parser parses them,
+                            // deciding if they're the one we're looking for.
+                            if (mutations[i].addedNodes[j].nodeType === Node.ELEMENT_NODE) {
+                                if (mutations[i].addedNodes[j].matches(selector)) {
+                                    callback(mutations[i].addedNodes[j]);
+
+                                    // We found our element, we're done:
+                                    me.disconnect();
+                                };
+                            }
+
+                        }
+                    }
+                });
+
+                observer.observe(document.documentElement, {
+                    childList: true,
+                    subtree: true
+                });
+
+            },
+
+            CreateElement: function (tagName, attrs, ...children) {
+
+                if (attrs === null) attrs = {};
+
+                return {
+                    tagName,
+                    attrs,
+                    children,
+                    events: {}
+                }
+
+            },
+
+            Use: function (classLink) {
+
+                return classLink.Vnode;
 
             }
 
         };
+
+
+        function applyLifecycle(callback, args = null) {
+
+            if(callback) {
+
+                return callback(args);
+
+            }
+
+            return null;
+
+        }
 
 
         function mount(renderedVnode, element) {
@@ -191,10 +203,9 @@
 
         }
 
-
         function render(vDOM) {
 
-            if (isString(vDOM)) {
+            if (!isObject(vDOM)) {
                 return document.createTextNode(vDOM);
             }
 
@@ -209,10 +220,7 @@
                 }
 
                 for (const [k, v] of Object.entries(vDOM.events)) {
-                    el.addEventListener(k, e => {
-                        const callbackFunction = new Function(`"use strict"; return(${ v })`)();
-                        callbackFunction(e, vDOM);
-                    });
+                    el.addEventListener(k, v);
                 }
 
                 vDOM.children.forEach(child => {
@@ -220,11 +228,14 @@
                     el.appendChild(childEl);
                 });
 
+                vDOM.realDOM = el;
+
                 return el;
 
             }
 
         }
+
 
         const zip = (xs, ys) => {
             const zipped = [];
@@ -236,7 +247,6 @@
 
         const diffAttrs = (oldAttrs, newAttrs) => {
             const patches = [];
-
             // set new attributes
             for (const [k, v] of Object.entries(newAttrs)) {
                 patches.push($node => {
