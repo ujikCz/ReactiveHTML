@@ -31,6 +31,7 @@
         function flatChildren(Vnode) {
 
             if (isObject(Vnode)) {
+
                 Vnode.children = flatten(Vnode.children);
                 Vnode.children.forEach(child => flatChildren(child));
 
@@ -50,64 +51,62 @@
 
             Component: class {
 
-                constructor(props = {}) {
+                constructor(props = {}, ...args) {
 
-                    applyLifecycle(this.__proto__.OnInit, props);
+                    const thisProto = Object.getPrototypeOf(this);
+
+                    applyLifecycle(thisProto.OnInit, props);
 
                     const validator = {
                         classLink: this,
 
                         get(target, key, receiver) {
-                            
+
                             if (isObject(target[key])) {
 
-                                return new Proxy(Reflect.get(...arguments), validator); 
+                                return new Proxy(target[key], validator);
 
                             } else {
 
-                                return Reflect.get(...arguments);
+                                return target[key];
 
-                            }                       
-                            
+                            } 
+                                                        
                         },
                         set(target, key, value, receiver) {
 
-                            Object.assign(receiver, Reflect.set(...arguments));
+                            target[key] = value;
 
-                            applyLifecycle(this.classLink.__proto__.onChange, this.classLink);
+                            applyLifecycle(thisProto.onChange, this.classLink);
                             
-                            const newVNode = fromAttrsToEvents(
-                                flatChildren(
-                                    this.classLink.__proto__.Element(this.classLink.props)
-                                )
-                            );
-
-                            if (this.classLink.Vnode !== newVNode) {
+                            const newVNode = fromAttrsToEvents(flatChildren(
+                                thisProto.Element(this.classLink.props, this.classLink.args)
+                            ));
 
                                 if (this.classLink.Vnode.realDOM) {
 
                                     const patch = diff(this.classLink.Vnode, newVNode);
-                                    this.classLink.Vnode.realDOM = patch(this.classLink.Vnode.realDOM);
+                                    newVNode.realDOM = patch(this.classLink.Vnode.realDOM);
 
                                 }
 
                                 Object.assign(this.classLink.Vnode, newVNode);
 
-                            }
 
                             return receiver;
                         }
                     };
 
                     this.props = new Proxy(props, validator);
+                    this.args = args.length > 1 ? args : args[0];
 
                     this.Vnode = fromAttrsToEvents(
                         flatChildren(
-                            this.__proto__.Element(this.props)
+                            thisProto.Element(this.props, this.args)
                         )
                     );
 
-                    applyLifecycle(this.__proto__.OnVnodeCreate, this);
+                    applyLifecycle(thisProto.OnVnodeCreate, this);
 
                     return this;
                 }
@@ -118,7 +117,7 @@
 
                 const rendered = render(classLink.Vnode);
 
-                applyLifecycle(classLink.__proto__.OnRender, classLink);
+                applyLifecycle(Object.getPrototypeOf(classLink).OnRender, classLink);
 
                 return mount(
                     rendered,
@@ -193,7 +192,6 @@
             return null;
 
         }
-
 
         function mount(renderedVnode, element) {
 
@@ -307,7 +305,7 @@
                 };
             }
 
-            if (typeof vOldNode === 'string' || typeof vNewNode === 'string') {
+            if ( !isObject(vOldNode) || !isObject(vNewNode) ) {
                 if (vOldNode !== vNewNode) {
                     return $node => {
                         const $newNode = render(vNewNode);
