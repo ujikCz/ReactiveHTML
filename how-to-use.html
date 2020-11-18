@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="components.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htm/3.0.4/htm.js"></script>
+
+    <title>test</title>
+    <script>
+        const html = htm.bind(ReactiveHTML.CreateElement);
+
+        console.time('a');
+        class Button extends ReactiveHTML.Component {
+
+            constructor(props) {
+
+                props.open = false;
+
+                super(props);
+            }
+
+            Element(props) {
+
+                return html `<div>
+                    <button onclick="${ (e) => props.open = !props.open }">
+                        ${ props.open ? 'close' : 'open' }
+                    </button>
+
+                ${ props.open ? new Nav({}, props).Vnode : '' }
+
+                </div>`;
+
+            }
+        }
+
+        class Nav extends ReactiveHTML.Component {
+
+            constructor(props, args) {
+
+                super(props, args);
+            }
+
+            Element(props, args) {
+
+                return html `<div>${ args.list.map( (l, i, a) => html `<li>${ l } <button onclick="${ (e) => a.splice(i, 1) }">del</button></li>`) }
+                    <button onclick="${ () => args.list.push(++args.len) }">add</button>
+                </div>`;
+
+            }
+        }
+
+
+        const el = new Button({
+            list: [1, 2, 3], len: 3
+        });
+
+        ReactiveHTML.Await('#app', (element) => {
+                ReactiveHTML.Render(
+                    el,
+                    element
+                )
+            }
+
+        );
+        console.timeEnd('a');
+    </script>
+
+</head>
+
+<body>
+
+    <div id="app">
+
+    </div>
+
+</body>
+
+</html>
