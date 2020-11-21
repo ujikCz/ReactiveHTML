@@ -3,7 +3,6 @@ Simple reactive Virtual DOM elements for building complex reactive UI
 
 ## Download
 
-src
-
+src  
 └── ReactiveHTML.min.js
 
