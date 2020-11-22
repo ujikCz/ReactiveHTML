@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="ReactiveHTML.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htm/3.0.4/htm.js"></script>
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-firestore.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-auth.js"></script>
+
+
+    <script>
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        var firebaseConfig = {
+            apiKey: "AIzaSyBOcyS4qUFS56fAx90JIIxUk_Qo2HKWivM",
+            authDomain: "chatapp-f8a53.firebaseapp.com",
+            databaseURL: "https://chatapp-f8a53.firebaseio.com",
+            projectId: "chatapp-f8a53",
+            storageBucket: "chatapp-f8a53.appspot.com",
+            messagingSenderId: "398837741627",
+            appId: "1:398837741627:web:37f78126653d727efc041e",
+            measurementId: "G-F4XBD69MGH"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        firebase.analytics();
+    </script>
+    <script>
+        var provider = new firebase.auth.GoogleAuthProvider();
+
+        function login(props) {
+            firebase.auth().signInWithPopup(provider).then(function (result) {
+                props.userInfo = result.user;
+            });
+        }
+
+        function logout(props) {
+            firebase.auth().signOut().then(function () {
+                props.userInfo = null;
+            });
+        }
+    </script>
+    <script>
+
+        const html = htm.bind(ReactiveHTML.CreateElement);
+
+        class LoginComponent extends ReactiveHTML.Component {
+
+            constructor(props) {
+                super(props);
+            }
+
+            Element(props) {
+
+                return html `
+                <div>
+                    ${ props.userInfo === null ? html`<button onclick="${ () => login(props) }">log in</button>` : html`
+                        <div>
+                            <h1>User info:</h1>
+                            <div>username: ${ String(props.userInfo.displayName) }</div>
+                            <div>email: ${ String(props.userInfo.email) }</div>
+                            <button onclick="${ () => logout(props) }">log out</button>
+                        </div>` 
+                    }
+                </div>`
+
+            }
+
+        }
+
+        const comp = new LoginComponent({
+            userInfo: null
+        });
+        ReactiveHTML.Await('#root', el => ReactiveHTML.Render(comp, el));
+    </script>
+</head>
+
+<body>
+    <div id="root"></div>
+</body>
+
+</html>
