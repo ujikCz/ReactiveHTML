@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="ReactiveHTML.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htm/3.0.4/htm.js"></script>
+    <script>
+        const {
+            Render,
+            Component,
+            Await,
+            CreateElement
+        } = ReactiveHTML;
+        const html = htm.bind(CreateElement);
+    </script>
+    <script src="components/userNameInput.js"></script>
+    <script src="components/messageInput.js"></script>
+    <script src="components/sendButton.js"></script>
+    <script src="components/messageBlock.js"></script>
+
+    <script>
+        class App extends Component {
+
+            constructor(props, args = {}) {
+
+                super(props, args);
+
+            }
+
+            Element(props, args) {
+
+                const messages = new messagesBlock();
+                const buttonToSend = new sendButton({
+                    messageInputValue: ""
+                }, messages.props.messages);
+
+                return html `<div id="app">${ buttonToSend } <br />${ messages }</div>`;
+
+            }
+
+        }
+
+
+        Await('#root', element => Render(new App(), element));
+    </script>
+
+</head>
+
+<body>
+    <div id="root"></div>
+</body>
+
+</html>
