@@ -64,15 +64,14 @@
 
             Component: class {
 
-                constructor(props = {}, args = []) {
+                constructor(props = {}, args = null) {
 
                     const thisProto = Object.getPrototypeOf(this);
-                    const classLink = this;
 
                     const validator = {
                         classLink: this,
 
-                        get(target, key) {
+                        get(target, key, receiver) {
 
                             if (isObject(target[key])) {
 
@@ -86,11 +85,11 @@
 
                         },
 
-                        set(target, key, value) {
+                        set(target, key, value, receiver) {
 
                             target[key] = value;
 
-                            const newVNode = thisProto.Element(this.classLink.props, classLink.args);
+                            const newVNode = thisProto.Element(this.classLink.props, this.classLink.args);
 
                             if (this.classLink.Vnode.realDOM) {
 
@@ -101,12 +100,32 @@
 
                             Object.assign(this.classLink.Vnode, newVNode);
 
-                            return target;
+                            return true;
                         }
                     };
 
-                    this.props = new Proxy(props, validator);
+                    this.props = new Proxy(props, validator);;
                     this.args = args;
+
+                    this.SetValue = function(target, value) {
+
+                        target = new Proxy(target, validator);
+                        Object.assign(target, value);
+
+                        const newVNode = thisProto.Element(this.props, this.args);
+
+                            if (this.Vnode.realDOM) {
+
+                                const patch = diff(this.Vnode, newVNode);
+                                newVNode.realDOM = patch(this.Vnode.realDOM);
+
+                            }
+
+                            Object.assign(this.Vnode, newVNode);
+
+                        return target;
+
+                    }
 
                     this.Vnode = thisProto.Element(this.props, this.args);
 
