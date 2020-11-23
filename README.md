@@ -22,7 +22,7 @@ src
 ### Issues
 Issue 01: render renders only components, no not component elements (solved)
 
-### Update
+### Updates
 #### update 01
 Changes: inside component you can call ```this.SetValue(target: Object, value: Object): Object``` that assigns value to target and make element reactive to that value, target is not going to be proxy.  
 Example: 
