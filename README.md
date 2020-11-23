@@ -18,20 +18,13 @@ src
  Await('#app', el => Render(html`<div>Hello, world!</div>`));
  
  ```
- 
-### Size comparison with other frameworks
-
-ReactiveHTML.min.js = 3kB  
-React.js (react + react-dom) = 109kB  
-Preact.min.js = 4kB  
-Vue.min.js = 33.30KB min+gzip  
-Angular.js = 143kB  
   
 ### Issues
 Issue 01: render renders only components, no not component elements (solved)
 
 ### Update
-Changes: inside component you can call ```this.SetValue(target: Object, value: Object): Object``` that assign value to target and make element reactive to that value, target is not going to be proxy.  
+#### update 01
+Changes: inside component you can call ```this.SetValue(target: Object, value: Object): Object``` that assigns value to target and make element reactive to that value, target is not going to be proxy.  
 Example: 
 ```
 let obj = {};
@@ -54,3 +47,14 @@ component.SetValue(obj, { a: "hello world" });
 
 //rendered element is <div>hello world</div>
 ```
+
+#### update 02
+1. ```target = this.SetValue(value: any): any``` that assigns value to target and make it reactive for that assigments, target is not going to be proxy object.
+2. style attribute expecting now object with styles, not string  
+Example: 
+```
+html`<div style="${ { color: "red" } }">Hello, world!</div>`
+```
+that makes div color red, this update is for better manipuation with styles and not recalculations whole styles in DOM, but only changes
+
+
