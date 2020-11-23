@@ -1,6 +1,7 @@
 /*
   (c) Ludvík Prokopec
   License: MIT
+  !this version is not recomended for production use
 */
 (function (w) {
 
