@@ -6,6 +6,9 @@ Simple reactive Virtual DOM elements for building complex reactive UI
 src  
  └── ReactiveHTML.min.js
  
+ ## Compatibility   
+ Only browsers that supports ES6 (classes, proxies)   
+  
  ## Hello world
  ```
  /* this example is create with htm.js */
