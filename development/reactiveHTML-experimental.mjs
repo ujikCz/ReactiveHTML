@@ -16,18 +16,27 @@
 
         }
 
-        function fromAttrsToEvents(attrs, events) {
+        function filterAttrs(attrs) {
+
+            let events = {};
+            let styles = {};
 
             for (const [k, v] of Object.entries(attrs)) {
                 if (k.startsWith('on')) {
                     events[k.replace('on', '')] = v;
                     delete attrs[k];
                 }
+
+                if (k === 'style') {
+                    styles = v;
+                    delete attrs[k];
+                }
             }
 
             return {
                 attrs,
-                events
+                events,
+                styles
             };
 
         }
@@ -39,8 +48,8 @@
         }
 
         function checkProto(object) {
-            
-            if(!isObject(object)) return object;
+
+            if (!isObject(object)) return object;
 
             let proto = Object.getPrototypeOf(object);
             if (proto) {
@@ -113,23 +122,34 @@
                     this.props = new Proxy(props, validator);;
                     this.args = args;
 
-                    this.SetValue = function(target, value) {
+                    this.SetValue = function (value) {
 
-                        target = new Proxy(target, validator);
-                        Object.assign(target, value);
+                        const that = this;
 
-                        const newVNode = thisProto.Element(this.props, this.args);
+                        function getValueFirst(value) {
+                            return new Promise(function (callback, reject) {
+                                callback(value);
+                            });
+                        }
 
-                            if (this.Vnode.realDOM) {
+                        getValueFirst(value).then(function () {
 
-                                const patch = diff(this.Vnode, newVNode);
-                                newVNode.realDOM = patch(this.Vnode.realDOM);
+                            const newVNode = thisProto.Element(that.props, that.args);
+
+                            if (that.Vnode.realDOM) {
+
+                                const patch = diff(that.Vnode, newVNode);
+                                newVNode.realDOM = patch(that.Vnode.realDOM);
 
                             }
 
-                            Object.assign(this.Vnode, newVNode);
+                            Object.assign(that.Vnode, newVNode);
 
-                        return target;
+                            return that;
+
+                        });
+
+                        return value;
 
                     }
 
@@ -142,22 +162,12 @@
 
             Render: function (classLink, element) {
 
-                if (Array.isArray(classLink)) {
+                const rendered = render(checkProto(classLink));
 
-                    classLink.forEach(oneClassLink => {
-                        this.Render(oneClassLink, element);
-                    });
-
-                } else {
-
-                    const rendered = render(checkProto(classLink));
-
-                    return mount(
-                        rendered,
-                        element
-                    );
-
-                }
+                return mount(
+                    rendered,
+                    element
+                );
 
             },
 
@@ -194,13 +204,14 @@
 
                 if (attrs === null) attrs = {};
 
-                const filter = fromAttrsToEvents(attrs, {});
+                const filter = filterAttrs(attrs);
 
                 return {
                     tagName,
                     attrs: filter.attrs,
                     children: convertClassToVnode(flatten(children)),
-                    events: filter.events
+                    events: filter.events,
+                    styles: filter.styles
                 }
 
             }
@@ -233,6 +244,10 @@
 
                 for (const [k, v] of Object.entries(vDOM.events)) {
                     el.addEventListener(k, v);
+                }
+
+                for (const [k, v] of Object.entries(vDOM.styles)) {
+                    el.style[k] = v;
                 }
 
                 vDOM.children.forEach(child => {
@@ -322,6 +337,41 @@
             };
         };
 
+        const diffStyles = (oldStyles, newStyles) => {
+
+            const stylesPatches = [];
+
+            for (const [k, v] of Object.entries(newStyles)) {
+                if (v !== oldStyles[k]) {
+                    stylesPatches.push(
+                        function (node) {
+                            node.style[k] = v;
+                            return node;
+                        }
+                    );
+                }
+            }
+
+            // remove old attributes
+            for (const k in oldStyles) {
+                if (!(k in newStyles)) {
+                    stylesPatches.push(
+                        function (node) {
+                            node.style[k] = null;
+                            return node;
+                        }
+                    );
+                }
+            }
+
+            return function (node) {
+                for (const patchstyle of stylesPatches) {
+                    patchstyle(node);
+                }
+            };
+
+        }
+
         const diff = (vOldNode, vNewNode) => {
             if (vNewNode === undefined) {
                 return $node => {
@@ -352,10 +402,12 @@
 
             const patchAttrs = diffAttrs(vOldNode.attrs, vNewNode.attrs);
             const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
+            const patchStyles = diffStyles(vOldNode.styles, vNewNode.styles);
 
             return $node => {
                 patchAttrs($node);
                 patchChildren($node);
+                patchStyles($node);
                 return $node;
             };
         };
