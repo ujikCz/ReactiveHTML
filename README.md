@@ -18,12 +18,12 @@ src
  
 ### Size comparison with other frameworks
 
-ReactiveHTML.min.js = 3kB
-React.js (react + react-dom) = 109kB
-Preact.min.js = 4kB
-Vue.min.js = 33.30KB min+gzip
-Angular.js = 143kB
-
+ReactiveHTML.min.js = 3kB  
+React.js (react + react-dom) = 109kB  
+Preact.min.js = 4kB  
+Vue.min.js = 33.30KB min+gzip  
+Angular.js = 143kB  
+  
 ### Issues
 Issue 01: render renders only components, no not component elements (solved)
 
