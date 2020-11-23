@@ -28,7 +28,7 @@ Angular.js = 143kB
 Issue 01: render renders only components, no not component elements (solved)
 
 ### Update
-Changes: inside component you can call ```this.SetValue(target, value)``` that assign value to target and make element reactive to that value, target is not going to be proxy.  
+Changes: inside component you can call ```this.SetValue(target: Object, value: Object): Object``` that assign value to target and make element reactive to that value, target is not going to be proxy.  
 Example: 
 ```
 let obj = {};
