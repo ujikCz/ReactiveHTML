@@ -1,3 +1,9 @@
+/*
+    (c) Ludvík Prokopec
+    License: MIT
+    !This version is experminental and not recomended for production use
+*/
+
 (function (w) {
 
     "use strict";
