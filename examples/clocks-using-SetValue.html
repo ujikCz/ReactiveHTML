@@ -13,7 +13,11 @@
         const { Render, Component, Await, CreateElement } = ReactiveHTML;
         const html = htm.bind(CreateElement);
 
-        let date = { now: new Date() };
+        let date = new Date();
+
+        let styles = {
+            color: "red"
+        }
 
         class Clocks extends Component {
 
@@ -24,7 +28,7 @@
 
             Element(props) {
 
-                return html`<div>${ date.now.toLocaleTimeString() }</div>`
+                return html`<div style="${ styles }">${ date.toLocaleTimeString() }</div>`
 
             }
 
@@ -41,12 +45,16 @@
     </div>
 
     <script>
+
+        function tick() {
+            date = clocks.SetValue(new Date());
+            styles = clocks.SetValue({ color: "blue" });
+        }
+
         const clocks = new Clocks();
         Render(clocks, document.getElementById('root'));
 
-        setInterval(function(){
-            clocks.SetValue(date, { now: new Date() });
-        }, 1000);
+        setInterval(tick, 1000);
 
 </script>
 </body>
