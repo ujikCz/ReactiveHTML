@@ -18,9 +18,6 @@ src
  Await('#app', el => Render(html`<div>Hello, world!</div>`));
  
  ```
-  
-### Issues
-Issue 01: render renders only components, no not component elements (solved)
 
 ### Updates
 #### update 01
@@ -56,5 +53,5 @@ Example:
 html`<div style="${ { color: "red" } }">Hello, world!</div>`
 ```
 that makes div color red, this update is for better manipuation with styles and not recalculations whole styles in DOM, but only changes
-
+3. Render now can't render array of virtual nodes or components, but only one
 
