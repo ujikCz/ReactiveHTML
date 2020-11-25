@@ -1,7 +1,7 @@
 /*
     (c) Ludvík Prokopec
     License: MIT
-    !This version is experminental and not recomended for production use
+    !this version is not recomended for production use
 */
 
 (function (w) {
@@ -61,6 +61,7 @@
                     proto = proto.constructor;
 
                     if (proto.name === 'Component') {
+                        object.Vnode.realDOM = null;
                         return object.Vnode;
                     }
                     return object;
@@ -79,7 +80,7 @@
 
             Component: class {
 
-                constructor(props = {}, args = null) {
+                constructor(props = {}) {
 
                     const thisProto = Object.getPrototypeOf(this);
 
@@ -88,7 +89,7 @@
 
                         get(target, key, receiver) {
 
-                            if (isObject(target[key])) {
+                            if (isObject(target[key]) && target[key].constructor.name === 'Object') {
 
                                 return new Proxy(target[key], validator);
 
@@ -104,7 +105,7 @@
 
                             target[key] = value;
 
-                            const newVNode = thisProto.Element(this.classLink.props, this.classLink.args);
+                            const newVNode = thisProto.Element(this.classLink.props);
 
                             if (this.classLink.Vnode.realDOM) {
 
@@ -119,41 +120,32 @@
                         }
                     };
 
-                    this.props = new Proxy(props, validator);;
-                    this.args = args;
+                    this.props = new Proxy(props, validator);
 
-                    this.SetValue = function (value) {
+                    this.setValue = function (callback) {
 
-                        const that = this;
+                        callback(this);
 
-                        function getValueFirst(value) {
-                            return new Promise(function (callback, reject) {
-                                callback(value);
-                            });
+                        const newVNode = thisProto.Element(this.props);
+                        if (this.Vnode.realDOM) {
+
+                            const patch = diff(this.Vnode, newVNode);
+                            newVNode.realDOM = patch(this.Vnode.realDOM);
+
                         }
 
-                        getValueFirst(value).then(function () {
+                        Object.assign(this.Vnode, newVNode);
 
-                            const newVNode = thisProto.Element(that.props, that.args);
-
-                            if (that.Vnode.realDOM) {
-
-                                const patch = diff(that.Vnode, newVNode);
-                                newVNode.realDOM = patch(that.Vnode.realDOM);
-
-                            }
-
-                            Object.assign(that.Vnode, newVNode);
-
-                            return that;
-
-                        });
-
-                        return value;
-
+                        return;
                     }
 
-                    this.Vnode = thisProto.Element(this.props, this.args);
+                    this.makeReactive = function(object) {
+
+                        return new Proxy(object, validator);
+                        
+                    }
+
+                    this.Vnode = thisProto.Element(this.props);
 
                     return this;
                 }
@@ -257,7 +249,9 @@
 
                 });
 
-                return vDOM.realDOM = el;
+                if(vDOM.realDOM === null) vDOM.realDOM = el;
+
+                return el;
 
             }
 
@@ -373,6 +367,7 @@
         }
 
         const diff = (vOldNode, vNewNode) => {
+
             if (vNewNode === undefined) {
                 return $node => {
                     $node.remove();
@@ -416,6 +411,11 @@
     }
 
     if (w.ReactiveHTML === undefined) {
+
+        if (typeof module !== 'undefined') {
+            module.exports = ReactiveHTML;
+        }
+
         w.ReactiveHTML = defineReactiveHTMLClass();
     }
 
