@@ -55,3 +55,10 @@ html`<div style="${ { color: "red" } }">Hello, world!</div>`
 that makes div color red, this update is for better manipuation with styles and not recalculations whole styles in DOM, but only changes   
 3. Render now can't render array of virtual nodes or components, but only one
 
+#### update 03
+1. better performance - realDOM is saved only in components   
+2. ```this.setValue(callback: function): undefined``` function return undefined value and expecting one parameter that is callback function where you can set you variable and then the DOM can react on it   
+3. ```this.makeReactive(object: Object): Proxy``` function make a proxy from object and return it, component can react on this proxy   
+
+
+
