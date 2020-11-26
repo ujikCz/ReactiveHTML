@@ -1,7 +1,7 @@
 {
   "name": "reactive-html",
   "version": "1.0.0",
-  "description": "Simple reactive components to create complex UI",
+  "description": "Simple reactive Virtual DOM elements for building complex reactive UI",
   "main": "src/ReactiveHTML.min.js",
   "scripts": {
     "test": "test"
