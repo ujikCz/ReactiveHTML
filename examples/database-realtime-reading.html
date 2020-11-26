@@ -36,17 +36,18 @@
         firebase.analytics();
     </script>
     <script>
+        let userInfo = null;
         var provider = new firebase.auth.GoogleAuthProvider();
 
-        function login(props) {
+        function login() {
             firebase.auth().signInWithPopup(provider).then(function (result) {
-                props.userInfo = result.user;
+                loginComponent.setValue(() => userInfo = result.user);
             });
         }
 
-        function logout(props) {
+        function logout() {
             firebase.auth().signOut().then(function () {
-                props.userInfo = null;
+                loginComponent.setValue(() => userInfo = null);
             });
         }
     </script>
@@ -64,12 +65,12 @@
 
                 return html `
                 <div>
-                    ${ props.userInfo === null ? html`<button onclick="${ () => login(props) }">log in</button>` : html`
+                    ${ userInfo === null ? html`<button onclick="${ login }">log in</button>` : html`
                         <div>
                             <h1>User info:</h1>
-                            <div>username: ${ String(props.userInfo.displayName) }</div>
-                            <div>email: ${ String(props.userInfo.email) }</div>
-                            <button onclick="${ () => logout(props) }">log out</button>
+                            <div>username: ${ userInfo.displayName }</div>
+                            <div>email: ${ userInfo.email }</div>
+                            <button onclick="${ logout }">log out</button>
                         </div>` 
                     }
                 </div>`
@@ -78,10 +79,8 @@
 
         }
 
-        const comp = new LoginComponent({
-            userInfo: null
-        });
-        ReactiveHTML.Await('#root', el => ReactiveHTML.Render(comp, el));
+        const loginComponent = new LoginComponent();
+        ReactiveHTML.Await('#root', el => ReactiveHTML.Render(loginComponent, el));
     </script>
 </head>
 
