@@ -16,7 +16,49 @@ src
  const html = htm.bind(CreateElement);
  
  Await('#app', el => Render(html`<div>Hello, world!</div>`, el));
+ ```
  
+ ## Components
+ ### Simple component
+ ```
+ /* this example is create with htm.js */
+
+ const html = htm.bind(ReactiveHTML.CreateElement);
+ 
+ class myComponent extends ReactiveHTML.Component {
+   constructor(props){
+     super(props);
+   }
+   
+   Element(props){
+     return html`<div>Hello, world!</div>`
+   }
+ }
+ 
+ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent()`, el));
+ ```
+ 
+ ### Component with props
+ ```
+ /* this example is create with htm.js */
+
+ const html = htm.bind(ReactiveHTML.CreateElement);
+ 
+ class myComponent extends ReactiveHTML.Component {
+   constructor(props){
+     super(props);
+     
+     setInterval(function(){
+       this.props.num++;
+     }, 1000);
+   }
+   
+   Element(props){
+     return html`<div>${ props.num }</div>`
+   }
+ }
+ 
+ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({ num: 0 })`, el));
  ```
 
 
