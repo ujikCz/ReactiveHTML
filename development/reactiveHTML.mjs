@@ -1,369 +1,436 @@
 /*
-  (c) Ludvík Prokopec
-  License: MIT
-  !this version is not recomended for production use
+    (c) Ludvík Prokopec
+    License: MIT
+    !This version is not recomended for production use
 */
-(function (w) {
 
-        "use strict";
 
-        function defineReactiveHTMLClass() {
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+        typeof define === 'function' && define.amd ? define(factory) :
+        (global.ReactiveHTML = factory());
+}(this, function () {
 
-            function isObject(object) {
+    function isObject(object) {
 
-                return (typeof object === 'object' && object !== null);
+        return (typeof object === 'object' && object !== null);
 
+    }
+
+    function filterAttrs(attrs) {
+
+        let events = {};
+        let styles = {};
+
+        for (const [k, v] of Object.entries(attrs)) {
+            if (k.startsWith('on')) {
+                events[k.replace('on', '')] = v;
+                delete attrs[k];
             }
 
-            function fromAttrsToEvents(attrs, events) {
+            if (k === 'style') {
+                styles = v;
+                delete attrs[k];
+            }
+        }
 
-                for (const [k, v] of Object.entries(attrs)) {
-                    if (k.startsWith('on')) {
-                        events[k.replace('on', '')] = v;
-                        delete attrs[k];
-                    }
+        return {
+            attrs,
+            events,
+            styles
+        };
+
+    }
+
+    function flatten(children) {
+        return children.reduce(function (flat, toFlatten) {
+            return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
+        }, []);
+    }
+
+    function checkProto(object) {
+
+        if (!isObject(object)) return object;
+
+        let proto = Object.getPrototypeOf(object);
+        if (proto) {
+
+            proto = Object.getPrototypeOf(proto);
+
+            if (proto) {
+
+                proto = proto.constructor;
+
+                if (proto.name === 'Component') {
+                    object.Vnode.realDOM = null;
+                    return object.Vnode;
                 }
-
-                return {
-                    attrs,
-                    events
-                };
-
+                return object;
             }
+            return object;
+        }
+        return object;
 
-            function flatten(children) {
-                return children.reduce(function (flat, toFlatten) {
-                    return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
-                }, []);
-            }
+    }
 
-            function convertClassToVnode(children) {
-                return children.map(f => {
-                        let proto = Object.getPrototypeOf(f);
-                        if (proto) {
+    function convertClassToVnode(children) {
+        return children.map(f => checkProto(f));
+    }
 
-                            proto = Object.getPrototypeOf(proto);
+    function updateVnodeAndRealDOM(classLink) {
 
-                            if (proto) {
+        const newVNode = Object.getPrototypeOf(classLink).Element(classLink.props);
 
-                                proto = proto.constructor;
+        if (classLink.Vnode.realDOM) {
 
-                                if (proto.name === 'Component') {
-                                    return f.Vnode;
-                                }
-                                return f;
-                            }
-                            return f;
-                        }
-                        return f;
-                    });
-                }
+            const patch = diff(classLink.Vnode, newVNode);
+            newVNode.realDOM = patch(classLink.Vnode.realDOM);
 
-                const ReactiveHTML = {
+        }
 
-                    Component: class {
+        Object.assign(classLink.Vnode, newVNode);
 
-                        constructor(props = {}, ...args) {
+    }
 
-                            const thisProto = Object.getPrototypeOf(this);
+    const ReactiveHTML = {
 
-                            applyLifecycle(thisProto.OnInit, props);
+        Component: class {
 
-                            const validator = {
-                                classLink: this,
+            constructor(props = {}) {
 
-                                get(target, key, receiver) {
+                const thisProto = Object.getPrototypeOf(this);
 
-                                    if (isObject(target[key])) {
+                const validator = {
+                    classLink: this,
 
-                                        return new Proxy(target[key], validator);
+                    get(target, key, receiver) {
 
-                                    } else {
+                        if (isObject(target[key]) && target[key].constructor.name === 'Object') {
 
-                                        return target[key];
-
-                                    }
-
-                                },
-                                set(target, key, value, receiver) {
-
-                                    target[key] = value;
-
-                                    applyLifecycle(thisProto.onChange, this.classLink);
-
-                                    const newVNode = thisProto.Element(this.classLink.props, this.classLink.args);
-
-                                    if (this.classLink.Vnode.realDOM) {
-
-                                        const patch = diff(this.classLink.Vnode, newVNode);
-                                        newVNode.realDOM = patch(this.classLink.Vnode.realDOM);
-
-                                    }
-
-                                    Object.assign(this.classLink.Vnode, newVNode);
-
-                                    return receiver;
-                                }
-                            };
-
-                            this.props = new Proxy(props, validator);
-                            this.args = args.length > 1 ? args : args[0];
-
-                            this.Vnode = thisProto.Element(this.props, this.args);
-
-                            applyLifecycle(thisProto.OnVnodeCreate, this);
-
-                            return this;
-                        }
-
-                    },
-
-                    Render: function (classLink, element) {
-
-                        if (Array.isArray(classLink)) {
-
-                            classLink.forEach(oneClassLink => {
-                                this.Render(oneClassLink, element);
-                            });
+                            return new Proxy(target[key], validator);
 
                         } else {
 
-                            const rendered = render(classLink.Vnode);
-
-                            applyLifecycle(Object.getPrototypeOf(classLink).OnRender, classLink);
-
-                            return mount(
-                                rendered,
-                                element
-                            );
+                            return target[key];
 
                         }
 
                     },
 
-                    Ready: function (callback) {
+                    set(target, key, value, receiver) {
 
-                        window.addEventListener('DOMContentLoaded', callback);
+                        target[key] = value;
 
-                    },
+                        updateVnodeAndRealDOM(this.classLink);
 
-                    Await: function (selector, callback) {
-
-                        const observer = new MutationObserver(function (mutations, me) {
-                            for (var i = 0; i < mutations.length; i++) {
-                                for (var j = 0; j < mutations[i].addedNodes.length; j++) {
-                                    // We're iterating through _all_ the elements as the parser parses them,
-                                    // deciding if they're the one we're looking for.
-                                    if (mutations[i].addedNodes[j].nodeType === Node.ELEMENT_NODE) {
-                                        if (mutations[i].addedNodes[j].matches(selector)) {
-                                            callback(mutations[i].addedNodes[j]);
-
-                                            // We found our element, we're done:
-                                            me.disconnect();
-                                        };
-                                    }
-
-                                }
-                            }
-                        });
-
-                        observer.observe(document.documentElement, {
-                            childList: true,
-                            subtree: true
-                        });
-
-                    },
-
-                    CreateElement: function (tagName, attrs, ...children) {
-
-                        if (attrs === null) attrs = {};
-
-                        const filter = fromAttrsToEvents(attrs, {});
-
-                        return {
-                            tagName,
-                            attrs: filter.attrs,
-                            children: convertClassToVnode(flatten(children)),
-                            events: filter.events
-                        }
-
+                        return true;
                     }
-
                 };
 
+                this.props = new Proxy(props, validator);
 
-                function applyLifecycle(callback, args = null) {
+                this.setValue = function (...assigments) {
 
-                    if (callback) {
+                    updateVnodeAndRealDOM(this);
 
-                        return callback(args);
-
-                    }
-
-                    return null;
-
+                    return;
                 }
 
-                function mount(renderedVnode, element) {
+                this.Vnode = thisProto.Element(this.props);
 
-                    element.appendChild(renderedVnode);
+                return this;
+            }
 
-                    return renderedVnode;
+        },
 
-                }
+        Hook: class {
 
-                function render(vDOM) {
+            constructor(value) {
 
-                    if (!isObject(vDOM)) {
-                        return document.createTextNode(vDOM);
-                    }
+                this.value = value;
+                this.scopes = [];
 
-                    return renderElem(vDOM);
+                this.setValue = function (newValue) {
 
-                    function renderElem(vDOM) {
+                    this.value = newValue;
 
-                        const el = document.createElement(vDOM.tagName);
+                    this.scopes.forEach(scope => {
 
-                        for (const [k, v] of Object.entries(vDOM.attrs)) {
-                            el.setAttribute(k, v);
-                        }
+                        updateVnodeAndRealDOM(scope);
 
-                        for (const [k, v] of Object.entries(vDOM.events)) {
-                            el.addEventListener(k, v);
-                        }
-
-                        vDOM.children.forEach(child => {
-
-                            const childEl = render(child);
-                            el.appendChild(childEl);
-
-                        });
-
-                        vDOM.realDOM = el;
-
-                        return el;
-
-                    }
-
-                }
-
-
-                function zip(first, second) {
-
-                    const zipped = [];
-                    for (let i = 0; i < Math.min(first.length, second.length); i++) {
-                        zipped.push([first[i], second[i]]);
-                    }
-
-                    return zipped;
-
-                }
-
-                function diffAttrs(oldAttrs, newAttrs) {
-
-                    const attrsPatches = [];
-
-                    for (const [k, v] of Object.entries(newAttrs)) {
-                        if (v !== oldAttrs[k]) {
-                            attrsPatches.push(
-                                function (node) {
-                                    node.setAttribute(k, v);
-                                    return node;
-                                }
-                            );
-                        }
-                    }
-
-                    // remove old attributes
-                    for (const k in oldAttrs) {
-                        if (!(k in newAttrs)) {
-                            attrsPatches.push(
-                                function (node) {
-                                    node.removeAttribute(k);
-                                    return node;
-                                }
-                            );
-                        }
-                    }
-
-                    return function (node) {
-                        for (const patchattr of attrsPatches) {
-                            patchattr(node);
-                        }
-                    };
-
-                }
-
-                const diffChildren = (oldVChildren, newVChildren) => {
-                    const childPatches = [];
-                    oldVChildren.forEach((oldVChild, i) => {
-                        childPatches.push(diff(oldVChild, newVChildren[i]));
                     });
-        
-                    const additionalPatches = [];
-                    for (const additionalVChild of newVChildren.slice(oldVChildren.length)) {
-                        additionalPatches.push($node => {
-                            $node.appendChild(render(additionalVChild));
-                            return $node;
+
+                    return this.value;
+                };
+
+                const scopesConstructor = this.scopes;
+
+                this.effect = {
+                    add: function (...scopes) {
+                        scopes.forEach(scope => scopesConstructor.push(scope));
+                    },
+
+                    remove: function (...scopes) {
+                        scopes.forEach(scope => {
+                            scopesConstructor.splice(scopesConstructor.indexOf(scope), 1);
                         });
                     }
-        
-                    return $parent => {
-                        for (const [patch, child] of zip(childPatches, $parent.childNodes)) {
-                            patch(child);
-                        }
-        
-                        for (const patch of additionalPatches) {
-                            patch($parent);
-                        }
-        
-                        return $parent;
-                    };
                 };
 
-                const diff = (vOldNode, vNewNode) => {
-                    if (vNewNode === undefined) {
-                        return $node => {
-                            $node.remove();
-                            return undefined;
-                        };
-                    }
+                return this;
 
-                    if (!isObject(vOldNode) || !isObject(vNewNode)) {
-                        if (vOldNode !== vNewNode) {
-                            return $node => {
-                                const $newNode = render(vNewNode);
-                                $node.replaceWith($newNode);
-                                return $newNode;
-                            };
-                        } else {
-                            return $node => undefined;
+            }
+
+        },
+
+        Render: function (classLink, element) {
+
+            const rendered = render(checkProto(classLink));
+
+            return mount(
+                rendered,
+                element
+            );
+
+        },
+
+        Await: function (selector, callback) {
+
+            const observer = new MutationObserver((mutations, me) => {
+                mutations.forEach(mutation => {
+                    Array.from(mutation.addedNodes).forEach(addedNode => {
+                        if(addedNode.nodeType === Node.ELEMENT_NODE) {
+                            if(addedNode.matches(selector)) {
+                                callback(addedNode);
+                                me.disconnect();
+                            }
                         }
+                    });
+                });
+            });
+
+            observer.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+
+        },
+
+        CreateElement: function (tagName, attrs, ...children) {
+
+            if (attrs === null) attrs = {};
+
+            const filter = filterAttrs(attrs);
+
+            return {
+                tagName,
+                attrs: filter.attrs,
+                children: convertClassToVnode(flatten(children)),
+                events: filter.events,
+                styles: filter.styles
+            }
+
+        }
+
+    };
+
+    function mount(renderedVnode, element) {
+
+        element.appendChild(renderedVnode);
+
+        return renderedVnode;
+
+    }
+
+    function render(vDOM) {
+
+        if (!isObject(vDOM)) {
+            return document.createTextNode(vDOM);
+        }
+
+        return renderElem(vDOM);
+
+        function renderElem(vDOM) {
+
+            const el = document.createElement(vDOM.tagName);
+
+            for (const [k, v] of Object.entries(vDOM.attrs)) {
+                el.setAttribute(k, v);
+            }
+
+            for (const [k, v] of Object.entries(vDOM.events)) {
+                el.addEventListener(k, v);
+            }
+
+            for (const [k, v] of Object.entries(vDOM.styles)) {
+                el.style[k] = v;
+            }
+
+            vDOM.children.forEach(child => {
+
+                const childEl = render(child);
+                el.appendChild(childEl);
+
+            });
+
+            if (vDOM.realDOM === null) vDOM.realDOM = el;
+
+            return el;
+
+        }
+
+    }
+
+
+    function zip(first, second) {
+
+        const zipped = [];
+        for (let i = 0; i < Math.min(first.length, second.length); i++) {
+            zipped.push([first[i], second[i]]);
+        }
+
+        return zipped;
+
+    }
+
+    function diffAttrs(oldAttrs, newAttrs) {
+
+        const attrsPatches = [];
+
+        for (const [k, v] of Object.entries(newAttrs)) {
+            if (v !== oldAttrs[k]) {
+                attrsPatches.push(
+                    function (node) {
+                        node.setAttribute(k, v);
+                        return node;
                     }
+                );
+            }
+        }
 
-                    if (vOldNode.tagName !== vNewNode.tagName) {
-                        return $node => {
-                            const $newNode = render(vNewNode);
-                            $node.replaceWith($newNode);
-                            return $newNode;
-                        };
+        // remove old attributes
+        for (const k in oldAttrs) {
+            if (!(k in newAttrs)) {
+                attrsPatches.push(
+                    function (node) {
+                        node.removeAttribute(k);
+                        return node;
                     }
+                );
+            }
+        }
 
-                    const patchAttrs = diffAttrs(vOldNode.attrs, vNewNode.attrs);
-                    const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
+        return function (node) {
+            for (const patchattr of attrsPatches) {
+                patchattr(node);
+            }
+        };
 
-                    return $node => {
-                        patchAttrs($node);
-                        patchChildren($node);
-                        return $node;
-                    };
+    }
+
+    const diffChildren = (oldVChildren, newVChildren) => {
+        const childPatches = [];
+        oldVChildren.forEach((oldVChild, i) => {
+            childPatches.push(diff(oldVChild, newVChildren[i]));
+        });
+
+        const additionalPatches = [];
+        for (const additionalVChild of newVChildren.slice(oldVChildren.length)) {
+            additionalPatches.push($node => {
+                $node.appendChild(render(additionalVChild));
+                return $node;
+            });
+        }
+
+        return $parent => {
+            for (const [patch, child] of zip(childPatches, $parent.childNodes)) {
+                patch(child);
+            }
+
+            for (const patch of additionalPatches) {
+                patch($parent);
+            }
+
+            return $parent;
+        };
+    };
+
+    const diffStyles = (oldStyles, newStyles) => {
+
+        const stylesPatches = [];
+
+        for (const [k, v] of Object.entries(newStyles)) {
+            if (v !== oldStyles[k]) {
+                stylesPatches.push(
+                    function (node) {
+                        node.style[k] = v;
+                        return node;
+                    }
+                );
+            }
+        }
+
+        // remove old attributes
+        for (const k in oldStyles) {
+            if (!(k in newStyles)) {
+                stylesPatches.push(
+                    function (node) {
+                        node.style[k] = null;
+                        return node;
+                    }
+                );
+            }
+        }
+
+        return function (node) {
+            for (const patchstyle of stylesPatches) {
+                patchstyle(node);
+            }
+        };
+
+    }
+
+    const diff = (vOldNode, vNewNode) => {
+
+        if (vNewNode === undefined) {
+            return $node => {
+                $node.remove();
+                return undefined;
+            };
+        }
+
+        if (!isObject(vOldNode) || !isObject(vNewNode)) {
+            if (vOldNode !== vNewNode) {
+                return $node => {
+                    const $newNode = render(vNewNode);
+                    $node.replaceWith($newNode);
+                    return $newNode;
                 };
-
-                return ReactiveHTML;
+            } else {
+                return $node => undefined;
             }
+        }
 
-            if (w.ReactiveHTML === undefined) {
-                w.ReactiveHTML = defineReactiveHTMLClass();
-            }
+        if (vOldNode.tagName !== vNewNode.tagName) {
+            return $node => {
+                const $newNode = render(vNewNode);
+                $node.replaceWith($newNode);
+                return $newNode;
+            };
+        }
 
-        })(window);
+        const patchAttrs = diffAttrs(vOldNode.attrs, vNewNode.attrs);
+        const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
+        const patchStyles = diffStyles(vOldNode.styles, vNewNode.styles);
+
+        return $node => {
+            patchAttrs($node);
+            patchChildren($node);
+            patchStyles($node);
+            return $node;
+        };
+    };
+
+    return ReactiveHTML;
+
+}));
