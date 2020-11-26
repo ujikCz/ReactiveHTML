@@ -5,11 +5,11 @@
 */
 
 
-(function(global, factory) {
+(function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-    typeof define === 'function' && define.amd ? define(factory) :
-    (global.ReactiveHTML = factory());
-}(this, function() {
+        typeof define === 'function' && define.amd ? define(factory) :
+        (global.ReactiveHTML = factory());
+}(this, function () {
 
     function isObject(object) {
 
@@ -77,6 +77,21 @@
         return children.map(f => checkProto(f));
     }
 
+    function updateVnodeAndRealDOM(classLink) {
+
+        const newVNode = Object.getPrototypeOf(classLink).Element(classLink.props);
+
+        if (classLink.Vnode.realDOM) {
+
+            const patch = diff(classLink.Vnode, newVNode);
+            newVNode.realDOM = patch(classLink.Vnode.realDOM);
+
+        }
+
+        Object.assign(classLink.Vnode, newVNode);
+
+    }
+
     const ReactiveHTML = {
 
         Component: class {
@@ -106,16 +121,7 @@
 
                         target[key] = value;
 
-                        const newVNode = thisProto.Element(this.classLink.props);
-
-                        if (this.classLink.Vnode.realDOM) {
-
-                            const patch = diff(this.classLink.Vnode, newVNode);
-                            newVNode.realDOM = patch(this.classLink.Vnode.realDOM);
-
-                        }
-
-                        Object.assign(this.classLink.Vnode, newVNode);
+                        updateVnodeAndRealDOM(this.classLink);
 
                         return true;
                     }
@@ -125,15 +131,7 @@
 
                 this.setValue = function (...assigments) {
 
-                    const newVNode = thisProto.Element(this.props);
-                    if (this.Vnode.realDOM) {
-
-                        const patch = diff(this.Vnode, newVNode);
-                        newVNode.realDOM = patch(this.Vnode.realDOM);
-
-                    }
-
-                    Object.assign(this.Vnode, newVNode);
+                    updateVnodeAndRealDOM(this);
 
                     return;
                 }
@@ -141,6 +139,46 @@
                 this.Vnode = thisProto.Element(this.props);
 
                 return this;
+            }
+
+        },
+
+        Hook: class {
+
+            constructor(value) {
+
+                this.value = value;
+                this.scopes = [];
+
+                this.setValue = function (newValue) {
+
+                    this.value = newValue;
+
+                    this.scopes.forEach(scope => {
+
+                        updateVnodeAndRealDOM(scope);
+
+                    });
+
+                    return this.value;
+                };
+
+                const scopesConstructor = this.scopes;
+
+                this.effect = {
+                    add: function (...scopes) {
+                        scopes.forEach(scope => scopesConstructor.push(scope));
+                    },
+
+                    remove: function (...scopes) {
+                        scopes.forEach(scope => {
+                            scopesConstructor.splice(scopesConstructor.indexOf(scope), 1);
+                        });
+                    }
+                };
+
+                return this;
+
             }
 
         },
@@ -158,24 +196,17 @@
 
         Await: function (selector, callback) {
 
-            const observer = new MutationObserver(function (mutations, me) {
-                for (var i = 0; i < mutations.length; i++) {
-                    for (var j = 0; j < mutations[i].addedNodes.length; j++) {
-
-                        if (mutations[i].addedNodes[j].nodeType === Node.ELEMENT_NODE) {
-
-                            if (mutations[i].addedNodes[j].matches(selector)) {
-
-                                callback(mutations[i].addedNodes[j]);
-
+            const observer = new MutationObserver((mutations, me) => {
+                mutations.forEach(mutation => {
+                    Array.from(mutation.addedNodes).forEach(addedNode => {
+                        if(addedNode.nodeType === Node.ELEMENT_NODE) {
+                            if(addedNode.matches(selector)) {
+                                callback(addedNode);
                                 me.disconnect();
-
-                            };
-
+                            }
                         }
-
-                    }
-                }
+                    });
+                });
             });
 
             observer.observe(document.documentElement, {
@@ -185,7 +216,7 @@
 
         },
 
-        CreateElement: function (tagName, attrs, ...children) { 
+        CreateElement: function (tagName, attrs, ...children) {
 
             if (attrs === null) attrs = {};
 
@@ -242,7 +273,7 @@
 
             });
 
-            if(vDOM.realDOM === null) vDOM.realDOM = el;
+            if (vDOM.realDOM === null) vDOM.realDOM = el;
 
             return el;
 
