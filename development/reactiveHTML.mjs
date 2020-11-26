@@ -10,7 +10,9 @@
         typeof define === 'function' && define.amd ? define(factory) :
         (global.ReactiveHTML = factory());
 }(this, function () {
-
+    
+    "use strict";
+    
     function isObject(object) {
 
         return (typeof object === 'object' && object !== null);
