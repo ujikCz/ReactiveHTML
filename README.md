@@ -15,7 +15,7 @@ src
  const { Render, CreateElement, Await } = ReactiveHTML;
  const html = htm.bind(CreateElement);
  
- Await('#app', el => Render(html`<div>Hello, world!</div>`));
+ Await('#app', el => Render(html`<div>Hello, world!</div>`, el));
  
  ```
 
