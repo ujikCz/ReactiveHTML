@@ -10,9 +10,9 @@
         typeof define === 'function' && define.amd ? define(factory) :
         (global.ReactiveHTML = factory());
 }(this, function () {
-    
+
     "use strict";
-    
+
     function isObject(object) {
 
         return (typeof object === 'object' && object !== null);
@@ -80,7 +80,6 @@
     }
 
     function updateVnodeAndRealDOM(classLink) {
-
         const newVNode = Object.getPrototypeOf(classLink).Element(classLink.props);
 
         if (classLink.Vnode.realDOM) {
@@ -150,36 +149,21 @@
             constructor(value) {
 
                 this.value = value;
-                this.scopes = [];
+                const effect = [];
 
-                this.setValue = function (newValue) {
-
+                const setter = (function (newValue) {
                     this.value = newValue;
 
-                    this.scopes.forEach(scope => {
-
+                    effect.forEach(scope => {
                         updateVnodeAndRealDOM(scope);
 
                     });
 
-                    return this.value;
-                };
+                    return this;
+                }).bind(this);
 
-                const scopesConstructor = this.scopes;
 
-                this.effect = {
-                    add: function (...scopes) {
-                        scopes.forEach(scope => scopesConstructor.push(scope));
-                    },
-
-                    remove: function (...scopes) {
-                        scopes.forEach(scope => {
-                            scopesConstructor.splice(scopesConstructor.indexOf(scope), 1);
-                        });
-                    }
-                };
-
-                return this;
+                return [this, setter, effect];
 
             }
 
@@ -201,8 +185,8 @@
             const observer = new MutationObserver((mutations, me) => {
                 mutations.forEach(mutation => {
                     Array.from(mutation.addedNodes).forEach(addedNode => {
-                        if(addedNode.nodeType === Node.ELEMENT_NODE) {
-                            if(addedNode.matches(selector)) {
+                        if (addedNode.nodeType === Node.ELEMENT_NODE) {
+                            if (addedNode.matches(selector)) {
                                 callback(addedNode);
                                 me.disconnect();
                             }
