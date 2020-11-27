@@ -61,5 +61,21 @@ src
  ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({ num: 0 })`, el));
  ```
 
+ ### Hooks
+ ```
+ /*
+  example is created with destructing assigment
+ */
+ 
+ const [hook, setHook, hookEffect] = new Hook(1);
+ 
+ setHook(5);
+ console.log(hook.value); //5
+ 
+ hookEffect.push(MyComponent); //class: Class
+ 
+ setHook(hook.value * 3); //MyComponent will react on this change
+
+ ```
 
 
