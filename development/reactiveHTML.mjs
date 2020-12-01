@@ -179,9 +179,9 @@
 
             const thisProto = Object.getPrototypeOf(classLink);
 
-            applyLifecycle(thisProto.onComponentRender, classLink);
+            applyLifecycle(thisProto.onComponentRendered, classLink);
 
-            applyLifecycle(thisProto.onComponentMount, classLink);
+            applyLifecycle(thisProto.onComponentMounted, classLink);
 
             return mount(
                 rendered,
