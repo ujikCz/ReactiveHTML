@@ -80,7 +80,7 @@
     }
 
     function updateVnodeAndRealDOM(classLink) {
-        const newVNode = Object.getPrototypeOf(classLink).Element(classLink.props);
+        const newVNode = Object.getPrototypeOf(classLink).Element.bind(classLink)(classLink.props);
 
         if (classLink.Vnode.realDOM) {
 
@@ -124,6 +124,10 @@
 
                         updateVnodeAndRealDOM(this.classLink);
 
+                        applyLifecycle(thisProto.onVnodeUpdated, this.classLink);
+
+                        thisProto.onVnodeUpdated.bind(this.classLink)();
+
                         return true;
                     }
                 };
@@ -133,11 +137,14 @@
                 this.setValue = function (...assigments) {
 
                     updateVnodeAndRealDOM(this);
+                    applyLifecycle(thisProto.onVnodeUpdated, this);
 
                     return;
                 }
 
-                this.Vnode = thisProto.Element(this.props);
+                this.Vnode = thisProto.Element.bind(this)(this.props);
+
+                applyLifecycle(thisProto.onVnodeCreated, this);
 
                 return this;
             }
@@ -156,7 +163,7 @@
 
                     effect.forEach(scope => {
                         updateVnodeAndRealDOM(scope);
-
+                        applyLifecycle(Object.getPrototypeOf(scope).onVnodeUpdated, scope);
                     });
 
                     return this;
@@ -172,6 +179,12 @@
         Render: function (classLink, element) {
 
             const rendered = render(checkProto(classLink));
+
+            const thisProto = Object.getPrototypeOf(classLink);
+
+            applyLifecycle(thisProto.onComponentRender, classLink);
+
+            applyLifecycle(thisProto.onComponentMount, classLink);
 
             return mount(
                 rendered,
@@ -225,6 +238,14 @@
         element.appendChild(renderedVnode);
 
         return renderedVnode;
+
+    }
+
+    function applyLifecycle(lifecycle, classLink) {
+
+        if(lifecycle === undefined) return;
+
+        return lifecycle.bind(classLink)();
 
     }
 
@@ -287,6 +308,9 @@
             if (v !== oldAttrs[k]) {
                 attrsPatches.push(
                     function (node) {
+                        if(k === 'value') {
+                            node.value = v;
+                        } 
                         node.setAttribute(k, v);
                         return node;
                     }
