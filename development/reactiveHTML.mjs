@@ -80,7 +80,8 @@
     }
 
     function updateVnodeAndRealDOM(classLink) {
-        const newVNode = Object.getPrototypeOf(classLink).Element.bind(classLink)(classLink.props);
+        const classLinkProto = Object.getPrototypeOf(classLink);
+        const newVNode = classLinkProto.Element.bind(classLink)(classLink.props);
 
         if (classLink.Vnode.realDOM) {
 
@@ -90,6 +91,8 @@
         }
 
         Object.assign(classLink.Vnode, newVNode);
+
+        applyLifecycle(classLinkProto.onVnodeUpdated, classLink);
 
     }
 
@@ -124,10 +127,6 @@
 
                         updateVnodeAndRealDOM(this.classLink);
 
-                        applyLifecycle(thisProto.onVnodeUpdated, this.classLink);
-
-                        thisProto.onVnodeUpdated.bind(this.classLink)();
-
                         return true;
                     }
                 };
@@ -137,7 +136,6 @@
                 this.setValue = function (...assigments) {
 
                     updateVnodeAndRealDOM(this);
-                    applyLifecycle(thisProto.onVnodeUpdated, this);
 
                     return;
                 }
@@ -163,7 +161,6 @@
 
                     effect.forEach(scope => {
                         updateVnodeAndRealDOM(scope);
-                        applyLifecycle(Object.getPrototypeOf(scope).onVnodeUpdated, scope);
                     });
 
                     return this;
