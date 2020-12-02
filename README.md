@@ -12,10 +12,9 @@ src
  ## Hello world
  ```
  /* this example is create with htm.js */
- const { Render, CreateElement, Await } = ReactiveHTML;
- const html = htm.bind(CreateElement);
+ const html = htm.bind(ReactiveHTML.CreateElement);
  
- Await('#app', el => Render(html`<div>Hello, world!</div>`, el));
+ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(html`<div>Hello, world!</div>`, el));
  ```
  
  ## Components
@@ -35,7 +34,7 @@ src
    }
  }
  
- ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent()`, el));
+ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent, el));
  ```
  
  ### Component with props
@@ -58,7 +57,7 @@ src
    }
  }
  
- ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({ num: 0 })`, el));
+ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({ num: 0 }), el));
  ```
 
  ### Hooks
@@ -67,7 +66,7 @@ src
   example is created with destructing assigment
  */
  
- const [hook, setHook, hookEffect] = new Hook(1);
+ const [hook, setHook, hookEffect] = new ReactiveHTML.Hook(1);
  
  setHook(5);
  console.log(hook.value); //5
