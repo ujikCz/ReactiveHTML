@@ -52,25 +52,15 @@
 
     function checkProto(object) {
 
-        if (!isObject(object)) return object;
+        if (!isObject(object) || !Object.getPrototypeOf(object) || !Object.getPrototypeOf(Object.getPrototypeOf(object)) ) return object;
 
-        let proto = Object.getPrototypeOf(object);
-        if (proto) {
-
-            proto = Object.getPrototypeOf(proto);
-
-            if (proto) {
-
-                proto = proto.constructor;
-
-                if (proto.name === 'Component') {
-                    object.Vnode.realDOM = null;
-                    return object.Vnode;
-                }
-                return object;
-            }
-            return object;
+        let proto = Object.getPrototypeOf(Object.getPrototypeOf(object));
+        
+        if (proto.constructor.name === 'Component' && Object.getPrototypeOf(proto).isPrototypeOf(ReactiveHTML)) {
+            object.Vnode.realDOM = null;
+            return object.Vnode;
         }
+
         return object;
 
     }
@@ -154,12 +144,12 @@
             constructor(value) {
 
                 this.value = value;
-                const effect = [];
+                this.effect = [];
 
                 const setter = (function (newValue) {
                     this.value = newValue;
 
-                    effect.forEach(scope => {
+                    this.effect.forEach(scope => {
                         updateVnodeAndRealDOM(scope);
                     });
 
@@ -167,7 +157,24 @@
                 }).bind(this);
 
 
-                return [this, setter, effect];
+                return [this, setter];
+
+            }
+
+            useHook(...hookInvokers) {
+
+                this.effect.push(...hookInvokers);
+                return this;
+
+            }
+
+            removeHook(...hookInvokers) {
+
+                hookInvokers.forEach(hookInvoker => {
+                    this.effect.splice(this.effect.indexOf(hookInvoker));
+                });
+
+                return this;
 
             }
 
@@ -343,22 +350,22 @@
 
         const additionalPatches = [];
         for (const additionalVChild of newVChildren.slice(oldVChildren.length)) {
-            additionalPatches.push($node => {
-                $node.appendChild(render(additionalVChild));
-                return $node;
+            additionalPatches.push(function(node) {
+                node.appendChild(render(additionalVChild));
+                return node;
             });
         }
 
-        return $parent => {
-            for (const [patch, child] of zip(childPatches, $parent.childNodes)) {
+        return function(parent) {
+            for (const [patch, child] of zip(childPatches, parent.childNodes)) {
                 patch(child);
             }
 
             for (const patch of additionalPatches) {
-                patch($parent);
+                patch(parent);
             }
 
-            return $parent;
+            return parent;
         };
     };
 
@@ -400,29 +407,29 @@
     const diff = (vOldNode, vNewNode) => {
 
         if (vNewNode === undefined) {
-            return $node => {
-                $node.remove();
+            return function(node) {
+                node.remove();
                 return undefined;
             };
         }
 
         if (!isObject(vOldNode) || !isObject(vNewNode)) {
             if (vOldNode !== vNewNode) {
-                return $node => {
-                    const $newNode = render(vNewNode);
-                    $node.replaceWith($newNode);
-                    return $newNode;
+                return function(node) {
+                    const newNode = render(vNewNode);
+                    node.replaceWith(newNode);
+                    return newNode;
                 };
             } else {
-                return $node => undefined;
+                return node => undefined;
             }
         }
 
         if (vOldNode.tagName !== vNewNode.tagName) {
-            return $node => {
-                const $newNode = render(vNewNode);
-                $node.replaceWith($newNode);
-                return $newNode;
+            return function(node) {
+                const newNode = render(vNewNode);
+                node.replaceWith(newNode);
+                return newNode;
             };
         }
 
@@ -430,11 +437,11 @@
         const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
         const patchStyles = diffStyles(vOldNode.styles, vNewNode.styles);
 
-        return $node => {
-            patchAttrs($node);
-            patchChildren($node);
-            patchStyles($node);
-            return $node;
+        return function(node) {
+            patchAttrs(node);
+            patchChildren(node);
+            patchStyles(node);
+            return node;
         };
     };
 
