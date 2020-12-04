@@ -77,9 +77,12 @@ src
  setHook(5);
  console.log(hook.value); //5
  
- hook.useHook(MyComponent);
+ hook.hookOn(MyComponent);
  
  setHook(hook.value * 3); //MyComponent will react on this change
+ 
+ //to remove hook on component
+ hook.unHook(MyComponent);
 
  ```
 
