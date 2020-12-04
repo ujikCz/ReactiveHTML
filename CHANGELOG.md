@@ -40,3 +40,22 @@ class myComponent extends ReactiveHTML.Component {
 
 #### value attribute v 1.0.6
 value attribute now on update component set value attribute and value property on element
+
+#### hooks v 1.0.7
+hooks are now array with object and setter function   
+```
+const [hook, setHook] = new ReactiveHTML.Hook(1);
+
+setHook(5);
+
+//hook.value === 5
+
+//add component to that hook
+
+hook.useHook(MyComponent: Class, ...): Hook;
+
+//remove component to that hook
+
+hook.removeHook(MyComponent: Class, ...): Hook;
+
+```
