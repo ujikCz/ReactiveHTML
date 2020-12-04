@@ -59,3 +59,64 @@ hook.useHook(MyComponent: Class, ...): Hook;
 hook.removeHook(MyComponent: Class, ...): Hook;
 
 ```
+
+#### hooks v 1.0.8
+added hookOn and unHook method
+```
+const [hook, setHook] = new ReactiveHTML.Hook(1);
+
+setHook(5);
+
+//hook.value === 5
+
+//add component to that hook
+
+hook.hookOn(MyComponent: Class, ...): Hook;
+
+//remove component to that hook
+
+hook.unHook(MyComponent: Class, ...): Hook;
+
+```
+
+#### lifecycles v 1.0.8
+
+```
+class myComponent extends ReactiveHTML.Component {
+  constructor(props){
+    super(props);
+  }
+  
+  //changed names of lifecycles
+  
+  onComponentCreate() {
+    console.log(this);
+  }
+  
+  onComponentUpdate() {
+    console.log(this);
+  }
+  
+  onComponentRendered() {
+    console.log(this);
+  }
+  
+  onComponentMounted() {
+    console.log(this);
+  }
+  
+  //new lifecycles
+  
+  onComponentHook() {
+    console.log(this);
+  }
+  
+  onComponentUnHook() {
+    console.log(this);
+  }
+  
+  Element(props){
+    return html`<div>Hello, world!</div>`
+  }
+}
+```
