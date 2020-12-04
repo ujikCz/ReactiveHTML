@@ -72,12 +72,12 @@ src
   example is created with destructing assigment
  */
  
- const [hook, setHook, hookEffect] = new ReactiveHTML.Hook(1);
+ const [hook, setHook] = new ReactiveHTML.Hook(1);
  
  setHook(5);
  console.log(hook.value); //5
  
- hookEffect.push(MyComponent); //class: Class
+ hook.useHook(MyComponent);
  
  setHook(hook.value * 3); //MyComponent will react on this change
 
