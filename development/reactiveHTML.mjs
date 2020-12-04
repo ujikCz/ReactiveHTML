@@ -82,7 +82,7 @@
 
         Object.assign(classLink.Vnode, newVNode);
 
-        applyLifecycle(classLinkProto.onVnodeUpdated, classLink);
+        applyLifecycle(classLinkProto.onComponentUpdate, classLink);
 
     }
 
@@ -132,7 +132,7 @@
 
                 this.Vnode = thisProto.Element.bind(this)(this.props);
 
-                applyLifecycle(thisProto.onVnodeCreated, this);
+                applyLifecycle(thisProto.onComponentCreate, this);
 
                 return this;
             }
@@ -161,23 +161,36 @@
 
             }
 
-            useHook(...hookInvokers) {
+            hookOn(...hookInvokers) {
 
                 this.effect.push(...hookInvokers);
-                return this;
-
-            }
-
-            removeHook(...hookInvokers) {
 
                 hookInvokers.forEach(hookInvoker => {
-                    this.effect.splice(this.effect.indexOf(hookInvoker));
+
+                    applyLifecycle(Object.getPrototypeOf(hookInvoker).onComponentHook, hookInvoker);
+
                 });
 
                 return this;
 
             }
 
+            unHook(...hookInvokers) {
+
+                hookInvokers.forEach(hookInvoker => {
+                    this.effect.splice(this.effect.indexOf(hookInvoker));
+                    applyLifecycle(Object.getPrototypeOf(hookInvoker).onComponentUnHook, hookInvoker);
+                });
+
+                return this;
+
+            }
+
+            isUnHooked(hookInvoker) {
+
+                return !this.effect.find(search => search === hookInvoker);
+
+            }
         },
 
         Render: function (classLink, element) {
@@ -235,6 +248,7 @@
 
         }
 
+        
     };
 
     function mount(renderedVnode, element) {
