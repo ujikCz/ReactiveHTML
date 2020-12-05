@@ -99,7 +99,7 @@
 
                     get(target, key, receiver) {
 
-                        if (isObject(target[key]) && target[key].constructor.name === 'Object') {
+                        if ( isObject(target[key]) && (target[key].constructor.name === 'Object' || Array.isArray(target[key])) ) {
 
                             return new Proxy(target[key], validator);
 
