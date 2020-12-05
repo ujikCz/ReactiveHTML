@@ -97,11 +97,11 @@ class myComponent extends ReactiveHTML.Component {
     console.log(this);
   }
   
-  onComponentRendered() {
+  onComponentRender() {
     console.log(this);
   }
   
-  onComponentMounted() {
+  onComponentMount() {
     console.log(this);
   }
   
@@ -120,3 +120,28 @@ class myComponent extends ReactiveHTML.Component {
   }
 }
 ```
+
+#### Dispatcher v 1.0.9
+dispatcher is element on website that is dispatcher of component   
+first parameter is string that is element tag name on website and second is component class
+```
+
+new ReactiveHTML.Dispatcher("dispatchComponent": String, MyComponent: Class);
+
+<dispatchComponent></dispatchComponent>
+
+```   
+this element is now MyComponent and has its reactivity
+
+
+#### Dispatcher with props v 1.0.9
+to create dispatcher element with props add props to element attributes   
+```
+
+<dispatchComponent start="5" stop="10" array="[1, 2, 3]" object="{ time: new Date() }" func="function(){ alert("Hello"); }"></dispatchComponent>
+
+```
+props object in component class has now that values and of course it is reactive
+
+
+
