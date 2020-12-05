@@ -85,5 +85,26 @@ src
  hook.unHook(MyComponent);
 
  ```
+## Dispatcher
+### Dispatcher 
+dispatcher is element on website that is dispatcher of component   
+first parameter is string that is element tag name on website and second is component class
+```
 
+new ReactiveHTML.Dispatcher("dispatchComponent", MyComponent);
+
+<dispatchComponent></dispatchComponent>
+
+```   
+this element is now MyComponent and has its reactivity   
+
+### Dispatcher with props
+
+to create dispatcher element with props add props to element attributes   
+```
+
+<dispatchComponent start="5" stop="10" array="[1, 2, 3]" object="{ time: new Date() }" func="function(){ alert("Hello"); }"></dispatchComponent>
+
+```
+props object in component class has now that values and of course it is reactive
 
