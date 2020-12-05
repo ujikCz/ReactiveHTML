@@ -123,13 +123,6 @@
 
                 this.props = new Proxy(props, validator);
 
-                this.setValue = function (...assigments) {
-
-                    updateVnodeAndRealDOM(this);
-
-                    return;
-                }
-
                 this.Vnode = thisProto.Element.bind(this)(this.props);
 
                 applyLifecycle(thisProto.onComponentCreate, this);
@@ -167,7 +160,7 @@
 
                 hookInvokers.forEach(hookInvoker => {
 
-                    applyLifecycle(Object.getPrototypeOf(hookInvoker).onComponentHook, hookInvoker);
+                    applyLifecycle(Object.getPrototypeOf(hookInvoker).onComponentHook, hookInvoker, this);
 
                 });
 
@@ -179,7 +172,9 @@
 
                 hookInvokers.forEach(hookInvoker => {
                     this.effect.splice(this.effect.indexOf(hookInvoker));
-                    applyLifecycle(Object.getPrototypeOf(hookInvoker).onComponentUnHook, hookInvoker);
+
+                    applyLifecycle(Object.getPrototypeOf(hookInvoker).onComponentUnHook, hookInvoker, this);
+
                 });
 
                 return this;
@@ -193,19 +188,42 @@
             }
         },
 
-        Render: function (classLink, element) {
+        Dispatcher: class {
+
+            constructor(elementTagName, component) {
+
+                ReactiveHTML.Await(elementTagName, el => {
+
+                    const dispatcherProps = {};
+
+                    Array.from(el.attributes).forEach(attributeOfElementDispatcher => {
+
+                        dispatcherProps[attributeOfElementDispatcher.nodeName] =  new Function(`"use strict"; return(${ attributeOfElementDispatcher.nodeValue })`)();
+
+                    });
+
+                    return ReactiveHTML.Render(new component(dispatcherProps), el, true);
+
+                });
+
+            }
+
+        },
+
+        Render: function (classLink, element, type = false) {
 
             const rendered = render(checkProto(classLink));
 
             const thisProto = Object.getPrototypeOf(classLink);
 
-            applyLifecycle(thisProto.onComponentRendered, classLink);
+            applyLifecycle(thisProto.onComponentRender, classLink);
 
-            applyLifecycle(thisProto.onComponentMounted, classLink);
+            applyLifecycle(thisProto.onComponentMount, classLink);
 
             return mount(
                 rendered,
-                element
+                element,
+                type
             );
 
         },
@@ -251,19 +269,23 @@
         
     };
 
-    function mount(renderedVnode, element) {
+    function mount(renderedVnode, element, type) {
 
-        element.appendChild(renderedVnode);
+        if(!type) {
+            element.appendChild(renderedVnode);
+        } else {
+            element.replaceWith(renderedVnode);
+        }
 
         return renderedVnode;
 
     }
 
-    function applyLifecycle(lifecycle, classLink) {
+    function applyLifecycle(lifecycle, classLink, ...args) {
 
         if(lifecycle === undefined) return;
 
-        return lifecycle.bind(classLink)();
+        return lifecycle.bind(classLink)(...args);
 
     }
 
