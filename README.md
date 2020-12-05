@@ -66,7 +66,7 @@ src
  ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({ num: 0 }), el));
  ```
 
- ### Hooks
+ ## Hooks
  ```
  /*
   example is created with destructing assigment
