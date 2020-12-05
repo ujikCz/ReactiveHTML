@@ -1,6 +1,6 @@
 {
   "name": "reactive-html",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Simple reactive Virtual DOM elements for building complex reactive UI",
   "main": "src/ReactiveHTML.min.js",
   "scripts": {
