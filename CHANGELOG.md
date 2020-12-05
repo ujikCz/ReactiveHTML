@@ -126,7 +126,7 @@ dispatcher is element on website that is dispatcher of component
 first parameter is string that is element tag name on website and second is component class
 ```
 
-new ReactiveHTML.Dispatcher("dispatchComponent": String, MyComponent: Class);
+new ReactiveHTML.Dispatcher("dispatchComponent", MyComponent);
 
 <dispatchComponent></dispatchComponent>
 
@@ -142,6 +142,8 @@ to create dispatcher element with props add props to element attributes
 
 ```
 props object in component class has now that values and of course it is reactive
+
+#### removed this.setValue method v 1.0.9
 
 
 
