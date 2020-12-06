@@ -145,5 +145,8 @@ props object in component class has now that values and of course it is reactive
 
 #### removed this.setValue method v 1.0.9
 
+#### fixed issues v 1.1.0
+
+
 
 
