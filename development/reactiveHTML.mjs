@@ -19,6 +19,10 @@
 
     }
 
+    /*
+     *   convert attrs object to 3 objects [ attrs, events, styles ] 
+     */
+
     function filterAttrs(attrs) {
 
         let events = {};
@@ -44,18 +48,27 @@
 
     }
 
+    /*
+     *   flat array as much as possible
+     *   if map method is used on array inside component 
+     */
+
     function flatten(children) {
         return children.reduce(function (flat, toFlatten) {
             return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
         }, []);
     }
 
+    /*
+     *   check __proto__ of object, if it is component return its virtualNode else return object 
+     */
+
     function checkProto(object) {
 
-        if (!isObject(object) || !Object.getPrototypeOf(object) || !Object.getPrototypeOf(Object.getPrototypeOf(object)) ) return object;
+        if (!isObject(object) || !Object.getPrototypeOf(object) || !Object.getPrototypeOf(Object.getPrototypeOf(object))) return object;
 
         let proto = Object.getPrototypeOf(Object.getPrototypeOf(object));
-        
+
         if (proto.constructor.name === 'Component' && Object.getPrototypeOf(proto).isPrototypeOf(ReactiveHTML)) {
             object.Vnode.realDOM = null;
             return object.Vnode;
@@ -65,9 +78,17 @@
 
     }
 
+    /*
+     *   convert children of virtualNode into virtualNodes if components
+     */
+
     function convertClassToVnode(children) {
         return children.map(f => checkProto(f));
     }
+
+    /*
+     *   updates virtualNode and its realNode (update whole component)
+     */
 
     function updateVnodeAndRealDOM(classLink) {
         const classLinkProto = Object.getPrototypeOf(classLink);
@@ -86,7 +107,15 @@
 
     }
 
+    /*
+     *   whole library is here
+     */
+
     const ReactiveHTML = {
+
+        /*
+         *   component class that is ready to extends from it 
+         */
 
         Component: class {
 
@@ -94,12 +123,17 @@
 
                 const thisProto = Object.getPrototypeOf(this);
 
+                /*
+                 *   validator for props (Proxy validator)
+                 *   detect changes and apply changes into virtualNode and realNode 
+                 */
+
                 const validator = {
                     classLink: this,
 
                     get(target, key, receiver) {
 
-                        if ( isObject(target[key]) && (target[key].constructor.name === 'Object' || Array.isArray(target[key])) ) {
+                        if (isObject(target[key]) && (target[key].constructor.name === 'Object' || Array.isArray(target[key]))) {
 
                             return new Proxy(target[key], validator);
 
@@ -123,6 +157,11 @@
 
                 this.props = new Proxy(props, validator);
 
+                /*
+                 *   call Element method inside extended class component
+                 *   that creates virtualNode 
+                 */
+
                 this.Vnode = thisProto.Element.bind(this)(this.props);
 
                 applyLifecycle(thisProto.onComponentCreate, this);
@@ -131,6 +170,11 @@
             }
 
         },
+
+        /*
+         *   Hook is reactive variable
+         *   on that variable can react more components at one time
+         */
 
         Hook: class {
 
@@ -154,6 +198,10 @@
 
             }
 
+            /*
+             *   add components that can react on this hook changes 
+             */
+
             hookOn(...hookInvokers) {
 
                 this.effect.push(...hookInvokers);
@@ -168,6 +216,11 @@
 
             }
 
+            /*
+             *   remove components
+             *   removed components can't react on this hook until you add it back
+             */
+
             unHook(...hookInvokers) {
 
                 hookInvokers.forEach(hookInvoker => {
@@ -181,6 +234,11 @@
 
             }
 
+            /*
+             *   if component is not hooked at this hook return true
+             *   else return false
+             */
+
             isUnHooked(hookInvoker) {
 
                 return !this.effect.find(search => search === hookInvoker);
@@ -188,27 +246,52 @@
             }
         },
 
+        /*
+         *   creates dispatcher that is static HTML element
+         *   that element change to component immediately 
+         */
+
         Dispatcher: class {
 
             constructor(elementTagName, component) {
 
-                ReactiveHTML.Await(elementTagName, el => {
+                AwaitForElement(elementTagName, el => {
 
                     const dispatcherProps = {};
 
+                    /*
+                     *   convert all HTML element dispatcher attributes to prop (data)  
+                     */
+
                     Array.from(el.attributes).forEach(attributeOfElementDispatcher => {
 
-                        dispatcherProps[attributeOfElementDispatcher.nodeName] =  new Function(`"use strict"; return(${ attributeOfElementDispatcher.nodeValue })`)();
+                        dispatcherProps[attributeOfElementDispatcher.nodeName] = new Function(`"use strict"; return(${ attributeOfElementDispatcher.nodeValue })`)();
 
                     });
 
                     return ReactiveHTML.Render(new component(dispatcherProps), el, true);
 
-                });
+                }, false, false);
 
             }
 
         },
+
+        /*
+         *   this constants helps to make Render function clearer (přehlednější)
+         */
+
+        RenderConstants: {
+
+            REPLACE_WITH_COMPONENT: true,
+            APPEND_COMPONENT: false,
+
+        },
+
+        /*
+         *   render virtualNode to real element
+         *   type can determine if virtualNode will be appended or replaced with this real element 
+         */
 
         Render: function (classLink, element, type = false) {
 
@@ -228,27 +311,20 @@
 
         },
 
+        /*
+         *   wait until elements is parsed by HTML parser
+         *   then call callback function  
+         */
+
         Await: function (selector, callback) {
 
-            const observer = new MutationObserver((mutations, me) => {
-                mutations.forEach(mutation => {
-                    Array.from(mutation.addedNodes).forEach(addedNode => {
-                        if (addedNode.nodeType === Node.ELEMENT_NODE) {
-                            if (addedNode.matches(selector)) {
-                                callback(addedNode);
-                                me.disconnect();
-                            }
-                        }
-                    });
-                });
-            });
-
-            observer.observe(document.documentElement, {
-                childList: true,
-                subtree: true
-            });
+            AwaitForElement(selector, callback);
 
         },
+
+        /*
+         *   creates virtualNode 
+         */
 
         CreateElement: function (tagName, attrs, ...children) {
 
@@ -266,12 +342,43 @@
 
         }
 
-        
     };
+
+    /*
+     *   wait until elements is parsed by HTML parser
+     *   then call callback function  
+     */
+
+    function AwaitForElement(selector, callback, disconnect = true, mode = true) {
+
+        const observer = new MutationObserver((mutations, me) => {
+            mutations.forEach(mutation => {
+                Array.from(mutation.addedNodes).forEach(addedNode => {
+                    if (addedNode.nodeType === Node.ELEMENT_NODE) {
+                        if ((mode && addedNode.matches(selector)) || (addedNode.localName === selector)) {
+                            callback(addedNode);
+                            if (disconnect) me.disconnect();
+                        }
+                    }
+                });
+            });
+        });
+
+        observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+        });
+
+    }
+
+    /*
+     *   mount rendered element to page
+     *   rendered element can be appended or replace the real HTML element
+     */
 
     function mount(renderedVnode, element, type) {
 
-        if(!type) {
+        if (!type) {
             element.appendChild(renderedVnode);
         } else {
             element.replaceWith(renderedVnode);
@@ -281,13 +388,23 @@
 
     }
 
+    /*
+     *   trigger lifecycle method of component
+     *   it can be triggered with additional arguments
+     */
+
     function applyLifecycle(lifecycle, classLink, ...args) {
 
-        if(lifecycle === undefined) return;
+        if (lifecycle === undefined) return;
 
         return lifecycle.bind(classLink)(...args);
 
     }
+
+    /*
+     *   render the virtualNode 
+     *   rendered virtualNode is not mounted, but it is now HTML element
+     */
 
     function render(vDOM) {
 
@@ -320,6 +437,10 @@
 
             });
 
+            /*
+             *   if it is component, save its real element 
+             */
+
             if (vDOM.realDOM === null) vDOM.realDOM = el;
 
             return el;
@@ -328,6 +449,10 @@
 
     }
 
+    /*
+     *   fomate patch and element besides
+     *   do it for minimal times (means if patches are smaller than elements, do it only for patches and the same for elements)
+     */
 
     function zip(first, second) {
 
@@ -340,6 +465,11 @@
 
     }
 
+    /*
+     *   check differences between old virtualNode attributes and new one
+     *   apply changes to realNode
+     */
+
     function diffAttrs(oldAttrs, newAttrs) {
 
         const attrsPatches = [];
@@ -348,9 +478,9 @@
             if (v !== oldAttrs[k]) {
                 attrsPatches.push(
                     function (node) {
-                        if(k === 'value') {
+                        if (k === 'value') {
                             node.value = v;
-                        } 
+                        }
                         node.setAttribute(k, v);
                         return node;
                     }
@@ -378,21 +508,34 @@
 
     }
 
+    /*
+     *   check differences between old virtualNode childNodes and new one
+     *   apply changes to realNode
+     */
+
     const diffChildren = (oldVChildren, newVChildren) => {
         const childPatches = [];
         oldVChildren.forEach((oldVChild, i) => {
             childPatches.push(diff(oldVChild, newVChildren[i]));
         });
 
+        /*
+         *   if that virtualNode is not in old virtualNode parent, but in new it is, append it
+         */
+
         const additionalPatches = [];
         for (const additionalVChild of newVChildren.slice(oldVChildren.length)) {
-            additionalPatches.push(function(node) {
+            additionalPatches.push(function (node) {
                 node.appendChild(render(additionalVChild));
                 return node;
             });
         }
 
-        return function(parent) {
+        /*
+         *   apply all childNodes changes to parent realNode
+         */
+
+        return function (parent) {
             for (const [patch, child] of zip(childPatches, parent.childNodes)) {
                 patch(child);
             }
@@ -404,6 +547,11 @@
             return parent;
         };
     };
+
+    /*
+     *   check differences between old virtualNode styles and new one
+     *   apply changes to realNode
+     */
 
     const diffStyles = (oldStyles, newStyles) => {
 
@@ -440,18 +588,32 @@
 
     }
 
+    /*
+     *   check basic differences between old virtualNode and new one
+     *   check attributes, events and styles changes
+     *   apply all these changes to realNode
+     */
+
     const diff = (vOldNode, vNewNode) => {
 
+        /*
+         *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
+         */
+
         if (vNewNode === undefined) {
-            return function(node) {
+            return function (node) {
                 node.remove();
                 return undefined;
             };
         }
 
+        /*
+         *   if one of virtualNodes is not virtualNode (means Number or String) replace it as textNode
+         */
+
         if (!isObject(vOldNode) || !isObject(vNewNode)) {
             if (vOldNode !== vNewNode) {
-                return function(node) {
+                return function (node) {
                     const newNode = render(vNewNode);
                     node.replaceWith(newNode);
                     return newNode;
@@ -461,19 +623,31 @@
             }
         }
 
+        /*
+         *   if tagNames of virtualNodes doesn't match replace it with new rendered virtualNode 
+         */
+
         if (vOldNode.tagName !== vNewNode.tagName) {
-            return function(node) {
+            return function (node) {
                 const newNode = render(vNewNode);
                 node.replaceWith(newNode);
                 return newNode;
             };
         }
 
+        /*
+         *   creates all patch functions from diffing functions 
+         */
+
         const patchAttrs = diffAttrs(vOldNode.attrs, vNewNode.attrs);
         const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
         const patchStyles = diffStyles(vOldNode.styles, vNewNode.styles);
 
-        return function(node) {
+        /*
+         *   patch the real element with all patch functions 
+         */
+
+        return function (node) {
             patchAttrs(node);
             patchChildren(node);
             patchStyles(node);
