@@ -3,56 +3,47 @@
   !observable_module(!1);
 */        
 
-class Observable {
+        class Observable {
 
-            constructor(initvalue, resolutionFunc) {
+            constructor(resolutionFunc) {
 
                 this.resolutionFunc = resolutionFunc;
-                this.initValue = this.value = initvalue;
-                this.disconnected = false;
-
-                this.resolutionFunc.bind(this)(this.value, this.initValue, this.initValue);
 
                 return this;
 
             }
 
-            subscribe(newValue) {
+            subscribe(setter) {
 
-                if(this.disconnected) return this;
+                if (typeof setter !== 'function') return this;
 
-                const valueBefore = this.value;
-                this.value = newValue;
-                this.resolutionFunc.bind(this)(this.value, valueBefore, this.initValue);
+                Object.getPrototypeOf(setter).assign = function (assignNewValue) {
 
-                return this;
+                    return this(assignNewValue);
 
-            }
-
-            disconnect(lastCallback) {
-
-                this.disconnected = true;
-
-                if(lastCallback === undefined || lastCallback === null) {
-                    return this;
                 }
 
-                lastCallback.bind(this)(this.value, this.initValue);
-
-                return this;
+                this.resolutionFunc.apply(this, [setter]);
 
             }
 
         }
 
-        let a, b;
-        const gg = new Observable(8, function(state, before, init) {
+        const gg = new Observable(function (sub) {
+            setInterval(function(){
+                sub.assign(Math.random());
+            }, 1000);
 
-            console.log("changed", state, before, init);
+        });
 
-            a = state;
-            b = state + 1;
+        gg.subscribe(a => {
 
-        }); 
-        
-        gg.subscribe(10);
+            console.log("a", a);
+
+        });
+
+        gg.subscribe(b => {
+
+            console.log("b", b);
+
+        });
