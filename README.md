@@ -2,9 +2,9 @@
 Simple reactive Virtual DOM elements for building complex reactive UI
 
 ## Download
-
+```
  npm i reactivehtml
- 
+ ```
  ## Compatibility   
  Only browsers that supports ES6 (classes, proxies)   
  
