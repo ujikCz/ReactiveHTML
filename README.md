@@ -108,3 +108,27 @@ to create dispatcher element with props add props to element attributes
 ```
 props object in component class has now that values and of course it is reactive
 
+### Observables
+
+observe primitives and trigger changes in virtual node
+
+```
+let value = 0;
+const observe = new ReactiveHTML.Observable(function(subscriber){
+  
+    subscriber.assign(5);
+  
+});
+
+observe.subscribe(function(state){
+
+    console.log(state); //5
+    value = state;
+  
+});
+
+observe.effect(component: Class);
+```
+
+value is now reactive and components will react on value changes
+
