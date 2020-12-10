@@ -65,23 +65,30 @@ Simple reactive Virtual DOM elements for building complex reactive UI
  ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({ num: 0 }), el));
  ```
 
- ## Hooks
+ ## States
+ States won't change do default value on parent rerender, props will 
  ```
- /*
-  example is created with destructing assigment
- */
- 
- const [hook, setHook] = new ReactiveHTML.Hook(1);
- 
- setHook(5);
- console.log(hook.value); //5
- 
- hook.hookOn(MyComponent);
- 
- setHook(hook.value * 3); //MyComponent will react on this change
- 
- //to remove hook on component
- hook.unHook(MyComponent);
+ class myComponent extends ReactiveHTML.Component {
+   constructor(props){
+     super(props);
+     
+     console.log(this.states.num); //5
+   }
+   
+   setStates(){
+   
+      return {
+      
+         num: 5
+       
+      }
+     
+   }
+   
+   Element(props, states){
+     return html`<div>${ states.num }</div>`
+   }
+ }
 
  ```
 ## Dispatcher
