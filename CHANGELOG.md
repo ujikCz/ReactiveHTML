@@ -170,5 +170,37 @@ observe.effect(component: Class);
 ```
 
 
+#### hooks removed v 1.1.6
+
+#### hook component lifecycles removed v 1.1.6
+
+#### states added v 1.1.6
+
+states are similar to props, it is proxy reactive object, but on another new instance of the same component states won't change to default
+
+```
+class myComponent extends ReactiveHTML.Component {
+  constructor(props){
+    super(props);
+  }
+  
+  setStates(){
+  
+      return {
+      
+          num: 5
+        
+      }
+    
+  }
+  
+  Element(props, states){
+    return html`<div>Hello, world!</div>`
+  }
+}
+```
+
+
+
 
 
