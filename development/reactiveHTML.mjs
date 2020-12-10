@@ -19,6 +19,12 @@
 
     }
 
+    function getProto(object) {
+
+        return Object.getPrototypeOf(object);
+
+    }
+
     /*
      *   convert attrs object to 3 objects [ attrs, events, styles ] 
      */
@@ -65,11 +71,11 @@
 
     function checkProto(object) {
 
-        if (!isObject(object) || !Object.getPrototypeOf(object) || !Object.getPrototypeOf(Object.getPrototypeOf(object))) return object;
+        if (!isObject(object) || !getProto(object) || !getProto(getProto(object))) return object;
 
-        let proto = Object.getPrototypeOf(Object.getPrototypeOf(object));
+        let proto = getProto(getProto(object));
 
-        if (proto.constructor.name === 'Component' && Object.getPrototypeOf(proto).isPrototypeOf(ReactiveHTML)) {
+        if (proto.constructor.name === 'Component' && getProto(proto).isPrototypeOf(ReactiveHTML)) {
             object.Vnode.realDOM = null;
             return object.Vnode;
         }
@@ -91,8 +97,8 @@
      */
 
     function updateVnodeAndRealDOM(classLink) {
-        const classLinkProto = Object.getPrototypeOf(classLink);
-        const newVNode = classLinkProto.Element.bind(classLink)(classLink.props);
+        const classLinkProto = getProto(classLink);
+        const newVNode = classLinkProto.Element.bind(classLink)(classLink.props, classLink.states);
 
         if (classLink.Vnode.realDOM) {
 
@@ -121,13 +127,6 @@
 
             constructor(props = {}) {
 
-                const thisProto = Object.getPrototypeOf(this);
-
-                /*
-                 *   validator for props (Proxy validator)
-                 *   detect changes and apply changes into virtualNode and realNode 
-                 */
-
                 const validator = {
                     classLink: this,
 
@@ -155,97 +154,52 @@
                     }
                 };
 
-                this.props = new Proxy(props, validator);
 
                 /*
-                 *   call Element method inside extended class component
-                 *   that creates virtualNode 
+                 *   validator for props and states (Proxy validator)
+                 *   detect changes and apply changes into virtualNode and realNode 
                  */
 
-                this.Vnode = thisProto.Element.bind(this)(this.props);
 
-                applyLifecycle(thisProto.onComponentCreate, this);
+                this.props = new Proxy(props, validator);
 
-                return this;
-            }
+                if (getProto(this).setStates) {
 
-        },
+                    this.states = getProto(this).setStates.bind(this)();
 
-        /*
-         *   Hook is reactive variable
-         *   on that variable can react more components at one time
-         */
+                } else {
 
-        Hook: class {
+                    this.states = {};
 
-            constructor(value) {
+                }
 
-                this.value = value;
-                this.effect = [];
+                this.states = new Proxy(this.states, validator);
 
-                const setter = (function (newValue) {
-                    this.value = newValue;
+                function _init_() {
 
-                    this.effect.forEach(component => {
+                    const thisProto = getProto(this);
 
-                        updateVnodeAndRealDOM(component);
+                    this.props = new Proxy(props, validator);
 
-                    });
+                    /*
+                     *   call Element method inside extended class component
+                     *   that creates virtualNode 
+                     */
+
+                    this.Vnode = thisProto.Element.bind(this)(this.props, this.states);
+
+                    applyLifecycle(thisProto.onComponentCreate, this);
 
                     return this;
-                }).bind(this);
 
+                }
 
-                return [this, setter];
+                _init_.bind(this)();
 
-            }
-
-            /*
-             *   add components that can react on this hook changes 
-             */
-
-            hookOn(...hookInvokers) {
-
-                this.effect.push(...hookInvokers);
-
-                hookInvokers.forEach(hookInvoker => {
-
-                    applyLifecycle(Object.getPrototypeOf(hookInvoker).onComponentHook, hookInvoker, this);
-
-                });
-
-                return this;
+                getProto(this).constructor = _init_.bind(this);
 
             }
 
-            /*
-             *   remove components
-             *   removed components can't react on this hook until you add it back
-             */
-
-            unHook(...hookInvokers) {
-
-                hookInvokers.forEach(hookInvoker => {
-                    this.effect.splice(this.effect.indexOf(hookInvoker));
-
-                    applyLifecycle(Object.getPrototypeOf(hookInvoker).onComponentUnHook, hookInvoker, this);
-
-                });
-
-                return this;
-
-            }
-
-            /*
-             *   if component is not hooked at this hook return true
-             *   else return false
-             */
-
-            isUnHooked(hookInvoker) {
-
-                return !this.effect.find(search => search === hookInvoker);
-
-            }
         },
 
         /*
@@ -256,7 +210,7 @@
 
             constructor(subscriber) {
 
-                if(typeof subscriber !== 'function') {
+                if (typeof subscriber !== 'function') {
 
 
                     throw Error(`Observable subscriber must be function, your subscriber has value: ${ subscriber }`);
@@ -264,7 +218,7 @@
                 }
 
                 this.subscriber = subscriber;
-                this.effectArray = [];
+                this.effectArray = new Set();
 
                 return this;
 
@@ -276,7 +230,7 @@
 
                 const componentEffectArr = this.effectArray;
 
-                Object.getPrototypeOf(setter).assign = function (assignNewValue) {
+                getProto(setter).assign = function (assignNewValue) {
 
                     this(assignNewValue);
                     componentEffectArr.forEach(component => {
@@ -297,7 +251,11 @@
 
             effect(...components) {
 
-                this.effectArray.push(...components);
+                components.forEach(component => {
+
+                    this.effectArray.add(component);
+
+                });
 
                 return this;
 
@@ -314,7 +272,7 @@
 
             constructor(elementTagName, component) {
 
-                AwaitForElement(elementTagName, function(el) {
+                AwaitForElement(elementTagName, function (el) {
 
                     const dispatcherProps = {};
 
@@ -356,7 +314,7 @@
 
             const rendered = render(checkProto(classLink));
 
-            const thisProto = Object.getPrototypeOf(classLink);
+            const thisProto = getProto(classLink);
 
             applyLifecycle(thisProto.onComponentRender, classLink);
 
