@@ -8,7 +8,7 @@
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
         typeof define === 'function' && define.amd ? define(factory) :
-        (global.ReactiveHTML = factory());
+        (global = global || self, global.ReactiveHTML = factory());
 }(this, function () {
 
     "use strict";
@@ -186,8 +186,10 @@
                 const setter = (function (newValue) {
                     this.value = newValue;
 
-                    this.effect.forEach(scope => {
-                        updateVnodeAndRealDOM(scope);
+                    this.effect.forEach(component => {
+
+                        updateVnodeAndRealDOM(component);
+
                     });
 
                     return this;
@@ -247,6 +249,63 @@
         },
 
         /*
+         *   observing and templating data
+         */
+
+        Observable: class {
+
+            constructor(subscriber) {
+
+                if(typeof subscriber !== 'function') {
+
+
+                    throw Error(`Observable subscriber must be function, your subscriber has value: ${ subscriber }`);
+
+                }
+
+                this.subscriber = subscriber;
+                this.effectArray = [];
+
+                return this;
+
+            }
+
+            subscribe(setter) {
+
+                if (typeof setter !== 'function') return this;
+
+                const componentEffectArr = this.effectArray;
+
+                Object.getPrototypeOf(setter).assign = function (assignNewValue) {
+
+                    this(assignNewValue);
+                    componentEffectArr.forEach(component => {
+
+                        updateVnodeAndRealDOM(component);
+
+                    });
+
+                    return this;
+
+                }
+
+                this.subscriber.apply(this, [setter]);
+
+                return this;
+
+            }
+
+            effect(...components) {
+
+                this.effectArray.push(...components);
+
+                return this;
+
+            }
+
+        },
+
+        /*
          *   creates dispatcher that is static HTML element
          *   that element change to component immediately 
          */
@@ -255,7 +314,7 @@
 
             constructor(elementTagName, component) {
 
-                AwaitForElement(elementTagName, el => {
+                AwaitForElement(elementTagName, function(el) {
 
                     const dispatcherProps = {};
 
