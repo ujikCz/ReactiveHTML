@@ -147,6 +147,28 @@ props object in component class has now that values and of course it is reactive
 
 #### fixed issues v 1.1.0
 
+#### added self in global factory function v 1.1.1
+
+#### added Observables v 1.1.1
+
+observe primitives and trigger changes in virtual node
+
+```
+const observe = new ReactiveHTML.Observable(function(subscriber){
+  
+    subscriber.assign(5);
+  
+});
+
+observe.subscribe(function(value){
+
+    console.log(value); //5
+  
+});
+
+observe.effect(component: Class);
+```
+
 
 
 
