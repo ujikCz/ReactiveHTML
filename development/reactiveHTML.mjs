@@ -164,7 +164,7 @@
 
                 if (getProto(this).setStates) {
 
-                    this.states = getProto(this).setStates.bind(this)();
+                    this.states = getProto(this).setStates.bind(this)(this.props);
 
                 } else {
 
