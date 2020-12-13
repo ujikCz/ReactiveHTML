@@ -4,7 +4,6 @@
     !This version is not recomended for production use
 */
 
-
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
         typeof define === 'function' && define.amd ? define(factory) :
@@ -179,7 +178,7 @@
 
                     const thisProto = getProto(this);
 
-                    this.props = new Proxy(props, validator);
+                    this.props = this.props || new Proxy(props, validator);
 
                     /*
                      *   call Element method inside extended class component
@@ -194,9 +193,9 @@
 
                 }
 
-                _init_.bind(this)();
-
                 getProto(this).constructor = _init_.bind(this);
+
+                return _init_.bind(this)();
 
             }
 
@@ -211,7 +210,6 @@
             constructor(subscriber) {
 
                 if (typeof subscriber !== 'function') {
-
 
                     throw Error(`Observable subscriber must be function, your subscriber has value: ${ subscriber }`);
 
@@ -233,6 +231,7 @@
                 getProto(setter).assign = function (assignNewValue) {
 
                     this(assignNewValue);
+                    
                     componentEffectArr.forEach(component => {
 
                         updateVnodeAndRealDOM(component);
@@ -272,7 +271,7 @@
 
             constructor(elementTagName, component) {
 
-                AwaitForElement(elementTagName, function (el) {
+                this.obs = AwaitForElement(elementTagName, function (el) {
 
                     const dispatcherProps = {};
 
@@ -289,6 +288,12 @@
                     return ReactiveHTML.Render(new component(dispatcherProps), el, true);
 
                 }, false, false);
+
+            }
+
+            disconnect() {
+
+                return this.obs.disconnect();
 
             }
 
@@ -385,6 +390,8 @@
             childList: true,
             subtree: true
         });
+
+        return observer;
 
     }
 
