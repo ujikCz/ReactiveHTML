@@ -17,7 +17,9 @@
     "UI",
     "observe",
     "javascript",
-    "html"
+    "html",
+    "front-end",
+    "web"
   ],
   "author": "Ludvik Prokopec <ludvik.prokopec@gmail.com>",
   "license": "MIT",
