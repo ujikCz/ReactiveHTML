@@ -6,7 +6,7 @@ Simple reactive Virtual DOM elements for building complex reactive UI
  npm i reactivehtml
  ```
  ## Compatibility   
- Only browsers that supports ES6 (classes, proxies)   
+ Only browsers that supports ES8 (classes, proxies, Object.entries)   
  
  ## About
  This library allows you to write components with html elements in javascript, so you can create conditional rendering or list rendering simply.   
