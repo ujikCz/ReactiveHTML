@@ -199,6 +199,8 @@ class myComponent extends ReactiveHTML.Component {
   }
 }
 ```
+#### bugs fixed v 1.1.7
+#### bugs fixed v 1.1.8
 
 
 
