@@ -52,8 +52,10 @@ Simple reactive Virtual DOM elements for building complex reactive UI
    constructor(props){
      super(props);
      
+     props = this.props;
+
      setInterval(function(){
-       this.props.num++;
+       props.num++;
      }, 1000);
    }
    
@@ -64,6 +66,151 @@ Simple reactive Virtual DOM elements for building complex reactive UI
  
  ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({ num: 0 }), el));
  ```
+
+## Events
+
+ ```
+ const html = htm.bind(ReactiveHTML.CreateElement);
+ 
+ class myComponent extends ReactiveHTML.Component {
+   constructor(props){
+     super(props);
+   }
+   
+   Element(props){
+     return html`<div onclick=${ (e) => ++this.props.num }>${ props.num }</div>`
+   }
+ }
+ 
+ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({ num: 0 }), el));
+ ```
+
+ ## Attributes
+
+ ```
+ const html = htm.bind(ReactiveHTML.CreateElement);
+ 
+class myComponent extends ReactiveHTML.Component {
+  constructor(props) {
+
+      props.id = "StaticIdProp";
+
+      super(props);
+
+      props = this.props;
+
+      setInterval(function () {
+          props.color = Math.random() * 360;
+          props.num++;
+      }, 1000);
+  }
+
+  Element(props) {
+      return html `<div id=${ props.id } style=${ { backgroundColor: `hsl(${ props.color }, 100%, 50%)` } }>${ props.num }</div>`
+  }
+}
+
+ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({
+  num: 0,
+  color: 0
+}), el));
+  ```
+
+## Conditional rendering
+
+ ```
+ const html = htm.bind(ReactiveHTML.CreateElement);
+ 
+class myComponent extends ReactiveHTML.Component {
+  constructor(props) {
+
+      super(props);
+
+      props = this.props;
+
+      setInterval(function () {
+          props.is = !props.is;
+      }, 1000);
+  }
+
+  Element(props) {
+      return html `
+      <div>
+        ${ props.is ? html`<h1>true</h1>` : html`<h6>false</h6>` }
+      </div>`
+  }
+}
+
+ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({
+  is: true
+}), el));
+  ```
+
+## List rendering
+
+ ```
+ const html = htm.bind(ReactiveHTML.CreateElement);
+ 
+class myComponent extends ReactiveHTML.Component {
+  constructor(props) {
+
+      super(props);
+
+      props = this.props;
+
+      setInterval(function () {
+          props.arr.push(props.arr.length + 1);
+      }, 1000);
+  }
+
+  Element(props) {
+      return html `
+      <div>
+        ${ props.arr.map(mapped => html`<div>${ mapped }</div>`) }
+      </div>`
+  }
+}
+
+ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({
+  arr: [1, 2, 3]
+}), el));
+  ```
+
+## Component inside component
+
+ ```
+ const html = htm.bind(ReactiveHTML.CreateElement);
+ 
+class Parent extends ReactiveHTML.Component {
+  constructor(props) {
+
+      super(props);
+  }
+
+  Element(props) {
+      return html `
+      <div>
+        ${ new Child }
+      </div>`
+  }
+}
+
+class Child extends ReactiveHTML.Component {
+  constructor(props) {
+
+      super(props);
+  }
+
+  Element(props) {
+      return html `
+      <div>
+        Hello, world!
+      </div>`
+  }
+}
+
+ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new Parent, el));
+  ```
 
  ## States
  States won't change do default value on parent rerender, props will 
@@ -106,7 +253,7 @@ this element is now MyComponent and has its reactivity
 
 ### Dispatcher with props
 
-to create dispatcher element with props add props to element attributes   
+to create dispatcher element with props add props as element attributes   
 ```
 
 <dispatchComponent start="5" stop="10" array="[1, 2, 3]" object="{ time: new Date() }" func="function(){ alert("Hello"); }"></dispatchComponent>
@@ -133,7 +280,7 @@ observe.subscribe(function(state){
   
 });
 
-observe.effect(component: Class);
+observe.effect(component);
 ```
 
 value is now reactive and components will react on value changes
