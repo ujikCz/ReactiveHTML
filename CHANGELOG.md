@@ -202,6 +202,8 @@ class myComponent extends ReactiveHTML.Component {
 #### bugs fixed v 1.1.7
 #### bugs fixed v 1.1.8
 
+#### added props as argument to setStates v 1.1.9
+
 
 
 
