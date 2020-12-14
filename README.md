@@ -5,8 +5,14 @@ Simple reactive Virtual DOM elements for building complex reactive UI
 ```
  npm i reactivehtml
  ```
+
+ ## HTM.js cdn
+```
+ https://cdnjs.com/libraries/htm
+ ```
+
  ## Compatibility   
- Only browsers that supports ES8 (classes, proxies, Object.entries)   
+ Only browsers that supports ES8 (classes, proxies, Object.entries, Object.values)   
  
  ## About
  This library allows you to write components with html elements in javascript, so you can create conditional rendering or list rendering simply.   
@@ -17,9 +23,9 @@ Simple reactive Virtual DOM elements for building complex reactive UI
  ## Hello world
  ```
  /* this example is create with htm.js */
- const html = htm.bind(ReactiveHTML.CreateElement);
+ const html = htm.bind(ReactiveHTML.createElement);
  
- ReactiveHTML.Await('#app', el => ReactiveHTML.Render(html`<div>Hello, world!</div>`, el));
+ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<div>Hello, world!</div>`, el));
  ```
  
  ## Components
@@ -27,7 +33,7 @@ Simple reactive Virtual DOM elements for building complex reactive UI
  ```
  /* this example is create with htm.js */
 
- const html = htm.bind(ReactiveHTML.CreateElement);
+ const html = htm.bind(ReactiveHTML.createElement);
  
  class myComponent extends ReactiveHTML.Component {
    constructor(props){
@@ -39,14 +45,14 @@ Simple reactive Virtual DOM elements for building complex reactive UI
    }
  }
  
- ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent, el));
+ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new myComponent, el));
  ```
  
  ### Component with props
  ```
  /* this example is create with htm.js */
 
- const html = htm.bind(ReactiveHTML.CreateElement);
+ const html = htm.bind(ReactiveHTML.createElement);
  
  class myComponent extends ReactiveHTML.Component {
    constructor(props){
@@ -64,13 +70,13 @@ Simple reactive Virtual DOM elements for building complex reactive UI
    }
  }
  
- ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({ num: 0 }), el));
+ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new myComponent({ num: 0 }), el));
  ```
 
 ## Events
 
  ```
- const html = htm.bind(ReactiveHTML.CreateElement);
+ const html = htm.bind(ReactiveHTML.createElement);
  
  class myComponent extends ReactiveHTML.Component {
    constructor(props){
@@ -82,13 +88,13 @@ Simple reactive Virtual DOM elements for building complex reactive UI
    }
  }
  
- ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({ num: 0 }), el));
+ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new myComponent({ num: 0 }), el));
  ```
 
  ## Attributes
 
  ```
- const html = htm.bind(ReactiveHTML.CreateElement);
+ const html = htm.bind(ReactiveHTML.createElement);
  
 class myComponent extends ReactiveHTML.Component {
   constructor(props) {
@@ -110,7 +116,7 @@ class myComponent extends ReactiveHTML.Component {
   }
 }
 
-ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({
+ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new myComponent({
   num: 0,
   color: 0
 }), el));
@@ -119,7 +125,7 @@ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({
 ## Conditional rendering
 
  ```
- const html = htm.bind(ReactiveHTML.CreateElement);
+ const html = htm.bind(ReactiveHTML.createElement);
  
 class myComponent extends ReactiveHTML.Component {
   constructor(props) {
@@ -141,7 +147,7 @@ class myComponent extends ReactiveHTML.Component {
   }
 }
 
-ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({
+ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new myComponent({
   is: true
 }), el));
   ```
@@ -149,7 +155,7 @@ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({
 ## List rendering
 
  ```
- const html = htm.bind(ReactiveHTML.CreateElement);
+ const html = htm.bind(ReactiveHTML.createElement);
  
 class myComponent extends ReactiveHTML.Component {
   constructor(props) {
@@ -171,7 +177,7 @@ class myComponent extends ReactiveHTML.Component {
   }
 }
 
-ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({
+ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new myComponent({
   arr: [1, 2, 3]
 }), el));
   ```
@@ -179,7 +185,7 @@ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new myComponent({
 ## Component inside component
 
  ```
- const html = htm.bind(ReactiveHTML.CreateElement);
+ const html = htm.bind(ReactiveHTML.createElement);
  
 class Parent extends ReactiveHTML.Component {
   constructor(props) {
@@ -209,7 +215,7 @@ class Child extends ReactiveHTML.Component {
   }
 }
 
-ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new Parent, el));
+ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new Parent, el));
   ```
 
  ## States
@@ -241,7 +247,7 @@ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new Parent, el));
  
  ## Lifecycles
  ```
- const html = htm.bind(ReactiveHTML.CreateElement);
+ const html = htm.bind(ReactiveHTML.createElement);
  
  class myComponent extends ReactiveHTML.Component {
    constructor(props){
@@ -251,25 +257,40 @@ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new Parent, el));
    onComponentCreate(){
    
      console.log(this);
+     /*
+      trigger on each new instance of class, 
+      that means if props of parent component changed, 
+      this will trigger, but onComponentInit won't
+    */
    
    }
    
    onComponentUpdate(){
    
      console.log(this);
+     //trigger on each update
    
    }
    
    onComponentRender(){
    
      console.log(this);
-   
+     //trigger only if component render
+
    }
    
    onComponentMount(){
    
      console.log(this);
+     //trigger only if component mount
    
+   }
+
+   onComponentInit() {
+
+     console.log(this);
+     //trigger only on component init
+
    }
    
    Element(props){
