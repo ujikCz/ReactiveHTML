@@ -174,7 +174,7 @@
 
                 this.states = new Proxy(this.states, validator);
 
-                function _init_() {
+                function _init_(props = {}) {
 
                     const thisProto = getProto(this);
 
@@ -300,17 +300,6 @@
         },
 
         /*
-         *   this constants helps to make Render function clearer (přehlednější)
-         */
-
-        RenderConstants: {
-
-            REPLACE_WITH_COMPONENT: true,
-            APPEND_COMPONENT: false,
-
-        },
-
-        /*
          *   render virtualNode to real element
          *   type can determine if virtualNode will be appended or replaced with this real element 
          */
@@ -322,14 +311,16 @@
             const thisProto = getProto(classLink);
 
             applyLifecycle(thisProto.onComponentRender, classLink);
-
-            applyLifecycle(thisProto.onComponentMount, classLink);
-
-            return mount(
+            
+            const realEl = mount(
                 rendered,
                 element,
                 type
             );
+            
+            applyLifecycle(thisProto.onComponentMount, classLink);
+            
+            return realEl;
 
         },
 
@@ -338,7 +329,7 @@
          *   then call callback function  
          */
 
-        Await: function (selector, callback) {
+        ElementReady: function (selector, callback) {
 
             AwaitForElement(selector, callback);
 
@@ -433,12 +424,10 @@
     function render(vDOM) {
 
         if (!isObject(vDOM)) {
+            
             return document.createTextNode(vDOM);
+            
         }
-
-        return renderElem(vDOM);
-
-        function renderElem(vDOM) {
 
             const el = document.createElement(vDOM.tagName);
 
@@ -468,8 +457,6 @@
             if (vDOM.realDOM === null) vDOM.realDOM = el;
 
             return el;
-
-        }
 
     }
 
