@@ -279,8 +279,9 @@ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new Parent, el));
  
 ## Dispatcher
 ### Dispatcher 
-dispatcher is element on website that is dispatcher of component   
-first parameter is string that is element tag name on website and second is component class
+dispatcher is element in HTML that is dispatcher of component   
+first parameter is string that is element tag name in HTML and second is component class   
+the element will be replaced with component   
 ```
 
 new ReactiveHTML.Dispatcher("dispatchComponent", MyComponent);
