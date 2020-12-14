@@ -10,8 +10,8 @@ Simple reactive Virtual DOM elements for building complex reactive UI
  
  ## About
  This library allows you to write components with html elements in javascript, so you can create conditional rendering or list rendering simply.   
- Library has reactive state management, that means elements can react on your input (variables) and you don't have to use dom api over your application which is very slow.    
- Every changes in components are done with virtual dom.    
+ The library has reactive state management, that means elements can react on your input (variables) and you don't have to use dom api over your application.    
+ Every change in components are done in virtual dom.      
  Virtual dom is lightweight copy of real dom, virtual dom is json javascript object, that means every diffing are faster than in real dom, because real dom need to recalculate styles, parents,...    
  
  ## Hello world
