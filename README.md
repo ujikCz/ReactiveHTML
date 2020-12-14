@@ -276,7 +276,7 @@ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new Parent, el));
      return html`<div>Hello, world!</div>`
    }
  }
- 
+ ```
 ## Dispatcher
 ### Dispatcher 
 dispatcher is element in HTML that is dispatcher of component   
