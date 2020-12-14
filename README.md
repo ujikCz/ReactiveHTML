@@ -238,6 +238,45 @@ ReactiveHTML.Await('#app', el => ReactiveHTML.Render(new Parent, el));
  }
 
  ```
+ 
+ ## Lifecycles
+ ```
+ const html = htm.bind(ReactiveHTML.CreateElement);
+ 
+ class myComponent extends ReactiveHTML.Component {
+   constructor(props){
+     super(props);
+   }
+   
+   onComponentCreate(){
+   
+     console.log(this);
+   
+   }
+   
+   onComponentUpdate(){
+   
+     console.log(this);
+   
+   }
+   
+   onComponentRender(){
+   
+     console.log(this);
+   
+   }
+   
+   onComponentMount(){
+   
+     console.log(this);
+   
+   }
+   
+   Element(props){
+     return html`<div>Hello, world!</div>`
+   }
+ }
+ 
 ## Dispatcher
 ### Dispatcher 
 dispatcher is element on website that is dispatcher of component   
