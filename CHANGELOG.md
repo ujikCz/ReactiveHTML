@@ -204,7 +204,36 @@ class myComponent extends ReactiveHTML.Component {
 
 #### added props as argument to setStates v 1.1.9
 
+#### API's first letter methods are in lowerCase but classes v 1.2.0
 
+```
+ReactiveHTML.render       //replace Render method
+ReactiveHTML.elementReady //replace Await method
+ReactiveHTML.createElement //replace CreateElement method
+ReactiveHTML.Component //still same
+ReactiveHTML.Dispatcher //still same
+ReactiveHTML.Observable //still same
+
+
+```
+
+#### onComponentInit lifecycle v 1.2.0
+
+```
+
+onComponentInit(){
+
+    console.log(this);
+
+}
+
+```
+
+#### Await method was replaced with elementReady method v 1.2.0
+
+#### Bugs with setStates fixed v 1.2.0
+
+#### renderElem was redundant, it is removed now v 1.2.0
 
 
 
