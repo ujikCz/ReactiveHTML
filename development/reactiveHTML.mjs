@@ -126,6 +126,8 @@
 
             constructor(props = {}) {
 
+                const thisProto = getProto(this);
+
                 const validator = {
                     classLink: this,
 
@@ -162,40 +164,33 @@
 
                 this.props = new Proxy(props, validator);
 
-                if (getProto(this).setStates) {
+                if (thisProto.constructor.__states__ === undefined) {
 
-                    this.states = getProto(this).setStates.bind(this)(this.props);
+                    /* 
+                     *   save states value 
+                     */
+
+                    thisProto.constructor.__states__ = 
+                    this.states = new Proxy(thisProto.setStates ? thisProto.setStates.bind(this)(this.props) : {}, validator);
+
+                    applyLifecycle(thisProto.onComponentInit, this);
 
                 } else {
 
-                    this.states = {};
+                    this.states = thisProto.constructor.__states__;
 
                 }
 
-                this.states = new Proxy(this.states, validator);
+                /*
+                 *   call Element method inside extended class component
+                 *   that creates virtualNode 
+                 */
 
-                function _init_() {
+                this.Vnode = thisProto.Element.bind(this)(this.props, this.states);
 
-                    const thisProto = getProto(this);
+                applyLifecycle(thisProto.onComponentCreate, this);
 
-                    this.props = this.props || new Proxy(props, validator);
-
-                    /*
-                     *   call Element method inside extended class component
-                     *   that creates virtualNode 
-                     */
-
-                    this.Vnode = thisProto.Element.bind(this)(this.props, this.states);
-
-                    applyLifecycle(thisProto.onComponentCreate, this);
-
-                    return this;
-
-                }
-
-                getProto(this).constructor = _init_.bind(this);
-
-                return _init_.bind(this)();
+                return this;
 
             }
 
@@ -231,7 +226,7 @@
                 getProto(setter).assign = function (assignNewValue) {
 
                     this(assignNewValue);
-                    
+
                     componentEffectArr.forEach(component => {
 
                         updateVnodeAndRealDOM(component);
@@ -271,7 +266,7 @@
 
             constructor(elementTagName, component) {
 
-                this.obs = AwaitForElement(elementTagName, function (el) {
+                this.obs = onElementReady(elementTagName, function (el) {
 
                     const dispatcherProps = {};
 
@@ -300,22 +295,11 @@
         },
 
         /*
-         *   this constants helps to make Render function clearer (přehlednější)
-         */
-
-        RenderConstants: {
-
-            REPLACE_WITH_COMPONENT: true,
-            APPEND_COMPONENT: false,
-
-        },
-
-        /*
          *   render virtualNode to real element
          *   type can determine if virtualNode will be appended or replaced with this real element 
          */
 
-        Render: function (classLink, element, type = false) {
+        render: function (classLink, element, type = false) {
 
             const rendered = render(checkProto(classLink));
 
@@ -338,9 +322,9 @@
          *   then call callback function  
          */
 
-        Await: function (selector, callback) {
+        elementReady: function (selector, callback) {
 
-            AwaitForElement(selector, callback);
+            onElementReady(selector, callback);
 
         },
 
@@ -348,7 +332,7 @@
          *   creates virtualNode 
          */
 
-        CreateElement: function (tagName, attrs, ...children) {
+        createElement: function (tagName, attrs = {}, ...children) {
 
             if (attrs === null) attrs = {};
 
@@ -371,7 +355,7 @@
      *   then call callback function  
      */
 
-    function AwaitForElement(selector, callback, disconnect = true, mode = true) {
+    function onElementReady(selector, callback, disconnect = true, mode = true) {
 
         const observer = new MutationObserver((mutations, me) => {
             mutations.forEach(mutation => {
@@ -436,40 +420,34 @@
             return document.createTextNode(vDOM);
         }
 
-        return renderElem(vDOM);
+        const el = document.createElement(vDOM.tagName);
 
-        function renderElem(vDOM) {
-
-            const el = document.createElement(vDOM.tagName);
-
-            for (const [k, v] of Object.entries(vDOM.attrs)) {
-                el.setAttribute(k, v);
-            }
-
-            for (const [k, v] of Object.entries(vDOM.events)) {
-                el.addEventListener(k, v);
-            }
-
-            for (const [k, v] of Object.entries(vDOM.styles)) {
-                el.style[k] = v;
-            }
-
-            vDOM.children.forEach(child => {
-
-                const childEl = render(child);
-                el.appendChild(childEl);
-
-            });
-
-            /*
-             *   if it is component, save its real element 
-             */
-
-            if (vDOM.realDOM === null) vDOM.realDOM = el;
-
-            return el;
-
+        for (const [k, v] of Object.entries(vDOM.attrs)) {
+            el.setAttribute(k, v);
         }
+
+        for (const [k, v] of Object.entries(vDOM.events)) {
+            el.addEventListener(k, v);
+        }
+
+        for (const [k, v] of Object.entries(vDOM.styles)) {
+            el.style[k] = v;
+        }
+
+        vDOM.children.forEach(child => {
+
+            const childEl = render(child);
+            el.appendChild(childEl);
+
+        });
+
+        /*
+         *   if it is component, save its real element 
+         */
+
+        if (vDOM.realDOM === null) vDOM.realDOM = el;
+
+        return el;
 
     }
 
