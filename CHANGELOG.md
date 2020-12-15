@@ -235,5 +235,12 @@ onComponentInit(){
 
 #### renderElem was redundant, it is removed now v 1.2.0
 
+#### constructors removed from components v 1.2.1
+
+#### onParentCompoenntUpdate lifecycle v 1.2.1
+
+#### onComponentInit lifecycle v 1.2.1
+
+
 
 
