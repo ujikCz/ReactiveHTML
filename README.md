@@ -36,10 +36,6 @@ Simple reactive Virtual DOM elements for building complex reactive UI
  const html = htm.bind(ReactiveHTML.createElement);
  
  class myComponent extends ReactiveHTML.Component {
-   constructor(props){
-     super(props);
-   }
-   
    Element(props){
      return html`<div>Hello, world!</div>`
    }
@@ -55,14 +51,13 @@ Simple reactive Virtual DOM elements for building complex reactive UI
  const html = htm.bind(ReactiveHTML.createElement);
  
  class myComponent extends ReactiveHTML.Component {
-   constructor(props){
-     super(props);
-     
-     props = this.props;
+
+   onComponentInit(props) {
 
      setInterval(function(){
        props.num++;
      }, 1000);
+
    }
    
    Element(props){
@@ -79,12 +74,9 @@ Simple reactive Virtual DOM elements for building complex reactive UI
  const html = htm.bind(ReactiveHTML.createElement);
  
  class myComponent extends ReactiveHTML.Component {
-   constructor(props){
-     super(props);
-   }
    
    Element(props){
-     return html`<div onclick=${ (e) => ++this.props.num }>${ props.num }</div>`
+     return html`<div onclick=${ (e) => ++props.num }>${ props.num }</div>`
    }
  }
  
@@ -97,18 +89,16 @@ Simple reactive Virtual DOM elements for building complex reactive UI
  const html = htm.bind(ReactiveHTML.createElement);
  
 class myComponent extends ReactiveHTML.Component {
-  constructor(props) {
 
-      props.id = "StaticIdProp";
+  onComponentInit(props) {
 
-      super(props);
-
-      props = this.props;
+    props.id = "StaticIdProp";
 
       setInterval(function () {
           props.color = Math.random() * 360;
           props.num++;
       }, 1000);
+
   }
 
   Element(props) {
@@ -128,15 +118,13 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new myComponent({
  const html = htm.bind(ReactiveHTML.createElement);
  
 class myComponent extends ReactiveHTML.Component {
-  constructor(props) {
 
-      super(props);
+  onComponentInit(props) {
 
-      props = this.props;
-
-      setInterval(function () {
+    setInterval(function () {
           props.is = !props.is;
       }, 1000);
+
   }
 
   Element(props) {
@@ -158,15 +146,13 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new myComponent({
  const html = htm.bind(ReactiveHTML.createElement);
  
 class myComponent extends ReactiveHTML.Component {
-  constructor(props) {
 
-      super(props);
+  onComponentInit(props) {
 
-      props = this.props;
-
-      setInterval(function () {
+    setInterval(function () {
           props.arr.push(props.arr.length + 1);
       }, 1000);
+
   }
 
   Element(props) {
@@ -188,10 +174,6 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new myComponent({
  const html = htm.bind(ReactiveHTML.createElement);
  
 class Parent extends ReactiveHTML.Component {
-  constructor(props) {
-
-      super(props);
-  }
 
   Element(props) {
       return html `
@@ -202,10 +184,6 @@ class Parent extends ReactiveHTML.Component {
 }
 
 class Child extends ReactiveHTML.Component {
-  constructor(props) {
-
-      super(props);
-  }
 
   Element(props) {
       return html `
@@ -217,46 +195,16 @@ class Child extends ReactiveHTML.Component {
 
 ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new Parent, el));
   ```
-
- ## States
- States won't change do default value on parent rerender, props will 
- ```
- class myComponent extends ReactiveHTML.Component {
-   constructor(props){
-     super(props);
-     
-     console.log(this.states.num); //5
-   }
-   
-   setStates(){
-   
-      return {
-      
-         num: 5
-       
-      }
-     
-   }
-   
-   Element(props, states){
-     return html`<div>${ states.num }</div>`
-   }
- }
-
- ```
  
  ## Lifecycles
  ```
  const html = htm.bind(ReactiveHTML.createElement);
  
  class myComponent extends ReactiveHTML.Component {
-   constructor(props){
-     super(props);
-   }
    
-   onComponentCreate(){
+   onParentComponentUpdate(props){
    
-     console.log(this);
+     console.log(props);
      /*
       trigger on each new instance of class, 
       that means if props of parent component changed, 
@@ -265,30 +213,30 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(new Parent, el));
    
    }
    
-   onComponentUpdate(){
+   onComponentUpdate(props){
    
-     console.log(this);
+     console.log(props);
      //trigger on each update
    
    }
    
-   onComponentRender(){
+   onComponentRender(props){
    
-     console.log(this);
+     console.log(props);
      //trigger only if component render
 
    }
    
-   onComponentMount(){
+   onComponentMount(props){
    
-     console.log(this);
+     console.log(props);
      //trigger only if component mount
    
    }
 
-   onComponentInit() {
+   onComponentInit(props) {
 
-     console.log(this);
+     console.log(props);
      //trigger only on component init
 
    }
