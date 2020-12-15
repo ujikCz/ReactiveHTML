@@ -88,7 +88,13 @@
      */
 
     function convertClassToVnode(children) {
-        return children.map(f => checkProto(f));
+
+        return children.map(f => {
+
+            return checkProto(f);
+
+        });
+
     }
 
     /*
@@ -97,7 +103,7 @@
 
     function updateVnodeAndRealDOM(classLink) {
         const classLinkProto = getProto(classLink);
-        const newVNode = classLinkProto.Element.bind(classLink)(classLink.props, classLink.states);
+        const newVNode = classLinkProto.Element.bind(classLink)(classLink.props);
 
         if (classLink.Vnode.realDOM) {
 
@@ -106,9 +112,9 @@
 
         }
 
-        Object.assign(classLink.Vnode, newVNode);
+        applyLifecycle(classLinkProto.onComponentUpdate, classLink, classLink.props);
 
-        applyLifecycle(classLinkProto.onComponentUpdate, classLink);
+        Object.assign(classLink.Vnode, newVNode);
 
     }
 
@@ -157,21 +163,20 @@
 
 
                 /*
-                 *   validator for props and states (Proxy validator)
+                 *   validator for props (Proxy validator)
                  *   detect changes and apply changes into virtualNode and realNode 
                  */
-
 
                 if (thisProto.__props__ === undefined) {
 
                     thisProto.__props__ = new Proxy(props, validator);
-                    applyLifecycle(thisProto.onComponentInit, this);
                     this.props = thisProto.__props__;
+                    applyLifecycle(thisProto.onComponentInit, this, this.props);
 
                 } else {
 
                     this.props = thisProto.__props__;
-                    applyLifecycle(thisProto.onComponentParentUpdate, this);
+                    applyLifecycle(thisProto.onParentComponentUpdate, this, this.props);
 
                 }
 
@@ -180,9 +185,7 @@
                  *   that creates virtualNode 
                  */
 
-                this.Vnode = thisProto.Element.bind(this)(this.props, this.states);
-
-                applyLifecycle(thisProto.onComponentCreate, this);
+                this.Vnode = thisProto.Element.bind(this)(this.props);
 
                 return this;
 
@@ -274,7 +277,7 @@
 
                     });
 
-                    return ReactiveHTML.Render(new component(dispatcherProps), el, true);
+                    return ReactiveHTML.render(new component(dispatcherProps), el, true);
 
                 }, false, false);
 
@@ -299,15 +302,17 @@
 
             const thisProto = getProto(classLink);
 
-            applyLifecycle(thisProto.onComponentRender, classLink);
+            applyLifecycle(thisProto.onComponentRender, classLink, rendered);
 
-            applyLifecycle(thisProto.onComponentMount, classLink);
-
-            return mount(
+            const mounted = mount(
                 rendered,
                 element,
                 type
             );
+
+            applyLifecycle(thisProto.onComponentMount, classLink, mounted);
+
+            return mounted;
 
         },
 
@@ -414,7 +419,7 @@
             return document.createTextNode(vDOM);
         }
 
-        const el = document.createElement(vDOM.tagName);
+        const el = vDOM.tagName === "" ? document.createDocumentFragment() : document.createElement(vDOM.tagName);
 
         for (const [k, v] of Object.entries(vDOM.attrs)) {
             el.setAttribute(k, v);
@@ -435,11 +440,24 @@
 
         });
 
+        if (vDOM.realDOM === null) {
+
+            if (vDOM.tagName === "") {
+
+                vDOM.realDOM = false;
+
+            } else {
+
+                vDOM.realDOM = el;
+
+            }
+
+        }
+
+
         /*
          *   if it is component, save its real element 
          */
-
-        if (vDOM.realDOM === null) vDOM.realDOM = el;
 
         return el;
 
