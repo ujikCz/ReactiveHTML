@@ -162,22 +162,16 @@
                  */
 
 
-                this.props = new Proxy(props, validator);
+                if (thisProto.__props__ === undefined) {
 
-                if (thisProto.constructor.__states__ === undefined) {
-
-                    /* 
-                     *   save states value 
-                     */
-
-                    thisProto.constructor.__states__ = 
-                    this.states = new Proxy(thisProto.setStates ? thisProto.setStates.bind(this)(this.props) : {}, validator);
-
+                    thisProto.__props__ = new Proxy(props, validator);
                     applyLifecycle(thisProto.onComponentInit, this);
+                    this.props = thisProto.__props__;
 
                 } else {
 
-                    this.states = thisProto.constructor.__states__;
+                    this.props = thisProto.__props__;
+                    applyLifecycle(thisProto.onComponentParentUpdate, this);
 
                 }
 
