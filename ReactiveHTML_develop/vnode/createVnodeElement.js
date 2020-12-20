@@ -19,7 +19,7 @@ import Component from './component.js';
 export default function createVnodeElement(type, attrs, ...children) {
 
     if(type.prototype instanceof componentClass) {
-
+        
         return {
             type,
             props: attrs || {}

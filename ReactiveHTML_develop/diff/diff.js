@@ -47,7 +47,7 @@
          *   if tagNames of virtualNodes doesn't match replace it with new rendered virtualNode 
          */
 
-        if (vOldNode.tagName !== vNewNode.tagName) {
+        if (vOldNode.type !== vNewNode.type) {
             return function (node) {
                 const newNode = render(vNewNode);
                 node.replaceWith(newNode);

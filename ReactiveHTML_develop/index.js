@@ -33,11 +33,24 @@ import Observable from './observable.js';
 
         Observable,
 
-        render: function (component, element, type = false) {
+        render: function (component, element) {
 
+            let type = false;
+            
+            const originalType = component.type;
             const rendered = render(component);
 
-            //component.onComponentRender(rendered);
+            if(component.type === 'ReactiveHTML.Container') {
+
+                type = true;
+
+            }
+
+            if(originalType.prototype instanceof Component) {
+
+                originalType.prototype.onComponentWillMount(originalType.props);
+
+            }
 
             const mounted = mount(
                 rendered,
@@ -45,7 +58,11 @@ import Observable from './observable.js';
                 type
             );
 
-            //component.onComponentMount(mounted);
+            if(originalType.prototype instanceof Component) {
+
+                originalType.prototype.onComponentMount(mounted);
+
+            }
 
             return mounted;
 

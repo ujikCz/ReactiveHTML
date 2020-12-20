@@ -29,7 +29,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
             return node;
         });
     }
-
     /*
      *   apply all childNodes changes to parent realNode
      */

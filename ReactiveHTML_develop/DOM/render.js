@@ -27,7 +27,13 @@
 
             Object.assign(component, instance);
 
-            return render(instance);
+            instance.onComponentWillRender(component.props);
+
+            const rendered = render(instance);
+            
+            instance.onComponentRender(rendered);
+
+            return rendered;
 
         }
 

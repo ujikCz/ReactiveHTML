@@ -8,7 +8,7 @@ import createVnodeElement from './createVnodeElement.js';
  */
 
 export function createProxyInContext(context) {
-    return {
+    const validator = {
         get(target, key, receiver) {
 
             if (isObject(target[key]) && (target[key].constructor.name === 'Object' || Array.isArray(target[key]))) {
@@ -27,11 +27,15 @@ export function createProxyInContext(context) {
 
             target[key] = value;
 
+            context.onComponentPropsWillUpdate(context.props);
+
             updateVnodeAndRealDOM(context);
 
             return true;
         }
-    }
+    };
+
+    return validator;
 }
 
 /**
@@ -39,6 +43,11 @@ export function createProxyInContext(context) {
  */
 
 export default class Component {
+
+    /**
+     * constructor of component
+     * @param { Object } props 
+     */
 
     constructor(props = {}) {
 
@@ -54,18 +63,56 @@ export default class Component {
 
     }
 
+    /*
+     * Element creator method 
+     */
+
     Element() {
 
         throw Error('You have to specify Element method in your Component');
 
     }
 
+    /*
+     *  basic lifecycles
+     */
+
     onComponentCreate() {}
     onComponentUpdate() {}
     onComponentRender() {}
     onComponentMount() {}
+
+    /*
+     *  future lifecycles
+     */
+
     onComponentWillUpdate() {}
-    onComponentChange() {}
+    onComponentWillRender() {}
+    onComponentWillMount() {}
+
+    /*
+     *  props lifecycles
+     */
+
+    onComponentPropsUpdate() {}
+
+    /*
+     *  future props lifecycles
+     */
+
+    onComponentPropsWillUpdate() {}
+
+    /*
+     *  manage methods
+     */
+
+    componentShouldUpdate() {}
+    componentShouldUpdateProps() {}
+
+    /**
+     * init method
+     * @param { Object } props 
+     */
 
     static $(props = {}) {
 
