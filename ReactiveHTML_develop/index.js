@@ -6,12 +6,9 @@
 
 import render from './DOM/render.js';
 import mount from './DOM/mount.js';
-import checkProto from './vnode/checkProto.js';
-import applyLifecycle from './applyLifecycle.js';
 import onElementReady from './DOM/elementReady.js';
 import createVnodeElement from './vnode/createVnodeElement.js';
 import Component from './vnode/component.js';
-import Dispatcher from './dispatcher.js';
 import Observable from './observable.js';
 
 
@@ -32,17 +29,15 @@ import Observable from './observable.js';
          *   type can determine if virtualNode will be appended or replaced with this real element 
          */
 
-        Component: Component,
+        Component,
 
-        Observable: Observable,
+        Observable,
 
-        Dispatcher: Dispatcher,
+        render: function (component, element, type = false) {
 
-        render: function (classLink, element, type = false) {
+            const rendered = render(component);
 
-            const rendered = render(checkProto(classLink));
-
-            applyLifecycle(classLink.onComponentRender, classLink, rendered);
+            //component.onComponentRender(rendered);
 
             const mounted = mount(
                 rendered,
@@ -50,7 +45,7 @@ import Observable from './observable.js';
                 type
             );
 
-            applyLifecycle(classLink.onComponentMount, classLink, mounted);
+            //component.onComponentMount(mounted);
 
             return mounted;
 
@@ -71,7 +66,17 @@ import Observable from './observable.js';
          *   creates virtualNode 
          */
 
-        createElement: createVnodeElement
+        createElement: createVnodeElement,
+
+        createFactory: function(component) {
+
+            return function(props = {}) {
+
+                return new component(props);
+
+            }
+
+        }
 
     };
 

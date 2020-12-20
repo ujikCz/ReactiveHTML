@@ -1,48 +1,60 @@
-    /*
-     *   render the virtualNode 
-     *   rendered virtualNode is not mounted, but it is now HTML element
-     */
+
 
     import isObject from '../isObject.js';
+    import componentClass from '../vnode/component.js';
 
-    export default function render(vDOM) {
+    /**
+     * render the virtualNode 
+     * rendered virtualNode is not mounted, but it is now HTML element
+     * @param { Object } component - component or vNode object
+     */
 
-        if (!isObject(vDOM)) {
-            return document.createTextNode(vDOM);
+    export default function render(component) {
+
+        if (!isObject(component)) {
+
+            return document.createTextNode(component);
+
         }
 
-        const el = vDOM.tagName === "" ? document.createDocumentFragment() : document.createElement(vDOM.tagName);
+        if(component.type.prototype instanceof componentClass) {
 
-        for (const [k, v] of Object.entries(vDOM.attrs)) {
+            const instance = new component.type(component.props);
+
+            /*
+             * assign instane value (vNode, props, ...) to component itself, cause component is only class
+             */
+
+            Object.assign(component, instance);
+
+            return render(instance);
+
+        }
+
+        const el = document.createElement(component.type);
+
+        for (const [k, v] of Object.entries(component.attrs)) {
             el.setAttribute(k, v);
         }
 
-        for (const [k, v] of Object.entries(vDOM.events)) {
+        for (const [k, v] of Object.entries(component.events)) {
             el.addEventListener(k, v);
         }
 
-        for (const [k, v] of Object.entries(vDOM.styles)) {
+        for (const [k, v] of Object.entries(component.styles)) {
             el.style[k] = v;
         }
 
-        vDOM.children.forEach(child => {
+        component.children.forEach(child => {
 
             const childEl = render(child);
             el.appendChild(childEl);
 
         });
 
-        if (vDOM.realDOM === null) {
+        if (component.realDOM === null) {
 
-            if (vDOM.tagName === "") {
-
-                vDOM.realDOM = false;
-
-            } else {
-
-                vDOM.realDOM = el;
-
-            }
+            component.realDOM = el;
 
         }
 
@@ -54,3 +66,23 @@
         return el;
 
     }
+
+    /*
+    let nextUnitOfWork = null;​
+    function workLoop(deadline) {
+
+        let shouldYield = false;
+
+        while (nextUnitOfWork && !shouldYield) {
+
+            nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+            shouldYield = deadline.timeRemaining() < 1;
+
+        }
+        requestIdleCallback(workLoop);
+    }​
+    requestIdleCallback(workLoop)​;
+
+    function performUnitOfWork(nextUnitOfWork) {
+        // TODO
+    }*/

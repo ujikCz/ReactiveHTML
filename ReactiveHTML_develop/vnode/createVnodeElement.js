@@ -4,20 +4,35 @@
  */
 
 import flatten from './flatten.js';
-import convertClassToVnode from './convertClassToVnode.js';
 import filterAttrs from './filterAttrs.js';
+import componentClass from './component.js';
+import Component from './component.js';
 
 
-export default function createVnodeElement(tagName, attrs = {}, ...children) {
+/**
+ * 
+ * @param { Component, tagName } type 
+ * @param { props, attrs } attrs 
+ * @param  { Array of vnodes } children 
+ */
 
-    if (attrs === null) attrs = {};
+export default function createVnodeElement(type, attrs, ...children) {
+
+    if(type.prototype instanceof componentClass) {
+
+        return {
+            type,
+            props: attrs || {}
+        }
+
+    }
 
     const filter = filterAttrs(attrs);
 
     return {
-        tagName,
+        type,
         attrs: filter.attrs,
-        children: convertClassToVnode(flatten(children)),
+        children: flatten(children),
         events: filter.events,
         styles: filter.styles
     }

@@ -1,8 +1,4 @@
-    /*
-     *   check basic differences between old virtualNode and new one
-     *   check attributes, events and styles changes
-     *   apply all these changes to realNode
-     */
+
 
     import diffAttrs from './diffAttrs.js';
     import diffChildren from './diffChildren.js';
@@ -10,6 +6,13 @@
     import render from '../DOM/render.js';
     import isObject from '../isObject.js';
 
+    /**
+     * check basic differences between old virtualNode and new one
+     * check attributes, events and styles changes
+     * apply all these changes to realNode
+     * @param { Object } vOldNode - old virtual node tree
+     * @param { Object } vNewNode - new virtual node tree
+     */
 
     export default function diff(vOldNode, vNewNode) {
 
@@ -57,8 +60,8 @@
          */
 
         const patchAttrs = diffAttrs(vOldNode.attrs, vNewNode.attrs);
-        const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
         const patchStyles = diffStyles(vOldNode.styles, vNewNode.styles);
+        const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
 
         /*
          *   patch the real element with all patch functions 

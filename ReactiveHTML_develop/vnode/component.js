@@ -1,61 +1,76 @@
-
 import updateVnodeAndRealDOM from '../DOM/updateVnodeAndRealDOM.js';
 import isObject from '../isObject.js';
+import createVnodeElement from './createVnodeElement.js';
 
+/**
+ * creates proxy object for component
+ * @param { Class } context - Component context
+ */
+
+export function createProxyInContext(context) {
+    return {
+        get(target, key, receiver) {
+
+            if (isObject(target[key]) && (target[key].constructor.name === 'Object' || Array.isArray(target[key]))) {
+
+                return new Proxy(target[key], validator);
+
+            } else {
+
+                return target[key];
+
+            }
+
+        },
+
+        set(target, key, value, receiver) {
+
+            target[key] = value;
+
+            updateVnodeAndRealDOM(context);
+
+            return true;
+        }
+    }
+}
+
+/**
+ *  Component class
+ */
 
 export default class Component {
 
     constructor(props = {}) {
 
-        const validator = {
-            classLink: this,
+        this.props = new Proxy(props, createProxyInContext(this));
+        
+        Object.assign(this, this.Element(this.props));
 
-            get(target, key, receiver) {
-
-                if (isObject(target[key]) && (target[key].constructor.name === 'Object' || Array.isArray(target[key]))) {
-
-                    return new Proxy(target[key], validator);
-
-                } else {
-
-                    return target[key];
-
-                }
-
-            },
-
-            set(target, key, value, receiver) {
-
-                target[key] = value;
-
-                updateVnodeAndRealDOM(this.classLink);
-
-                return true;
-            }
-        };
-
-        this.props = new Proxy(props, validator);
-        /*
-         *   call Element method inside extended class component
-         *   that creates virtualNode 
-         */
-
-        this.Vnode = this.Element.bind(this)(this.props);
-
+        this.realDOM = null;
+    
+        this.onComponentCreate(this.props);
+    
         return this;
 
     }
 
     Element() {
 
-        throw Error(`You have to specify Element method in your Component`);
+        throw Error('You have to specify Element method in your Component');
 
     }
 
-    onComponentInit(){}
-    onComponentUpdate(){}
-    onComponentRender(){}
-    onComponentMount(){}
+    onComponentCreate() {}
+    onComponentUpdate() {}
+    onComponentRender() {}
+    onComponentMount() {}
+    onComponentWillUpdate() {}
+    onComponentChange() {}
 
+    static $(props = {}) {
+
+        return createVnodeElement(this, props);
+
+    }
 
 }

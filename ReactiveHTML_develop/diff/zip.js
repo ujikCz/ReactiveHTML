@@ -1,6 +1,12 @@
     /*
-     *   formate patch and element besides
-     *   do it for minimal times (means if patches are smaller than elements, do it only for patches and the same for elements)
+     *   
+     */
+
+    /**
+     * formate patch and element besides
+     * do it for minimal times (means if patches are smaller than elements, do it only for patches and the same for elements)
+     * @param { Array } first 
+     * @param { Array } second 
      */
 
     export default function zip(first, second) {

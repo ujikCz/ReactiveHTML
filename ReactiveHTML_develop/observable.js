@@ -2,7 +2,6 @@
          *   observing and templating data
          */
 
-        import getProto from './getProto.js';
         import updateVnodeAndRealDOM from './DOM/updateVnodeAndRealDOM.js';
 
 
@@ -29,7 +28,7 @@
 
                 const componentEffectArr = this.effectArray;
 
-                getProto(setter).assign = function (assignNewValue) {
+                setter.prototype.assign = function (assignNewValue) {
 
                     this(assignNewValue);
 

@@ -1,6 +1,12 @@
-    /*
-     *   wait until elements is parsed by HTML parser
-     *   then call callback function  
+
+
+    /**
+     * wait until elements is parsed by HTML parser
+     * then call callback function  
+     * @param { String } selector - selector of element
+     * @param { function } callback - callback function that will be triggered after element is ready
+     * @param { Boolean } disconnect - disconnect after element finded or not
+     * @param { Boolean } mode - matches all selectors or only localNames of elements
      */
 
     export default function onElementReady(selector, callback, disconnect = true, mode = true) {

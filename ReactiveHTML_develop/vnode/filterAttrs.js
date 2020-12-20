@@ -1,9 +1,13 @@
-    /*
-     *   convert attrs object to 3 objects [ attrs, events, styles ] 
-     */
+
+
+    /**
+     * convert attrs object to 3 objects [ attrs, events, styles ]
+     * @param { Object } attrs - all not sorted attrs
+     */ 
 
     export default function filterAttrs(attrs) {
 
+        if(attrs === null) attrs = {};
         let events = {};
         let styles = {};
 

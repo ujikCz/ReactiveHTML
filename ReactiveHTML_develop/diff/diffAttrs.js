@@ -1,6 +1,10 @@
-  /*
-   *   check differences between old virtualNode attributes and new one
-   *   apply changes to realNode
+
+
+  /**
+   * check differences between old virtualNode attributes and new one
+   * apply changes to realNode
+   * @param { Object } oldAttrs - old virtual node attributes
+   * @param { Object } newAttrs - new virtual node attributes
    */
 
   export default function diffAttrs(oldAttrs, newAttrs) {
@@ -18,6 +22,8 @@
                       return node;
                   }
               );
+              
+              vOldNode.changed = true;
           }
       }
 
@@ -30,6 +36,8 @@
                       return node;
                   }
               );
+
+              vOldNode.changed = true;
           }
       }
 
