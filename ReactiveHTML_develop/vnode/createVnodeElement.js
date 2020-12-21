@@ -7,6 +7,7 @@ import flatten from './flatten.js';
 import filterAttrs from './filterAttrs.js';
 import componentClass from './component.js';
 import Component from './component.js';
+import isObject from '../isObject.js';
 
 
 /**
@@ -26,6 +27,16 @@ export default function createVnodeElement(type, attrs, ...children) {
         }
 
     }
+
+    children.forEach(child => {
+
+        if(isObject(child) && child.constructor.name === 'Object' && !(child.type.prototype instanceof componentClass)) {
+
+            throw Error('Child of virtual node cannot be object');
+
+        }
+
+    });
 
     const filter = filterAttrs(attrs);
 

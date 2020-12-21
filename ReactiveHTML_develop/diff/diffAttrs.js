@@ -9,7 +9,7 @@
 
   export default function diffAttrs(oldAttrs, newAttrs) {
 
-      const attrsPatches = [];
+    const attrsPatches = [];
 
       for (const [k, v] of Object.entries(newAttrs)) {
           if (v !== oldAttrs[k]) {
