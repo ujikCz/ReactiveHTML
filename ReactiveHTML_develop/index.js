@@ -10,6 +10,7 @@ import onElementReady from './DOM/elementReady.js';
 import createVnodeElement from './vnode/createVnodeElement.js';
 import Component from './vnode/component.js';
 import Observable from './observable.js';
+import __observable_change from './observable_change.js';
 
 
 
@@ -31,7 +32,7 @@ import Observable from './observable.js';
 
         Component,
 
-        Observable,
+        Observable: __observable_change,
 
         render: function (component, element) {
 

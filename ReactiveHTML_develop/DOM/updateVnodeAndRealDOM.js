@@ -52,42 +52,14 @@ function patchComponents(rootNewChildren, rootOldChildren) {
             /*
              *  if component was already initialized
              */
+            
             if (rootOldChildren[i]) {
 
                 /*
                  *  patch existing component, not calling new instance of component
                  */
 
-                if (child.type.prototype.componentShouldUpdate() === false) {
-
-                    return rootOldChildren[i];
-
-                }
-
-                child.type.prototype.onComponentPropsUpdate.bind(rootOldChildren[i])(child.props);
-
-                if (child.type.prototype.componentShouldUpdateProps()) {
-
-                    rootOldChildren[i].props = child.props;
-
-                }
-
-                child.type.prototype.onComponentWillUpdate.bind(rootOldChildren[i])(child.props);
-
-                const newComponentVNode = child.type.prototype.Element.bind(rootOldChildren[i])(child.props);
-
-                /*
-                 *  assign new vnode tree and new props to existing component
-                 */
-
-                patchComponents(newComponentVNode.children, rootOldChildren[i].children);
-
-                Object.assign(rootOldChildren[i], newComponentVNode);
-
-                child.type.prototype.onComponentUpdate.bind(rootOldChildren[i])(child.props);
-
-
-                return rootOldChildren[i];
+                return updateVnodeAndRealDOM(rootOldChildren[i].__component__);
 
             }
 

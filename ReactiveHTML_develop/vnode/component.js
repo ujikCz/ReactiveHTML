@@ -11,7 +11,13 @@ export function createProxyInContext(context) {
     const validator = {
         get(target, key, receiver) {
 
-            if (isObject(target[key]) && (target[key].constructor.name === 'Object' || Array.isArray(target[key]))) {
+            if (
+                isObject(target[key]) && 
+                ( 
+                    (target[key].constructor.name === 'Object' && target[key].toString() === '[object Object]') ||  
+                    Array.isArray(target[key])
+                )
+            ) {
 
                 return new Proxy(target[key], validator);
 
@@ -25,9 +31,15 @@ export function createProxyInContext(context) {
 
         set(target, key, value, receiver) {
 
-            target[key] = value;
+            if (target[key] === value) {
 
+                return true;
+
+            }
+            
             context.onComponentPropsWillUpdate(context.props);
+
+            target[key] = value;
 
             updateVnodeAndRealDOM(context);
 
@@ -51,14 +63,16 @@ export default class Component {
 
     constructor(props = {}) {
 
-        this.props = new Proxy(props, createProxyInContext(this));
-        
+        this.props = this.componentShouldObserveProps() === false ? props : new Proxy(props, createProxyInContext(this));
+
         Object.assign(this, this.Element(this.props));
 
         this.realDOM = null;
-    
+
+        this.__component__ = this;
+
         this.onComponentCreate(this.props);
-    
+
         return this;
 
     }
@@ -108,13 +122,15 @@ export default class Component {
 
     componentShouldUpdate() {}
     componentShouldUpdateProps() {}
+    componentShouldObserveProps() {}
+
 
     /**
      * init method
      * @param { Object } props 
      */
 
-    static $(props = {}) {
+    static init(props = {}) {
 
         return createVnodeElement(this, props);
 
