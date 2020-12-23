@@ -39,7 +39,14 @@ export function createProxyInContext(context) {
             
             context.onComponentPropsWillUpdate(context.props);
 
+
+            //TODO: oldProps still return udpated 
+
+            const oldProps = context.props;
+
             target[key] = value;
+
+            context.onComponentPropsUpdate(context.props, oldProps);
 
             updateVnodeAndRealDOM(context);
 
@@ -96,6 +103,8 @@ export default class Component {
     onComponentRender() {}
     onComponentMount() {}
 
+    //onComponentChange
+
     /*
      *  future lifecycles
      */
@@ -103,6 +112,8 @@ export default class Component {
     onComponentWillUpdate() {}
     onComponentWillRender() {}
     onComponentWillMount() {}
+
+    //onComponentWillChange
 
     /*
      *  props lifecycles
@@ -123,6 +134,8 @@ export default class Component {
     componentShouldUpdate() {}
     componentShouldUpdateProps() {}
     componentShouldObserveProps() {}
+
+    parentComponentShouldUpdateProps() { return true; }
 
 
     /**

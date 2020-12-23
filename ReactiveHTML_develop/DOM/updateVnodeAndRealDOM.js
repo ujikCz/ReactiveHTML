@@ -1,6 +1,6 @@
 import diff from '../diff/diff.js';
 import isObject from '../isObject.js';
-import componentClass from '../vnode/component.js';
+import componentClass, { createProxyInContext } from '../vnode/component.js';
 
 /**
  * updates virtualNode and its realNode (update whole component)
@@ -52,12 +52,24 @@ function patchComponents(rootNewChildren, rootOldChildren) {
             /*
              *  if component was already initialized
              */
-            
+
             if (rootOldChildren[i]) {
 
                 /*
                  *  patch existing component, not calling new instance of component
                  */
+
+                if (deepEqual(rootOldChildren[i].__component__.props, child.props)) {
+
+                    return rootOldChildren[i];
+
+                }
+
+                if (rootOldChildren[i].__component__.parentComponentShouldUpdateProps() === true) {
+
+                    rootOldChildren[i].__component__.props = new Proxy(child.props, createProxyInContext(rootOldChildren[i].__component__));
+
+                }
 
                 return updateVnodeAndRealDOM(rootOldChildren[i].__component__);
 
@@ -78,4 +90,28 @@ function patchComponents(rootNewChildren, rootOldChildren) {
 
     });
 
+}
+
+
+function deepEqual(object1, object2) {
+    const keys1 = Object.keys(object1);
+    const keys2 = Object.keys(object2);
+
+    if (keys1.length !== keys2.length) {
+        return false;
+    }
+
+    for (const key of keys1) {
+        const val1 = object1[key];
+        const val2 = object2[key];
+        const areObjects = isObject(val1) && isObject(val2);
+        if (
+            areObjects && !deepEqual(val1, val2) ||
+            !areObjects && val1 !== val2
+        ) {
+            return false;
+        }
+    }
+
+    return true;
 }
