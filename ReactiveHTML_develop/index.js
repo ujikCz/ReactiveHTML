@@ -11,6 +11,7 @@ import createVnodeElement from './vnode/createVnodeElement.js';
 import Component from './vnode/component.js';
 import Observable from './observable.js';
 import __observable_change from './observable_change.js';
+import updateVnodeAndRealDOM from './DOM/updateVnodeAndRealDOM.js';
 
 
 
@@ -37,17 +38,17 @@ import __observable_change from './observable_change.js';
         render: function (component, element) {
 
             let type = false;
-            
+
             const originalType = component.type;
             const rendered = render(component);
 
-            if(component.type === 'ReactiveHTML.Container') {
+            if (component.type === 'ReactiveHTML.Container') {
 
                 type = true;
 
             }
 
-            if(originalType.prototype instanceof Component) {
+            if (originalType.prototype instanceof Component) {
 
                 originalType.prototype.onComponentWillMount(originalType.props);
 
@@ -59,7 +60,7 @@ import __observable_change from './observable_change.js';
                 type
             );
 
-            if(originalType.prototype instanceof Component) {
+            if (originalType.prototype instanceof Component) {
 
                 originalType.prototype.onComponentMount(mounted);
 
@@ -86,19 +87,25 @@ import __observable_change from './observable_change.js';
 
         createElement: createVnodeElement,
 
-        createFactory: function(component) {
+        createFactory: function (component) {
 
-            return function(props = {}) {
+            return function (props = {}) {
 
                 return new component(props);
 
             }
 
+        },
+
+        triggerComponentUpdate(component) {
+
+            return updateVnodeAndRealDOM(component);
+
         }
 
     };
 
-    
+
     return ReactiveHTML;
 
 }));

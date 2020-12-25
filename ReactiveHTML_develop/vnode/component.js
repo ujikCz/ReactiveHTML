@@ -39,10 +39,7 @@ export function createProxyInContext(context) {
             
             context.onComponentPropsWillUpdate(context.props);
 
-
-            //TODO: oldProps still return udpated 
-
-            const oldProps = context.props;
+            const oldProps = Object.assign({}, context.props);
 
             target[key] = value;
 
@@ -146,6 +143,12 @@ export default class Component {
     static init(props = {}) {
 
         return createVnodeElement(this, props);
+
+    }
+
+    triggerUpdate() {
+
+        updateVnodeAndRealDOM(this);
 
     }
 

@@ -19,8 +19,6 @@ export default function diffStyles(oldStyles, newStyles) {
                     return node;
                 }
             );
-
-            vOldNode.changed = true;
         }
     }
 
@@ -33,8 +31,6 @@ export default function diffStyles(oldStyles, newStyles) {
                     return node;
                 }
             );
-
-            vOldNode.changed = true;
         }
     }
 
