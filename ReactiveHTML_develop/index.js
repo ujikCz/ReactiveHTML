@@ -95,12 +95,6 @@ import updateVnodeAndRealDOM from './DOM/updateVnodeAndRealDOM.js';
 
             }
 
-        },
-
-        triggerComponentUpdate(component) {
-
-            return updateVnodeAndRealDOM(component);
-
         }
 
     };

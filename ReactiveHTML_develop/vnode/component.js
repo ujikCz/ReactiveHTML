@@ -31,21 +31,16 @@ export function createProxyInContext(context) {
 
         set(target, key, value, receiver) {
 
-            if (target[key] === value) {
+            if(target[key] === value) {
 
                 return true;
 
             }
             
-            context.onComponentPropsWillUpdate(context.props);
+            const nextProps = Object.assign({}, context.props);
+            nextProps[key] = value;
 
-            const oldProps = Object.assign({}, context.props);
-
-            target[key] = value;
-
-            context.onComponentPropsUpdate(context.props, oldProps);
-
-            updateVnodeAndRealDOM(context);
+            updateVnodeAndRealDOM(context, false, nextProps, target, key, value);
 
             return true;
         }
@@ -112,27 +107,14 @@ export default class Component {
 
     //onComponentWillChange
 
-    /*
-     *  props lifecycles
-     */
-
-    onComponentPropsUpdate() {}
-
-    /*
-     *  future props lifecycles
-     */
-
-    onComponentPropsWillUpdate() {}
 
     /*
      *  manage methods
      */
 
-    componentShouldUpdate() {}
-    componentShouldUpdateProps() {}
-    componentShouldObserveProps() {}
+    componentShouldUpdate() { return true; }
 
-    parentComponentShouldUpdateProps() { return true; }
+    componentShouldObserveProps() { return true; }
 
 
     /**
@@ -146,9 +128,9 @@ export default class Component {
 
     }
 
-    triggerUpdate() {
+    forceComponentUpdate(harmful = false) {
 
-        updateVnodeAndRealDOM(this);
+        return updateVnodeAndRealDOM(this, harmful, this.props);
 
     }
 

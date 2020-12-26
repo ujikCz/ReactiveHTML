@@ -7,15 +7,30 @@ import componentClass, { createProxyInContext } from '../vnode/component.js';
  * @param { Class } oldComponent - updated component instance
  */
 
-export default function updateVnodeAndRealDOM(oldComponent) {
+export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, propsTarget, propsKey, propsValue) {
 
-    oldComponent.onComponentWillUpdate(oldComponent.props);
+    if(nextProps) {
 
-    if (oldComponent.componentShouldUpdate() === false) {
+        if(oldComponent.componentShouldUpdate(nextProps, !deepEqual(oldComponent.props, nextProps)) === false && harmful === false) {
 
-        return oldComponent;
+            return oldComponent;
+
+        }
+
+        if(propsTarget) {
+
+            propsTarget[propsKey] = propsValue;
+
+        } else {
+
+            oldComponent.props = new Proxy(nextProps, createProxyInContext(oldComponent));
+            //TODO - better optimalization
+
+        }
 
     }
+
+    oldComponent.onComponentWillUpdate();
 
     const newVNode = oldComponent.Element(oldComponent.props);
 
@@ -30,7 +45,7 @@ export default function updateVnodeAndRealDOM(oldComponent) {
 
     Object.assign(oldComponent, newVNode);
 
-    oldComponent.onComponentUpdate(oldComponent.props);
+    oldComponent.onComponentUpdate();
 
     return oldComponent;
 
@@ -59,19 +74,7 @@ function patchComponents(rootNewChildren, rootOldChildren) {
                  *  patch existing component, not calling new instance of component
                  */
 
-                if (deepEqual(rootOldChildren[i].__component__.props, child.props)) {
-
-                    return rootOldChildren[i];
-
-                }
-
-                if (rootOldChildren[i].__component__.parentComponentShouldUpdateProps() === true) {
-
-                    rootOldChildren[i].__component__.props = new Proxy(child.props, createProxyInContext(rootOldChildren[i].__component__));
-
-                }
-
-                return updateVnodeAndRealDOM(rootOldChildren[i].__component__);
+                return updateVnodeAndRealDOM(rootOldChildren[i].__component__, false, child.props);
 
             }
 
