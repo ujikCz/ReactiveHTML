@@ -85,17 +85,7 @@ import updateVnodeAndRealDOM from './DOM/updateVnodeAndRealDOM.js';
          *   creates virtualNode 
          */
 
-        createElement: createVnodeElement,
-
-        createFactory: function (component) {
-
-            return function (props = {}) {
-
-                return new component(props);
-
-            }
-
-        }
+        createElement: createVnodeElement
 
     };
 

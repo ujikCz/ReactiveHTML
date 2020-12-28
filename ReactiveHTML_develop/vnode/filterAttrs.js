@@ -1,32 +1,36 @@
+/**
+ * convert attrs object to 3 objects [ attrs, events, styles ]
+ * @param { Object } attrs - all not sorted attrs
+ */
 
+export default function filterAttrs(attrs) {
 
-    /**
-     * convert attrs object to 3 objects [ attrs, events, styles ]
-     * @param { Object } attrs - all not sorted attrs
-     */ 
+    let events = {};
+    let styles = {};
 
-    export default function filterAttrs(attrs) {
+    for (const [k, v] of Object.entries(attrs)) {
 
-        if(attrs === null) attrs = {};
-        let events = {};
-        let styles = {};
+        if (k.startsWith('on')) {
 
-        for (const [k, v] of Object.entries(attrs)) {
-            if (k.startsWith('on')) {
-                events[k.replace('on', '')] = v;
-                delete attrs[k];
-            }
+            events[k.replace('on', '')] = v;
+            delete attrs[k];
 
-            if (k === 'style') {
-                styles = v;
-                delete attrs[k];
-            }
         }
 
-        return {
-            attrs,
-            events,
-            styles
-        };
+        if (k === 'style') {
 
+            styles = v;
+            delete attrs[k];
+
+        }
     }
+
+    return {
+
+        attrs,
+        events,
+        styles,
+
+    };
+
+}

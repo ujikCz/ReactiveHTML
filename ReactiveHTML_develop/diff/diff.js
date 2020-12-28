@@ -21,10 +21,12 @@
          */
 
         if (vNewNode === undefined) {
+
             return function (node) {
                 node.remove();
                 return undefined;
             };
+
         }
 
         /*

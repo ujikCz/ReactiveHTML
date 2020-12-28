@@ -7,34 +7,50 @@ import componentClass, { createProxyInContext } from '../vnode/component.js';
  * @param { Class } oldComponent - updated component instance
  */
 
-export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, propsTarget, propsKey, propsValue) {
+export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, nextStates, statesTarget, statesKey, statesValue) {
 
-    if(nextProps) {
+    function assignNewStatesAndProps() {
 
-        if(oldComponent.componentShouldUpdate(nextProps, !deepEqual(oldComponent.props, nextProps)) === false && harmful === false) {
+        if(nextStates) {
 
-            return oldComponent;
-
+            if(statesTarget) {
+    
+                statesTarget[statesKey] = statesValue;
+    
+            } 
+    
         }
-
-        if(propsTarget) {
-
-            propsTarget[propsKey] = propsValue;
-
-        } else {
-
-            oldComponent.props = new Proxy(nextProps, createProxyInContext(oldComponent));
-            //TODO - better optimalization
-
-        }
+    
+        Object.assign(oldComponent.props, nextProps);
 
     }
 
+    
+
+    if(harmful === false) {
+
+        if(oldComponent.componentShouldUpdate(nextProps, nextStates) === false) {
+
+            assignNewStatesAndProps();
+
+            oldComponent.onComponentCancelUpdate();
+
+            return oldComponent;
+    
+        }  
+
+    }      
+
+    assignNewStatesAndProps();
+
     oldComponent.onComponentWillUpdate();
 
-    const newVNode = oldComponent.Element(oldComponent.props);
+    const newVNode = oldComponent.Element(oldComponent.props, oldComponent.states);
 
-    newVNode.children = patchComponents(newVNode.children, oldComponent.children);
+    console.log(newVNode, oldComponent)
+
+    newVNode.children = patchComponents(newVNode.children, oldComponent.children, harmful);
+    //throw error if children are imideatly components - fix issue
 
     if (oldComponent.realDOM) {
 
@@ -56,7 +72,7 @@ export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, 
  * @param { updated Component children } rootChildren 
  */
 
-function patchComponents(rootNewChildren, rootOldChildren) {
+function patchComponents(rootNewChildren, rootOldChildren, harmful) {
 
     return rootNewChildren.map((child, i) => {
 
@@ -74,7 +90,7 @@ function patchComponents(rootNewChildren, rootOldChildren) {
                  *  patch existing component, not calling new instance of component
                  */
 
-                return updateVnodeAndRealDOM(rootOldChildren[i].__component__, false, child.props);
+                return updateVnodeAndRealDOM(rootOldChildren[i].__component__, harmful, child.props, rootOldChildren[i].states);
 
             }
 

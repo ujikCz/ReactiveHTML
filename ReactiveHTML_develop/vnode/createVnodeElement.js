@@ -7,7 +7,7 @@ import flatten from './flatten.js';
 import filterAttrs from './filterAttrs.js';
 import componentClass from './component.js';
 import Component from './component.js';
-import isObject from '../isObject.js';
+import filterKey from './filterKey.js';
 
 
 /**
@@ -19,11 +19,17 @@ import isObject from '../isObject.js';
 
 export default function createVnodeElement(type, attrs, ...children) {
 
+    const filteredKey = filterKey(attrs);
+    const _key = filteredKey._key;
+    attrs = filteredKey.attrs;
+
+
     if(type.prototype instanceof componentClass) {
         
         return {
             type,
-            props: attrs || {}
+            props: attrs || {},
+            _key
         }
 
     }
@@ -35,7 +41,8 @@ export default function createVnodeElement(type, attrs, ...children) {
         attrs: filter.attrs,
         children: flatten(children),
         events: filter.events,
-        styles: filter.styles
+        styles: filter.styles,
+        _key
     }
 
 }

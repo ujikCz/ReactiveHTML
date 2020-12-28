@@ -3,6 +3,7 @@
 import zip from './zip.js';
 import render from '../DOM/render.js';
 import diff from './diff.js';
+import isObject from '../isObject.js';
 
 /**
  * check differences between old virtualNode childNodes and new one
@@ -23,6 +24,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
      */
 
     const additionalPatches = [];
+
     for (const additionalVChild of newVChildren.slice(oldVChildren.length)) {
         additionalPatches.push(function (node) {
             node.appendChild(render(additionalVChild));

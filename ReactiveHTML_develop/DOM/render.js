@@ -21,6 +21,10 @@
 
             const instance = new component.type(component.props);
 
+            instance.onComponentCreate();
+
+            Object.assign(instance, instance.Element(instance.props, instance.states));
+
             /*
              * assign instane value (vNode, props, ...) to component itself, cause component is only class
              */

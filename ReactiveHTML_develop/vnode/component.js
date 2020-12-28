@@ -36,11 +36,11 @@ export function createProxyInContext(context) {
                 return true;
 
             }
-            
-            const nextProps = Object.assign({}, context.props);
-            nextProps[key] = value;
 
-            updateVnodeAndRealDOM(context, false, nextProps, target, key, value);
+            const nextStates = Object.assign({}, context.states);
+            nextStates[key] = value;
+
+            updateVnodeAndRealDOM(context, false, context.props, nextStates, target, key, value);
 
             return true;
         }
@@ -62,15 +62,11 @@ export default class Component {
 
     constructor(props = {}) {
 
-        this.props = this.componentShouldObserveProps() === false ? props : new Proxy(props, createProxyInContext(this));
-
-        Object.assign(this, this.Element(this.props));
+        this.props = props;
 
         this.realDOM = null;
 
         this.__component__ = this;
-
-        this.onComponentCreate(this.props);
 
         return this;
 
@@ -94,6 +90,7 @@ export default class Component {
     onComponentUpdate() {}
     onComponentRender() {}
     onComponentMount() {}
+    onComponentCancelUpdate() {}
 
     //onComponentChange
 
@@ -114,7 +111,12 @@ export default class Component {
 
     componentShouldUpdate() { return true; }
 
-    componentShouldObserveProps() { return true; }
+    assignStates(states = {}) { 
+
+        this.states = new Proxy(states, createProxyInContext(this));
+        return this.states;
+
+    }
 
 
     /**
