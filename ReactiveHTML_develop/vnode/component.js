@@ -91,6 +91,7 @@ export default class Component {
     onComponentRender() {}
     onComponentMount() {}
     onComponentCancelUpdate() {}
+    onComponentTreeChange() {}
 
     //onComponentChange
 
@@ -111,7 +112,7 @@ export default class Component {
 
     componentShouldUpdate() { return true; }
 
-    assignStates(states = {}) { 
+    states(states = {}) { 
 
         this.states = new Proxy(states, createProxyInContext(this));
         return this.states;
