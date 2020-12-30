@@ -1,7 +1,6 @@
 
 
     import isObject from '../isObject.js';
-    import mount from './mount.js';
     import componentClass from '../vnode/component.js';
 
     /**
@@ -21,23 +20,23 @@
 
     }
 
-    function createDomElement(instance) {
+    function createDomElement(vnode) {
 
-        const el = document.createElement(instance.type);
+        const el = document.createElement(vnode.type);
 
-        for (const [k, v] of Object.entries(instance.attrs.basic)) {
+        for (const [k, v] of Object.entries(vnode.attrs.basic)) {
             el.setAttribute(k, v);
         }
 
-        for (const [k, v] of Object.entries(instance.attrs.events)) {
+        for (const [k, v] of Object.entries(vnode.attrs.events)) {
             el.addEventListener(k, v);
         }
 
-        for (const [k, v] of Object.entries(instance.attrs.styles)) {
+        for (const [k, v] of Object.entries(vnode.attrs.styles)) {
             el.style[k] = v;
         }
 
-        instance.children.forEach(child => {
+        vnode.children.forEach(child => {
 
             if(Array.isArray(child)) {
                 

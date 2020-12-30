@@ -19,6 +19,15 @@
          *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
          */
 
+        if (vNewNode === undefined) {
+
+            return function (node) {
+                node.remove();
+                return undefined;
+            };
+
+        }
+
         if(vOldNode.__component__) {
 
             return diff(vOldNode.vnode, vNewNode);
@@ -28,24 +37,6 @@
         if(vNewNode.__component__) {
 
             return diff(vOldNode, vNewNode.vnode);
-
-        }
-
-        if(Array.isArray(vNewNode)) {
-
-            const patches = vOldNode.map( (singleVOldNode, i) => diff(singleVOldNode, vNewNode[i]));
-            return patches.map(patch => function(node) {
-                return patch(node);
-            });
-
-        }
-
-        if (vNewNode === undefined) {
-
-            return function (node) {
-                node.remove();
-                return undefined;
-            };
 
         }
 

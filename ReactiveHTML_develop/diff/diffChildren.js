@@ -1,9 +1,7 @@
-
-
 import zip from './zip.js';
 import render from '../DOM/render.js';
 import diff from './diff.js';
-import isObject from '../isObject.js';
+import flatten from '../vnode/flatten.js';
 
 /**
  * check differences between old virtualNode childNodes and new one
@@ -15,8 +13,13 @@ import isObject from '../isObject.js';
 export default function diffChildren(oldVChildren, newVChildren) {
     const childPatches = [];
 
+    oldVChildren = flatten(oldVChildren);
+    newVChildren = flatten(newVChildren);
+
     oldVChildren.forEach((oldVChild, i) => {
+
         childPatches.push(diff(oldVChild, newVChildren[i]));
+
     });
 
     /*
@@ -26,11 +29,13 @@ export default function diffChildren(oldVChildren, newVChildren) {
     const additionalPatches = [];
 
     for (const additionalVChild of newVChildren.slice(oldVChildren.length)) {
+
         additionalPatches.push(function (node) {
             node.appendChild(render(additionalVChild));
             return node;
         });
     }
+
     /*
      *   apply all childNodes changes to parent realNode
      */
@@ -52,7 +57,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
 function patchAsArray(patchArray, element) {
 
-    if(Array.isArray(patchArray)) {
+    if (Array.isArray(patchArray)) {
 
         return patchArray.map(singlePatch => patchAsArray(singlePatch));
 

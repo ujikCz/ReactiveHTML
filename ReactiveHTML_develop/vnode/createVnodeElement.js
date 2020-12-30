@@ -18,11 +18,21 @@ import Component from './component.js';
 
 export default function createVnodeElement(type, props, ...children) {
 
+    let _key = null;
+    if(props !== null && props[':key']) {
+
+        _key = props[':key'];
+        delete props[':key'];
+
+    }
+    
+
     if(type.prototype instanceof componentClass) {
         
         return {
             type,
-            props
+            props,
+            _key
         }
 
     }
@@ -34,7 +44,8 @@ export default function createVnodeElement(type, props, ...children) {
             styles: {},
             basic: {}
         },
-        children: children
+        children,
+        _key
     }
 
 }
