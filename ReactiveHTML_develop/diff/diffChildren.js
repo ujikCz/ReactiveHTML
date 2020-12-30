@@ -37,7 +37,8 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
     return function (parent) {
         for (const [patch, child] of zip(childPatches, parent.childNodes)) {
-            patch(child);
+            patchAsArray(patch, child);
+            //patch(child);
         }
 
         for (const patch of additionalPatches) {
@@ -47,3 +48,16 @@ export default function diffChildren(oldVChildren, newVChildren) {
         return parent;
     };
 };
+
+
+function patchAsArray(patchArray, element) {
+
+    if(Array.isArray(patchArray)) {
+
+        return patchArray.map(singlePatch => patchAsArray(singlePatch));
+
+    }
+
+    return patchArray(element);
+
+}

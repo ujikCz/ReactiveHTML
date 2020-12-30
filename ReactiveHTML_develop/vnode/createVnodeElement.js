@@ -7,7 +7,6 @@ import flatten from './flatten.js';
 import filterAttrs from './filterAttrs.js';
 import componentClass from './component.js';
 import Component from './component.js';
-import filterKey from './filterKey.js';
 
 
 /**
@@ -17,32 +16,25 @@ import filterKey from './filterKey.js';
  * @param  { Array of vnodes } children 
  */
 
-export default function createVnodeElement(type, attrs, ...children) {
-
-    const filteredKey = filterKey(attrs);
-    const _key = filteredKey._key;
-    attrs = filteredKey.attrs;
-
+export default function createVnodeElement(type, props, ...children) {
 
     if(type.prototype instanceof componentClass) {
         
         return {
             type,
-            props: attrs || {},
-            _key
+            props
         }
 
     }
 
-    const filter = filterAttrs(attrs);
-
     return {
         type,
-        attrs: filter.attrs,
-        children: flatten(children),
-        events: filter.events,
-        styles: filter.styles,
-        _key
+        attrs: props ? filterAttrs(props) : {
+            events: {},
+            styles: {},
+            basic: {}
+        },
+        children: children
     }
 
 }

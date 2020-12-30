@@ -64,8 +64,6 @@ export default class Component {
 
         this.props = props;
 
-        this.realDOM = null;
-
         this.__component__ = this;
 
         return this;
@@ -124,12 +122,6 @@ export default class Component {
      * init method
      * @param { Object } props 
      */
-
-    static init(props = {}) {
-
-        return createVnodeElement(this, props);
-
-    }
 
     forceComponentUpdate(harmful = false) {
 

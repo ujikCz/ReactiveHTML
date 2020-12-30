@@ -15,10 +15,30 @@
      */
 
     export default function diff(vOldNode, vNewNode) {
-
         /*
          *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
          */
+
+        if(vOldNode.__component__) {
+
+            return diff(vOldNode.vnode, vNewNode);
+
+        }
+
+        if(vNewNode.__component__) {
+
+            return diff(vOldNode, vNewNode.vnode);
+
+        }
+
+        if(Array.isArray(vNewNode)) {
+
+            const patches = vOldNode.map( (singleVOldNode, i) => diff(singleVOldNode, vNewNode[i]));
+            return patches.map(patch => function(node) {
+                return patch(node);
+            });
+
+        }
 
         if (vNewNode === undefined) {
 
@@ -61,8 +81,8 @@
          *   creates all patch functions from diffing functions 
          */
 
-        const patchAttrs = diffAttrs(vOldNode.attrs, vNewNode.attrs);
-        const patchStyles = diffStyles(vOldNode.styles, vNewNode.styles);
+        const patchAttrs = diffAttrs(vOldNode.attrs.basic, vNewNode.attrs.basic);
+        const patchStyles = diffStyles(vOldNode.attrs.styles, vNewNode.attrs.styles);
         const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
 
         /*
@@ -70,6 +90,7 @@
          */
 
         return function (node) {
+            if(node === undefined) return node;
             patchAttrs(node);
             patchChildren(node);
             patchStyles(node);

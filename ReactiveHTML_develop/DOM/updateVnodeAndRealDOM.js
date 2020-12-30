@@ -27,8 +27,6 @@ export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, 
 
     }
 
-    
-
     if(harmful === false) {
 
         // if forcing update is harmful don't trigger componentShouldUpdate, update it without permission
@@ -59,13 +57,13 @@ export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, 
         oldComponent.Element(
             oldComponent.props, 
             oldComponent.states
-        ), 
-        oldComponent, 
+        ),
+        oldComponent.vnode, 
         harmful
 
     ); //patch all existing components and add new components in tree
 
-    if(!deepEqual(newVNode, oldComponent)) {
+    if(!deepEqual(newVNode, oldComponent.vnode)) {
 
         // if component virtual DOM tree changed
 
@@ -75,12 +73,14 @@ export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, 
  
     if (oldComponent.realDOM) {
 
-        const patch = diff(oldComponent, newVNode); // get patches
-        newVNode.realDOM = patch(oldComponent.realDOM); //patch real DOM of component
+        const patch = diff(oldComponent.vnode, newVNode); // get patches
+        oldComponent.realDOM = patch(oldComponent.realDOM); //patch real DOM of component
 
     }
 
-    Object.assign(oldComponent, newVNode); // patch old virtual DOM tree
+    console.log(newVNode);
+
+    oldComponent.vnode = newVNode; // patch old virtual DOM tree
 
     oldComponent.onComponentUpdate();
 
@@ -97,12 +97,17 @@ function patchComponents(newChild, oldChild, harmful) {
 
     if (!isObject(newChild)) return newChild; //if is text node, return it
 
+    if(Array.isArray(newChild)) {
+
+        return newChild.map( (singleNewChild, i) => patchComponents(singleNewChild, oldChild[i], harmful));
+
+    }
+
     if (newChild.type.prototype instanceof componentClass) {
 
         if(oldChild) {
 
             //if is component and already exists
-
             return updateVnodeAndRealDOM(oldChild.__component__, harmful, newChild.props, oldChild.states);
 
         }
@@ -112,8 +117,13 @@ function patchComponents(newChild, oldChild, harmful) {
 
     }
 
-    //if is not component patch components inside
+    if(oldChild === undefined) {
 
+        return newChild;
+
+    }
+
+    //if is not component patch components inside
     newChild.children = newChild.children.map( (newInside, i) => patchComponents(newInside, oldChild.children[i], harmful));
 
     return newChild;

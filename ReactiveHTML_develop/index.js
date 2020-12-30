@@ -37,32 +37,17 @@ import updateVnodeAndRealDOM from './DOM/updateVnodeAndRealDOM.js';
 
         render: function (component, element) {
 
-            let type = false;
-
             const originalType = component.type;
             const rendered = render(component);
 
-            if (component.type === 'ReactiveHTML.Container') {
-
-                type = true;
-
-            }
-
-            if (originalType.prototype instanceof Component) {
-
-                originalType.prototype.onComponentWillMount(originalType.props);
-
-            }
-
             const mounted = mount(
                 rendered,
-                element,
-                type
+                element
             );
 
             if (originalType.prototype instanceof Component) {
 
-                originalType.prototype.onComponentMount(mounted);
+                component.__component__.onComponentMount(mounted);
 
             }
 
@@ -85,7 +70,17 @@ import updateVnodeAndRealDOM from './DOM/updateVnodeAndRealDOM.js';
          *   creates virtualNode 
          */
 
-        createElement: createVnodeElement
+        createElement: createVnodeElement,
+
+        createFactory: function(component) {
+
+            return function(props = {}) {
+
+                return createVnodeElement(component, props);
+
+            }
+
+        }
 
     };
 
