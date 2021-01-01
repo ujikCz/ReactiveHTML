@@ -1,3 +1,5 @@
+
+## This changelog is obsolete
 ### Change log
 
 ```this.setValue(:assigments): undefinded``` arguments in setValue function are assigments, on that assigments element can react   
