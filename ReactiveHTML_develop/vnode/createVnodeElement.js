@@ -1,16 +1,12 @@
 
-/*
- *  creates virtual node 
- */
 
-import flatten from './flatten.js';
 import filterAttrs from './filterAttrs.js';
 import componentClass from './component.js';
 import Component from './component.js';
 
 
 /**
- * 
+ * creates virtual node
  * @param { Component, tagName } type 
  * @param { props, attrs } attrs 
  * @param  { Array of vnodes } children 
@@ -26,6 +22,9 @@ export default function createVnodeElement(type, props, ...children) {
 
     }
     
+    /**
+     * if element is component
+     */
 
     if(type.prototype instanceof componentClass) {
         
@@ -36,6 +35,10 @@ export default function createVnodeElement(type, props, ...children) {
         }
 
     }
+
+    /**
+     * if element is basic virtual node element
+     */
 
     return {
         type,

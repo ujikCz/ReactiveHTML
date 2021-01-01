@@ -26,7 +26,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
         }
 
-
     });
 
     /*
@@ -50,11 +49,15 @@ export default function diffChildren(oldVChildren, newVChildren) {
     return function (parent) {
 
         for (const [patch, child] of zip(childPatches, parent.childNodes)) {
+
             patch(child);
+
         }
 
         for (const patch of additionalPatches) {
+
             patch(parent);
+
         }
 
         return parent;

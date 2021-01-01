@@ -9,11 +9,12 @@ import mount from './DOM/mount.js';
 import onElementReady from './DOM/elementReady.js';
 import createVnodeElement from './vnode/createVnodeElement.js';
 import Component from './vnode/component.js';
-import Observable from './observable.js';
-import __observable_change from './observable_change.js';
-import updateVnodeAndRealDOM from './DOM/updateVnodeAndRealDOM.js';
 
-
+/**
+ * whole library is in container funciton for use library in node.js, js, modules, ...
+ * @param  { Object } global - window object
+ * @param  { Function } factory - ReactiveHTML library
+ */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -32,8 +33,6 @@ import updateVnodeAndRealDOM from './DOM/updateVnodeAndRealDOM.js';
          */
 
         Component,
-
-        Observable: __observable_change,
 
         render: function (component, element) {
 
