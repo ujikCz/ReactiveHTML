@@ -77,9 +77,7 @@ export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, 
         oldComponent.realDOM = patch(oldComponent.realDOM); //patch real DOM of component
 
     }
-
-    console.log(newVNode);
-
+    
     oldComponent.vnode = newVNode; // patch old virtual DOM tree
 
     oldComponent.onComponentUpdate();

@@ -28,15 +28,9 @@
 
         }
 
-        if(vOldNode.__component__) {
+        if(vOldNode.__component__ || vNewNode.__component__) {
 
-            return diff(vOldNode.vnode, vNewNode);
-
-        }
-
-        if(vNewNode.__component__) {
-
-            return diff(vOldNode, vNewNode.vnode);
+            return diff(vOldNode.vnode || vOldNode, vNewNode.vnode || newNode);
 
         }
 
@@ -81,7 +75,7 @@
          */
 
         return function (node) {
-            if(node === undefined) return node;
+
             patchAttrs(node);
             patchChildren(node);
             patchStyles(node);

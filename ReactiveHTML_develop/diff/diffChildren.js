@@ -1,7 +1,7 @@
 import zip from './zip.js';
 import render from '../DOM/render.js';
 import diff from './diff.js';
-import flatten from '../vnode/flatten.js';
+import diffArrays from './diffArrays.js';
 
 /**
  * check differences between old virtualNode childNodes and new one
@@ -12,13 +12,20 @@ import flatten from '../vnode/flatten.js';
 
 export default function diffChildren(oldVChildren, newVChildren) {
     const childPatches = [];
-
-    oldVChildren = flatten(oldVChildren);
-    newVChildren = flatten(newVChildren);
+    const additionalPatches = [];
 
     oldVChildren.forEach((oldVChild, i) => {
 
-        childPatches.push(diff(oldVChild, newVChildren[i]));
+        if(Array.isArray(oldVChild)) {
+
+            additionalPatches.push(diffArrays(oldVChild, newVChildren[i]));
+
+        } else {
+
+            childPatches.push(diff(oldVChild, newVChildren[i]));
+
+        }
+
 
     });
 
@@ -26,7 +33,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
      *   if that virtualNode is not in old virtualNode parent, but in new it is, append it
      */
 
-    const additionalPatches = [];
 
     for (const additionalVChild of newVChildren.slice(oldVChildren.length)) {
 
@@ -34,6 +40,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
             node.appendChild(render(additionalVChild));
             return node;
         });
+
     }
 
     /*
@@ -41,9 +48,9 @@ export default function diffChildren(oldVChildren, newVChildren) {
      */
 
     return function (parent) {
+
         for (const [patch, child] of zip(childPatches, parent.childNodes)) {
-            patchAsArray(patch, child);
-            //patch(child);
+            patch(child);
         }
 
         for (const patch of additionalPatches) {
@@ -53,16 +60,3 @@ export default function diffChildren(oldVChildren, newVChildren) {
         return parent;
     };
 };
-
-
-function patchAsArray(patchArray, element) {
-
-    if (Array.isArray(patchArray)) {
-
-        return patchArray.map(singlePatch => patchAsArray(singlePatch));
-
-    }
-
-    return patchArray(element);
-
-}

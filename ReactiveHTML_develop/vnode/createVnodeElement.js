@@ -19,7 +19,7 @@ import Component from './component.js';
 export default function createVnodeElement(type, props, ...children) {
 
     let _key = null;
-    if(props !== null && props[':key']) {
+    if(props !== null && props[':key'] !== undefined) {
 
         _key = props[':key'];
         delete props[':key'];
