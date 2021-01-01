@@ -81,9 +81,11 @@ export default function render(virtualElement) {
         const instance = getVnodeFromComponent(virtualElement);
         instance.realDOM = render(instance.vnode);
 
-        instance.onComponentRender();
+        instance.onComponentRender(instance.realDOM);
 
         Object.assign(virtualElement, instance);
+
+        instance.onComponentWillMount(virtualElement.realDOM);
 
         return virtualElement.realDOM;
 

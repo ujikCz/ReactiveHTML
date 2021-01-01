@@ -24,7 +24,6 @@ import Component from './vnode/component.js';
 
     "use strict";
 
-
     const ReactiveHTML = {
 
         /*
@@ -36,21 +35,10 @@ import Component from './vnode/component.js';
 
         render: function (component, element) {
 
-            const originalType = component.type;
-            const rendered = render(component);
-
-            const mounted = mount(
-                rendered,
+            return mount(
+                render(component),
                 element
             );
-
-            if (originalType.prototype instanceof Component) {
-
-                component.__component__.onComponentMount(mounted);
-
-            }
-
-            return mounted;
 
         },
 

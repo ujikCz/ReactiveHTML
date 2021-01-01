@@ -87,11 +87,7 @@ export default class Component {
     onComponentCreate() {}
     onComponentUpdate() {}
     onComponentRender() {}
-    onComponentMount() {}
     onComponentCancelUpdate() {}
-    onComponentTreeChange() {}
-
-    //onComponentChange
 
     /*
      *  future lifecycles
@@ -101,16 +97,13 @@ export default class Component {
     onComponentWillRender() {}
     onComponentWillMount() {}
 
-    //onComponentWillChange
-
-
     /*
      *  manage methods
      */
 
     componentShouldUpdate() { return true; }
 
-    states(states = {}) { 
+    setStates(states = {}) { 
 
         this.states = new Proxy(states, createProxyInContext(this));
         return this.states;
@@ -125,7 +118,7 @@ export default class Component {
 
     forceComponentUpdate(harmful = false) {
 
-        return updateVnodeAndRealDOM(this, harmful, this.props);
+        return updateVnodeAndRealDOM(this, harmful, this.props, this.states);
 
     }
 

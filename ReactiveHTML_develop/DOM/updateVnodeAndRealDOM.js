@@ -22,8 +22,12 @@ export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, 
             } 
     
         }
-    
-        Object.assign(oldComponent.props, nextProps);
+        
+        if(oldComponent.props && isObject(nextProps)) {
+
+            Object.assign(oldComponent.props, nextProps);
+
+        }
 
     }
 
@@ -62,14 +66,6 @@ export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, 
         harmful
 
     ); //patch all existing components and add new components in tree
-
-    if(!deepEqual(newVNode, oldComponent.vnode)) {
-
-        // if component virtual DOM tree changed
-
-        oldComponent.onComponentTreeChange();
-
-    }
  
     if (oldComponent.realDOM) {
 
@@ -127,35 +123,3 @@ function patchComponents(newChild, oldChild, harmful) {
     return newChild;
 }
 
-
-function deepEqual(object1, object2) {
-
-    const keys1 = Object.keys(object1);
-    const keys2 = Object.keys(object2);
-
-    if (keys1.length !== keys2.length) {
-
-        return false;
-
-    }
-
-    for (const key of keys1) {
-
-        const val1 = object1[key];
-        const val2 = object2[key];
-
-        const areObjects = isObject(val1) && isObject(val2);
-
-        if (areObjects && !deepEqual(val1, val2) || !areObjects && val1 !== val2) {
-
-            //if values are not objects and are not equal
-            //if values are objects create recursion
-
-            return false;
-
-        }
-
-    }
-
-    return true;
-}
