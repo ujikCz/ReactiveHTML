@@ -109,10 +109,12 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(HelloWorldComponent(
 ```
 
 ### Component with states
-States is reactive object, on every change done in this object, component will react.
-States can be added by reactive method, setStates method.
+States are reactive objects, on every change done in this objects, component will react.
+States can be added by reactive method.
 States are internally only in component where they was created.
 You can create more states with more names.
+
+Note: be careful what object can be state and what no, every changes will trigger changes and diff algorithm. 
 ```
 class HelloWorldComponent extends ReactiveHTML.Component {
 
@@ -319,3 +321,18 @@ class StylesTest extends ReactiveHTML.Component {
 
 ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ StylesTest } />`, el));
 ```
+
+### Lifecycles
+
+Lifecycles are method of component. 
+Lifecycles are triggered when something happen, e.g. onComponentRender trigger when component was rendered. 
+
+There are 3 types of Lifecycles [manage lifecycles, callback lifecycles, future callback lifecycles] 
+
+1. Manage lifecycles can manage behavior of component
+2. Callback lifecycles are triggered when something happen with component
+3. Future callback lifecycles are triggered before something happen with component
+
+
+
+
