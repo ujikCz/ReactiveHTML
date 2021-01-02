@@ -27,7 +27,7 @@ The library has reactive state management, that means elements can react on your
 use dom api over your application.
 Every change in components are done in virtual dom.
 Virtual dom is lightweight copy of real dom, virtual dom is json javascript object, that means every diffing are faster
-than in real dom, because real dom need to recalculate styles, parents,...
+than in real dom, because real dom need to recalculate styles, parents,... (benchmark will be added) 
 
 ## Hello world
 ```
