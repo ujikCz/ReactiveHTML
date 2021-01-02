@@ -1,10 +1,10 @@
 {
-  "name": "@ujik/reactive-html",
-  "version": "2.1.3",
+  "name": "reactivehtml",
+  "version": "2.1.7",
   "description": "Simple reactive Virtual DOM elements for building complex reactive UI",
-  "main": "ReactiveHTML.min.js",
+  "main": "ReactiveHTML.js",
   "scripts": {
-    "test": "test"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -17,8 +17,11 @@
     "virtual",
     "DOM",
     "React",
-    "htm"
+    "htm",
+    "front-end",
+    "web"
   ],
+  "homepage": "https://github.com/ujikCz/ReactiveHTML#readme",
   "author": "Ludvik Prokopec <ludvik.prokopec@gmail.com>",
   "license": "MIT"
 }
