@@ -175,29 +175,16 @@
     }
 
     function createProxyInContext(context) {
-        const validator = {
+
+        return {
             get(target, key, receiver) {
 
-                if (
-                    isObject(target[key]) &&
-                    (
-                        (target[key].constructor.name === 'Object' && target[key].toString() === '[object Object]') ||
-                        Array.isArray(target[key])
-                    )
-                ) {
-
-                    return new Proxy(target[key], validator);
-
-                } else {
-
-                    return target[key];
-
-                }
+                return target[key];
 
             },
 
             set(target, key, value, receiver) {
-
+                
                 if (target[key] === value) {
 
                     return true;
@@ -213,7 +200,6 @@
             }
         };
 
-        return validator;
     }
 
     /**
@@ -272,10 +258,22 @@
             return true;
         }
 
-        setStates(states = {}) {
+        reactive(object) {
 
-            this.states = new Proxy(states, createProxyInContext(this));
-            return this.states;
+            if (
+                isObject(object) &&
+                (
+                    (object.constructor.name === 'Object') ||
+                    Array.isArray(object)
+                )
+            ) {
+
+                return new Proxy(object, createProxyInContext(this));
+
+            }
+
+            console.warn('To make value reactive, value have to be object or array.');
+            return object;
 
         }
 
@@ -643,12 +641,6 @@
 
         }
 
-        if(vOldNode.__component__ || vNewNode.__component__) {
-
-            return diff(vOldNode.vnode || vOldNode, vNewNode.vnode || newNode);
-
-        }
-
         /*
          *   if one of virtualNodes is not virtualNode (means Number or String) replace it as textNode
          */
@@ -663,6 +655,12 @@
             } else {
                 return node => undefined;
             }
+        }
+
+        if(vOldNode.__component__ || vNewNode.__component__) {
+
+            return diff(vOldNode.vnode || vOldNode, vNewNode.vnode || newNode);
+
         }
 
         /*
