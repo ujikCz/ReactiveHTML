@@ -327,7 +327,7 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ StylesTest 
 Lifecycles are method of component. 
 Lifecycles are triggered when something happen, e.g. onComponentRender trigger when component was rendered. 
 
-There are 3 types of Lifecycles [manage lifecycles, callback lifecycles, future callback lifecycles] 
+There are 3 types of Lifecycles ```[manage lifecycles, callback lifecycles, future callback lifecycles]```
 
 1. Manage lifecycles can manage behavior of component
 2. Callback lifecycles are triggered when something happen with component
