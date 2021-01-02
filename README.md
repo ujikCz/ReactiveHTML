@@ -110,8 +110,9 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(HelloWorldComponent(
 
 ### Component with states
 States is reactive object, on every change done in this object, component will react.
-States can be added by setStates method, setStates method should be executed only once to prevent bugs.
+States can be added by reactive method, setStates method.
 States are internally only in component where they was created.
+You can create more states with more names.
 ```
 class HelloWorldComponent extends ReactiveHTML.Component {
 
@@ -119,7 +120,7 @@ class HelloWorldComponent extends ReactiveHTML.Component {
 
         super(props);
 
-        this.setStates({
+        this.states = this.reactive({
             count: this.props.count
         });
 
@@ -160,8 +161,6 @@ If you want to create some simple list, you can use (map) method on array you wa
 
 Remember that you can return only one element, so you have to add list into some container.
 
-Static lists don't have to use :key inside elements, dynamic have. 
-
 Every list element have to some identifier, you can add it by add :key attribute (in elements) or :key prop (in components), keys helps to recognize changes in elements. Every key has to be unique in list. It can be String, Number, but no Object, Function or Array.
 
 ```
@@ -171,8 +170,8 @@ class List extends ReactiveHTML.Component {
         
         super(props);
 
-        this.setStates({
-            products: ["Milk", "Butter", "Chesse", "Water"]
+        this.states = this.reactive({
+            products: this.reactive(["Milk", "Butter", "Chesse", "Water"])
         });
 
         setTimeout(() => this.states.products.push("Sugar"), 2500);
@@ -201,8 +200,8 @@ class List extends ReactiveHTML.Component {
         
         super(props);
 
-        this.setStates({
-            products: [["Milk", "Butter"], ["Chesse", "Water"]]
+        this.states = this.reactive({
+            products: this.reactive([["Milk", "Butter"], ["Chesse", "Water"]])
         });
 
         setTimeout(() => this.states.products.push(["Lemon"]), 2500);
@@ -245,7 +244,7 @@ class parent extends ReactiveHTML.Component {
 
     constructor(props) {
 
-        this.setStates({
+        this.states = this.reactive({
             count: 0
         });
 
