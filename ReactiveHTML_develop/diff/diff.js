@@ -28,12 +28,6 @@
 
         }
 
-        if(vOldNode.__component__ || vNewNode.__component__) {
-
-            return diff(vOldNode.vnode || vOldNode, vNewNode.vnode || newNode);
-
-        }
-
         /*
          *   if one of virtualNodes is not virtualNode (means Number or String) replace it as textNode
          */
@@ -48,6 +42,16 @@
             } else {
                 return node => undefined;
             }
+        }
+
+        /*
+         * diff components if old or new vnode are components
+         */
+
+        if(vOldNode.__component__ || vNewNode.__component__) {
+
+            return diff(vOldNode.vnode || vOldNode, vNewNode.vnode || newNode);
+
         }
 
         /*

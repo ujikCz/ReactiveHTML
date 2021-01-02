@@ -8,30 +8,17 @@ import createVnodeElement from './createVnodeElement.js';
  */
 
 export function createProxyInContext(context) {
-    const validator = {
+
+    return {
         get(target, key, receiver) {
 
-            if (
-                isObject(target[key]) && 
-                ( 
-                    (target[key].constructor.name === 'Object' && target[key].toString() === '[object Object]') ||  
-                    Array.isArray(target[key])
-                )
-            ) {
-
-                return new Proxy(target[key], validator);
-
-            } else {
-
-                return target[key];
-
-            }
+            return target[key];
 
         },
 
         set(target, key, value, receiver) {
 
-            if(target[key] === value) {
+            if (target[key] === value) {
 
                 return true;
 
@@ -46,8 +33,8 @@ export function createProxyInContext(context) {
         }
     };
 
-    return validator;
 }
+
 
 /**
  *  Component class
@@ -101,12 +88,26 @@ export default class Component {
      *  manage methods
      */
 
-    componentShouldUpdate() { return true; }
+    componentShouldUpdate() {
+        return true;
+    }
 
-    setStates(states = {}) { 
+    reactive(object) {
 
-        this.states = new Proxy(states, createProxyInContext(this));
-        return this.states;
+        if (
+            isObject(object) &&
+            (
+                (object.constructor.name === 'Object') ||
+                Array.isArray(object)
+            )
+        ) {
+
+            return new Proxy(object, createProxyInContext(this));
+
+        }
+
+        console.warn('To make value reactive, value have to be object or array.');
+        return object;
 
     }
 
