@@ -160,6 +160,8 @@ If you want to create some simple list, you can use (map) method on array you wa
 
 Remember that you can return only one element, so you have to add list into some container.
 
+Static lists don't have to use :key inside elements, dynamic have. 
+
 Every list element have to some identifier, you can add it by add :key attribute (in elements) or :key prop (in components), keys helps to recognize changes in elements. Every key has to be unique in list. It can be String, Number, but no Object, Function or Array.
 
 ```
@@ -222,12 +224,10 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ List } />`,
 ```
 
 ### Component inside another component
-List rendering is also simple, you can use any array of virtual node elements you want.
-If you want to create some simple list, you can use (map) method on array you want to display in list.
 
-Remember that you can return only one element, so you have to add list into some container.
+Any component can be used as child of another component. 
+Components can share states by props, that means child component can manipulate with parent component as you can see in example. 
 
-Every list element have to some identifier, you can add it by add :key attribute (in elements) or :key prop (in components), keys helps to recognize changes in elements. Every key has to be unique in list. It can be String, Number, but no Object, Function or Array.
 ```
 class child extends ReactiveHTML.Component {
 
