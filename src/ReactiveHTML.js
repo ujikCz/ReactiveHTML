@@ -632,6 +632,13 @@
          *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
          */
 
+        
+        if(vOldNode.__component__) {
+
+            return node => node;
+
+        }
+
         if (vNewNode === undefined) {
 
             return function (node) {
@@ -655,12 +662,6 @@
             } else {
                 return node => undefined;
             }
-        }
-
-        if(vOldNode.__component__ || vNewNode.__component__) {
-
-            return diff(vOldNode.vnode || vOldNode, vNewNode.vnode || newNode);
-
         }
 
         /*
