@@ -15,6 +15,13 @@
      */
 
     export default function diff(vOldNode, vNewNode) {
+
+        if(vOldNode.__component__) {
+
+            return node => node;
+
+        }
+
         /*
          *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
          */
@@ -42,16 +49,6 @@
             } else {
                 return node => undefined;
             }
-        }
-
-        /*
-         * diff components if old or new vnode are components
-         */
-
-        if(vOldNode.__component__ || vNewNode.__component__) {
-
-            return diff(vOldNode.vnode || vOldNode, vNewNode.vnode || newNode);
-
         }
 
         /*
