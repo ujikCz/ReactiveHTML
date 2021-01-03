@@ -1,6 +1,6 @@
 {
   "name": "reactivehtml",
-  "version": "2.1.8",
+  "version": "2.1.9",
   "description": "Simple reactive Virtual DOM elements for building complex reactive UI",
   "main": "ReactiveHTML.js",
   "repository": {
