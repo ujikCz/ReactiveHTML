@@ -23,11 +23,16 @@ Only browsers that supports ES8 (classes, proxies, Object.entries, Object.values
 ## About
 This library allows you to write components with html elements in javascript, so you can create conditional rendering or
 list rendering simply.
+
 The library has reactive state management, that means elements can react on your input (variables) and you don't have to
 use dom api over your application.
+
 Every change in components are done in virtual dom.
+
 Virtual dom is lightweight copy of real dom, virtual dom is json javascript object, that means every diffing are faster
 than in real dom, because real dom need to recalculate styles, parents,... (benchmark will be added) 
+
+This library is also very lightweight, only 2Kb min+gzip
 
 ## Hello world
 ```
