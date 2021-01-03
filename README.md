@@ -39,7 +39,79 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<div>Hello, wor
 
 note: every example are done with htm.js for clarity
 
+## render method
+This method render virtual dom into real dom and mount it to specific element.
+
+```
+ReactiveHTML.render(html`<div>Hello, world!</div>`, document.getElementById('app'));
+```
+
+## elementReady method
+This method wait until selector in the first parameter matched element.
+Element is matched before whole DOM is loaded, it is matched after element was parsed.
+That means you can modify element before whole DOM loaded, so if it is some big modification, user don't see "blick" effect.
+
+If element was matches, it will call asynchronnous callback function in second parameter, where you can render to this element.
+Callback function paramater is the matched element.
+
+Note: call elementReady before element in document, else callback function will never be called.
+```
+ReactiveHTML.elementReady('#app', function(element){
+
+    console.log(element);
+    ReactiveHTML.render(html`<div>Hello, world!</div>`, element);
+
+});
+```
+
+## createElement method
+This method creates virtual element.
+It has 3 parameters, first one is String or Class of component. It defining type of virtual element.
+Second parameter is Object that are props/attributes.
+The last one is unlimited parameter. In this parameter can be children virtual nodes.
+
+This method can be replaced with html literal string tag function.
+
+```
+ReactiveHTML.createElement('div', { id: "hello-world" }, 'Hello, world!');
+html`<div id="hello-world">Hello, world!</div>`
+```
+
+This two virtual Elements are the same.
+
+To make html function you have to installed htm.js library and bind its function to ReactiveHTML.createElement
+
+```
+const html = htm.bind(ReactiveHTML.createElement);
+```
+
+## createFactory method
+This method creates fuction which can be called as component element.
+This method has one parameter that is the component class.
+On call factory function the first parameter is Object - props of component.
+
+```
+class myComponent extends ReactiveHTML.Component {
+
+    Element(props, states) {
+
+        return html`<div>${ props.message }</div>`
+
+    }
+
+}
+
+const myComponentFactory = ReactiveHTML.createFactory(myComponent);
+
+ReactiveHTML.render(myComponentFactory({ message: "Hello, world!" }), document.getElementById('app'));
+
+```
+
 ## Components
+
+### Element method
+Element method is the only one method, that have to be defined else it will throw Error.
+
 ### Simple component
 
 this example with component has the same output as the Hello world example, but with component based elements
@@ -333,6 +405,222 @@ There are 3 types of Lifecycles ```[manage lifecycles, callback lifecycles, futu
 2. Callback lifecycles are triggered when something happen with component
 3. Future callback lifecycles are triggered before something happen with component
 
+#### Manage lifecycles
+componentShouldUpdate lifecycle is manage method for better performance.
+Return type is Boolean false means component will not update, true component will update.
+
+How you can see in example, on every states change, component will react, but update only every two seconds - only if a changed.
+This method is only for performance boost.
+
+```
+class ManageLifecyclesTest extends ReactiveHTML.Component {
+
+    constructor(props) {
+
+        super(props);
+
+        this.states = this.reactive({
+
+            a: 1,
+            b: 1
+
+        });
+
+        let canChange = false;
+
+        setInterval( () => {
+
+            if(canChange) {
+
+                this.states.a++;
+                canChange = !canChange;
+
+            } else {
+
+                this.states.b++;
+                canChange = !canChange;
+
+            }
+
+        }, 1000);
+
+    }
+
+    componentShouldUpdate(nextProps, nextStates) {
+
+        if(nextStates.a !== this.states.a) return true;
+        else return false;
+
+    }
+
+    onComponentUpdate() {
+
+        console.log("update"); //every two seconds
+
+    }   
+
+    Element(props, states) {
+
+        return html`<div>${ states.a }</div>`
+
+    }
+
+}
+
+ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ ManageLifecyclesTest } />`, el));
+```
+
+#### Callback lifecycles
+Callback lifecycles are methods which is called when something happen with component.
+
+```
+class CallbackLifecyclesTest extends ReactiveHTML.Component {
+
+    constructor(props) {
+
+        super(props);
+
+        console.log("init"); // called only once per component used
+
+    }
+
+    onComponentCreate() {
+
+        console.log("create"); // called only once per component used. Called after component is created.
+
+    }   
+
+    onComponentUpdate() {
+
+        console.log("update"); // called on every update. Called after component is updated.
+
+    }  
+
+    onComponentCancelUpdate() {
+
+        console.log("update"); // called on every canceled update, this react on componentShouldUpdate
+
+    }    
+
+    onComponentRender() {
+
+        console.log("render"); // called once per component used. Called after component is rendered
+
+    }  
+
+    Element(props, states) {
+
+        return html`<div>Hello, world!</div>`
+
+    }
+
+}
+
+ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ CallbackLifecyclesTest } />`, el));
+```
+
+#### Future callback lifecycles
+Future callback lifecycles are methods which is called when something will happen with component.
+
+```
+class FutureCallbackLifecyclesTest extends ReactiveHTML.Component {
+
+    onComponentWillUpdate() {
+
+        console.log("will update"); // called before every update. If update canceled by componentShouldUpdate, this will not called
+
+    }   
+
+    onComponentWillRender() {
+
+        console.log("will render"); // called once per component used. Called before component is rendered
+
+    }  
+
+    onComponentWillMount() {
+
+        console.log("will mount"); // called once per component used. Called before component is mounted to view
+
+    }  
+
+    Element(props, states) {
+
+        return html`<div>Hello, world!</div>`
+
+    }
+
+}
+
+ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ FutureCallbackLifecyclesTest } />`, el));
+```
+
+### Component methods
+Components have some methods that can manipulate with component.
+
+#### Component.reactive
+This method expecting one parameter that can be Object or Array.
+All other types not throw error, but warning and can be used, but they are not reactive.
+Reactive method is mostly used to create states of component.
+
+```
+class reactiveTest extends ReactiveHTML.Component {
+
+    constructor(props) {
+
+        super(props);
+
+        this.states = this.reactive({
+
+            count: 0
+
+        }); //this.states.count is reactive value, on every change, component will update 
+    }
+
+    Element(props, states) {
+
+        return html`<button onclick=${ (e) => states.count++ }>${ states.count }</button>`
+
+    }
+
+}
+
+ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ reactiveTest } />`, el));
+```
+
+#### Component.forceComponentUpdate
+This method expecting one parameter that must be Boolean. Parameter is not required, default value is false.
+Parameter sais if force udpate will be harmful or not, false means not, true means harmful.
+If forcing update without parameter, or with false it will on update query componentShouldUpdate if update component or not.
+If forcing update with true, componentShouldUpdate will not called and component will update although componentShouldUpdate return false.
+
+I highly recommend to use forceComponentUpdate with harmful mode only if there is no other way to update component.
+```
+class forceUpdateTest extends ReactiveHTML.Component {
+
+    constructor(props) {
+
+        super(props);
+
+        this.count = 0;
+
+        setInterval( () => {
+
+            this.count++;
+            this.forceComponentUpdate();
+
+        }, 1000);
+    }
+
+    Element(props, states) {
+
+        return html`<div>${ this.count }</div>`
+
+    }
+
+}
+
+ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ forceUpdateTest } />`, el));
+```
 
 
 
