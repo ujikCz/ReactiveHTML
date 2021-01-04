@@ -266,6 +266,32 @@
 
     }
 
+    function cloneObjectWithoutReference(object) {
+
+        if(object instanceof Array) {
+    
+            return object.map(item => cloneObjectWithoutReference(item));
+    
+        }
+    
+        if(object instanceof Object) {
+    
+            const clone = {};
+    
+            for(const [k, v] of Object.entries(object)) {
+    
+                clone[k] = cloneObjectWithoutReference(v);
+    
+            }
+    
+            return clone;
+    
+        }
+    
+        return object;
+    
+    }
+
     function assignNewStatesAndProps(oldComponent, nextProps, nextStates, willUpdate) {
 
         // prepare for update states and prop, not update now because of next values of props and states 
