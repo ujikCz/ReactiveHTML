@@ -188,12 +188,10 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(HelloWorldComponent(
 ```
 
 ### Component with states
-States are reactive objects, on every change done in this objects, component will react.
-States can be added by reactive method.
+States is simple object.
 States are internally only in component where they was created.
-You can create more states with more names.
+You can create only one state object.
 
-Note: be careful what object can be state and what no, every changes will trigger changes and diff algorithm. 
 ```
 class HelloWorldComponent extends ReactiveHTML.Component {
 
@@ -201,15 +199,15 @@ class HelloWorldComponent extends ReactiveHTML.Component {
 
         super(props);
 
-        this.states = this.reactive({
+        this.states = {
             count: this.props.count
-        });
+        };
 
     }
 
     Element(props, states) {
 
-        return html`<button onclick=${ (e) => states.count++ }>${ states.count }</button>`
+        return html`<button onclick=${ (e) => this.setState(states => states.count++) }>${ states.count }</button>`
 
     }
 
@@ -251,11 +249,11 @@ class List extends ReactiveHTML.Component {
         
         super(props);
 
-        this.states = this.reactive({
-            products: this.reactive(["Milk", "Butter", "Chesse", "Water"])
-        });
+        this.states = {
+            products: ["Milk", "Butter", "Chesse", "Water"]
+        };
 
-        setTimeout(() => this.states.products.push("Sugar"), 2500);
+        setTimeout(() => this.setState(states => states.products.push("Sugar")), 2500);
 
     }
 
@@ -281,11 +279,11 @@ class List extends ReactiveHTML.Component {
         
         super(props);
 
-        this.states = this.reactive({
-            products: this.reactive([["Milk", "Butter"], ["Chesse", "Water"]])
-        });
+        this.states = {
+            products: [["Milk", "Butter"], ["Chesse", "Water"]]
+        };
 
-        setTimeout(() => this.states.products.push(["Lemon"]), 2500);
+        setTimeout(() => this.setState(states => states.products.push(["Lemon"])), 2500);
 
     }
 
@@ -325,9 +323,9 @@ class parent extends ReactiveHTML.Component {
 
     constructor(props) {
 
-        this.states = this.reactive({
+        this.states = {
             count: 0
-        });
+        };
 
         this.add = this.add.bind(this);
 
@@ -335,7 +333,7 @@ class parent extends ReactiveHTML.Component {
 
     add() {
 
-        this.states.count++;
+        this.setState(states => states.count++);
 
     }
 
@@ -406,11 +404,12 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ StylesTest 
 Lifecycles are method of component. 
 Lifecycles are triggered when something happen, e.g. onComponentRender trigger when component was rendered. 
 
-There are 3 types of Lifecycles ```[manage lifecycles, callback lifecycles, future callback lifecycles]```
+There are 4 types of Lifecycles ```[manage lifecycles, callback lifecycles, future callback lifecycles, snapshot lifecycles]```
 
 1. Manage lifecycles can manage behavior of component
 2. Callback lifecycles are triggered when something happen with component
 3. Future callback lifecycles are triggered before something happen with component
+4. Snapshot lifecycles are for handle old values of props and states of component
 
 #### Manage lifecycles
 componentShouldUpdate lifecycle is manage method for better performance.
@@ -426,12 +425,12 @@ class ManageLifecyclesTest extends ReactiveHTML.Component {
 
         super(props);
 
-        this.states = this.reactive({
+        this.states = {
 
             a: 1,
             b: 1
 
-        });
+        };
 
         let canChange = false;
 
@@ -439,12 +438,12 @@ class ManageLifecyclesTest extends ReactiveHTML.Component {
 
             if(canChange) {
 
-                this.states.a++;
+                this.setState(states => states.a++);
                 canChange = !canChange;
 
             } else {
 
-                this.states.b++;
+                this.setState(states => states.b++);
                 canChange = !canChange;
 
             }
@@ -505,7 +504,7 @@ class CallbackLifecyclesTest extends ReactiveHTML.Component {
 
     onComponentCancelUpdate() {
 
-        console.log("update"); // called on every canceled update, this react on componentShouldUpdate
+        console.log("cancel update"); // called on every canceled update, this react on componentShouldUpdate
 
     }    
 
@@ -561,13 +560,40 @@ class FutureCallbackLifecyclesTest extends ReactiveHTML.Component {
 ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ FutureCallbackLifecyclesTest } />`, el));
 ```
 
+#### Snapshot lifecycles
+
+```
+class SnapshotLifecyclesTest extends ReactiveHTML.Component {
+
+    getSnapshotBeforeUpdate(propsBefore, statesBefore) {
+
+        console.log(this.states, statesBefore); //this snapshot is given before component update
+
+    } 
+
+    getSnapshotAfterUpdate(propsBefore, statesBefore) {
+
+        console.log(this.states, statesBefore); //this snapshot is given after component update
+
+    } 
+
+    Element(props, states) {
+
+        return html`<div>Hello, world!</div>`
+
+    }
+
+}
+
+ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ SnapshotLifecyclesTest } />`, el));
+```
+
 ### Component methods
 Components have some methods that can manipulate with component.
 
-#### Component.reactive
-This method expecting one parameter that can be Object or Array.
-All other types not throw error, but warning and can be used, but they are not reactive.
-Reactive method is mostly used to create states of component.
+#### Component.setState
+This method expecting one parameter that is function with one parameter that is states.
+It is important to use function states parameter instead of this.states!
 
 ```
 class reactiveTest extends ReactiveHTML.Component {
@@ -576,16 +602,16 @@ class reactiveTest extends ReactiveHTML.Component {
 
         super(props);
 
-        this.states = this.reactive({
+        this.states = {
 
             count: 0
 
-        }); //this.states.count is reactive value, on every change, component will update 
+        };
     }
 
     Element(props, states) {
 
-        return html`<button onclick=${ (e) => states.count++ }>${ states.count }</button>`
+        return html`<button onclick=${ (e) => this.setState(states => states.count++) }>${ states.count }</button>`
 
     }
 
