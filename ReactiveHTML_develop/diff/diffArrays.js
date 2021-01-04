@@ -18,12 +18,6 @@ export default function diffArrays(oldArray, newArray) {
          * if element cannot be found by find => undefined => oldNode will be removed
          */
 
-        if(oldNode._key === undefined) {
-
-            console.warn('You have to specify :key attribute or prop to make your list trully reactive');
-
-        }
-
         arrayPatches.push(diff(oldNode, newArray.find(f => f._key === oldNode._key)));
 
     }

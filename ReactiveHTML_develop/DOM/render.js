@@ -1,5 +1,7 @@
 import isObject from '../isObject.js';
 import componentClass from '../vnode/component.js';
+import isArray from '../isArray.js';
+
 
 /**
  * creates virtual node tree from component
@@ -38,7 +40,7 @@ function createDomElement(vnode) {
 
     vnode.children.forEach(child => {
 
-        if (Array.isArray(child)) {
+        if (isArray(child)) {
 
             const childGroup = child.map(singleChild => render(singleChild));
             childGroup.forEach(domChild => el.appendChild(domChild));
@@ -70,7 +72,7 @@ export default function render(virtualElement) {
 
     }
 
-    if (Array.isArray(virtualElement)) {
+    if (isArray(virtualElement)) {
 
         return virtualElement.map(singleVirtualElement => render(singleVirtualElement));
 

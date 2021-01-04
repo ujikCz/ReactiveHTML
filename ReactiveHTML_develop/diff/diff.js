@@ -16,9 +16,13 @@
 
     export default function diff(vOldNode, vNewNode) {
 
-        if(vOldNode.__component__) {
+        /*
+         * if it is component, return node only, update is pathed already cause updateVnodeAndRealDOM patch all components
+         */
 
-            return node => node;
+        if(isObject(vOldNode) && vOldNode.__component__) {
+
+            return node => node; 
 
         }
 

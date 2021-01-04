@@ -1,40 +1,6 @@
-import updateVnodeAndRealDOM from '../DOM/updateVnodeAndRealDOM.js';
-import isObject from '../isObject.js';
-import createVnodeElement from './createVnodeElement.js';
-
-/**
- * creates proxy object for component
- * @param { Class } context - Component context
- */
-
-export function createProxyInContext(context) {
-
-    return {
-        get(target, key, receiver) {
-
-            return target[key];
-
-        },
-
-        set(target, key, value, receiver) {
-
-            if (target[key] === value) {
-
-                return true;
-
-            }
-
-            const nextStates = Object.assign({}, context.states);
-            nextStates[key] = value;
-
-            updateVnodeAndRealDOM(context, false, context.props, nextStates, target, key, value);
-
-            return true;
-        }
-    };
-
-}
-
+import updateVnodeAndRealDOM from './updateVnodeAndRealDOM.js';
+import deepProxy from './proxy.js';
+import cloneObjectWithoutReference from '../cloneObjectWithoutReference.js';
 
 /**
  *  Component class
@@ -52,6 +18,8 @@ export default class Component {
         this.props = props;
 
         this.__component__ = this;
+
+        this.onComponentCreate();
 
         return this;
 
@@ -88,34 +56,53 @@ export default class Component {
      *  manage methods
      */
 
-    componentShouldUpdate() {
-        return true;
-    }
-
-    reactive(object) {
-
-        if (
-            isObject(object) &&
-            (
-                (object.constructor.name === 'Object') ||
-                Array.isArray(object)
-            )
-        ) {
-
-            return new Proxy(object, createProxyInContext(this));
-
-        }
-
-        console.warn('To make value reactive, value have to be object or array.');
-        return object;
-
-    }
-
-
-    /**
-     * init method
-     * @param { Object } props 
+    /*
+     * components has these methods too, but they doing some in addition operation so they are checked if exists 
+     * getSnapshotBeforeUpdate(oldProps, oldStates){}
+     * getSnapshotAfterUpdate(oldProps, oldStates){}
      */
+
+    componentShouldUpdate() {
+
+        return true;
+
+    }
+
+    reactive(object = {}) {
+
+        return deepProxy(object, (manipulation, args, target, prop, value) => {
+
+            let nextStates = Object.assign({}, target);
+
+            if (args === false) {
+
+                manipulation(nextStates, prop, value);
+                const nextStateCache = Object.assign({}, this.states);
+                nextStates = Object.assign(nextStateCache, nextStates);
+
+            } else {
+
+                nextStates = Object.assign({}, this.states);
+                const nextValue = manipulation(...args);
+                Object.assign(nextStates, nextValue);
+
+            }
+
+            return updateVnodeAndRealDOM(this, false, this.props, nextStates, target, prop, value);
+
+        });
+
+    }
+
+    setState(setterFunction) {
+
+        const nextStates = cloneObjectWithoutReference(this.states);
+
+        setterFunction(nextStates);
+
+        return updateVnodeAndRealDOM(this, false, this.props, nextStates);
+
+    }
 
     forceComponentUpdate(harmful = false) {
 
@@ -124,3 +111,4 @@ export default class Component {
     }
 
 }
+

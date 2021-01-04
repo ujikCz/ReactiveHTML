@@ -2,6 +2,8 @@ import zip from './zip.js';
 import render from '../DOM/render.js';
 import diff from './diff.js';
 import diffArrays from './diffArrays.js';
+import isArray from '../isArray.js';
+
 
 /**
  * check differences between old virtualNode childNodes and new one
@@ -16,7 +18,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
     oldVChildren.forEach((oldVChild, i) => {
 
-        if(Array.isArray(oldVChild)) {
+        if(isArray(oldVChild)) {
 
             additionalPatches.push(diffArrays(oldVChild, newVChildren[i]));
 
