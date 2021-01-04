@@ -174,123 +174,86 @@
 
     }
 
-    function createProxyInContext(context) {
-
-        return {
-            get(target, key, receiver) {
-
-                return target[key];
-
-            },
-
-            set(target, key, value, receiver) {
-                
-                if (target[key] === value) {
-
-                    return true;
-
-                }
-
-                const nextStates = Object.assign({}, context.states);
-                nextStates[key] = value;
-
-                updateVnodeAndRealDOM(context, false, context.props, nextStates, target, key, value);
-
-                return true;
-            }
-        };
-
-    }
-
-    /**
-     *  Component class
-     */
-
     class Component {
 
         /**
          * constructor of component
          * @param { Object } props 
          */
-
-        constructor(props = {}) {
-
+    
+        constructor(props) {
+    
             this.props = props;
-
+    
             this.__component__ = this;
-
+    
+            this.onComponentCreate();
+    
             return this;
-
+    
         }
-
+    
         /*
          * Element creator method 
          */
-
+    
         Element() {
-
+    
             throw Error('You have to specify Element method in your Component');
-
+    
         }
-
+    
         /*
          *  basic lifecycles
          */
-
+    
         onComponentCreate() {}
         onComponentUpdate() {}
         onComponentRender() {}
         onComponentCancelUpdate() {}
-
+    
         /*
          *  future lifecycles
          */
-
+    
         onComponentWillUpdate() {}
         onComponentWillRender() {}
         onComponentWillMount() {}
-
+    
         /*
          *  manage methods
          */
-
-        componentShouldUpdate() {
-            return true;
-        }
-
-        reactive(object) {
-
-            if (
-                isObject(object) &&
-                (
-                    (object.constructor.name === 'Object') ||
-                    Array.isArray(object)
-                )
-            ) {
-
-                return new Proxy(object, createProxyInContext(this));
-
-            }
-
-            console.warn('To make value reactive, value have to be object or array.');
-            return object;
-
-        }
-
-
-        /**
-         * init method
-         * @param { Object } props 
+    
+        /*
+         * components has these methods too, but they doing some in addition operation so they are checked if exists 
+         * getSnapshotBeforeUpdate(oldProps, oldStates){}
+         * getSnapshotAfterUpdate(oldProps, oldStates){}
          */
-
-        forceComponentUpdate(harmful = false) {
-
-            return updateVnodeAndRealDOM(this, harmful, this.props, this.states);
-
+    
+        componentShouldUpdate() {
+    
+            return true;
+    
         }
-
+    
+        setState(setterFunction) {
+    
+            const nextStates = cloneObjectWithoutReference(this.states);
+    
+            setterFunction(nextStates);
+    
+            return updateVnodeAndRealDOM(this, false, this.props, nextStates);
+    
+        }
+    
+        forceComponentUpdate(harmful = false) {
+    
+            return updateVnodeAndRealDOM(this, harmful, this.props, this.states);
+    
+        }
+    
     }
-
+    
     function mount(renderedVnode, element, type) {
 
         if (!type) {
@@ -303,54 +266,69 @@
 
     }
 
-    function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, nextStates, statesTarget, statesKey, statesValue) {
+    function assignNewStatesAndProps(oldComponent, nextProps, nextStates, willUpdate) {
 
-        function assignNewStatesAndProps() {
+        // prepare for update states and prop, not update now because of next values of props and states 
     
-            // prepare for update states and prop, not update now because of next values of props and states 
+        // if component has getSnapshotBeforeUpdate method prepare old values
     
-            if(nextStates) {
+        let oldProps, oldStates;
     
-                if(statesTarget) {
-        
-                    statesTarget[statesKey] = statesValue;
-        
-                } 
-        
-            }
-            
-            if(oldComponent.props) {
-
-                Object.assign(oldComponent.props, nextProps);
-
-            }
+        if( oldComponent.getSnapshotBeforeUpdate || (oldComponent.getSnapshotAfterUpdate && willUpdate) ) {
+    
+            [oldProps, oldStates] = [cloneObjectWithoutReference(oldComponent.props), cloneObjectWithoutReference(oldComponent.states)];
     
         }
     
+        if(oldComponent.states && isObject(nextStates)) {
+    
+            Object.assign(oldComponent.states, nextStates);
+    
+        }
+        
+        if(oldComponent.props && isObject(nextProps)) {
+    
+            Object.assign(oldComponent.props, nextProps);
+    
+        }
+    
+        // if old value has values => oldComponent has snapshot method => trigger it
+    
+        if(oldComponent.getSnapshotBeforeUpdate) {
+    
+            oldComponent.getSnapshotBeforeUpdate(oldProps, oldStates);
+    
+        }
+    
+        return [oldProps, oldStates];
+    
+    }
+
+    function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, nextStates) {
+
         if(harmful === false) {
     
             // if forcing update is harmful don't trigger componentShouldUpdate, update it without permission
-    
     
             if(oldComponent.componentShouldUpdate(nextProps, nextStates) === false) {
     
                 // check if component should update (undefined mean everytime update)
     
-                assignNewStatesAndProps(); //patch props and states
+                assignNewStatesAndProps(oldComponent, nextProps, nextStates, false); //patch props and states
     
                 oldComponent.onComponentCancelUpdate();
     
-                return oldComponent;
+                return oldComponent; // return non updated component back to scene
         
             }  
     
         }      
     
-        assignNewStatesAndProps(); //patch props and states
+        const [oldProps, oldStates] = assignNewStatesAndProps(oldComponent, nextProps, nextStates, true); //patch props and states
     
         oldComponent.onComponentWillUpdate();
     
-        // if component going to update
+        // if component is going to update
     
         const newVNode = patchComponents(
     
@@ -363,7 +341,7 @@
     
         ); //patch all existing components and add new components in tree
      
-        if (oldComponent.realDOM) {
+        if (oldComponent.realDOM) { // if component is mounted, else patch only its virtual node
     
             const patch = diff(oldComponent.vnode, newVNode); // get patches
             oldComponent.realDOM = patch(oldComponent.realDOM); //patch real DOM of component
@@ -374,9 +352,60 @@
     
         oldComponent.onComponentUpdate();
     
-        return oldComponent;
+        // if component has getSnapshotAfterUpdate method
+    
+        if(oldComponent.getSnapshotAfterUpdate) {
+    
+            oldComponent.getSnapshotAfterUpdate(oldProps, oldStates);
+    
+        }
+    
+        return oldComponent; // updated old component (so newComponent...)
     
     }
+    
+    /**
+     * update all components inside updated component
+     * @param { updated Component children } rootChildren 
+     */
+    
+    function patchComponents(newChild, oldChild, harmful) {
+    
+        if (!isObject(newChild)) return newChild; //if is text node, return it
+    
+        if(isArray(newChild)) {
+    
+            return newChild.map( (singleNewChild, i) => patchComponents(singleNewChild, oldChild[i], harmful));
+    
+        }
+    
+        if (newChild.type.prototype instanceof componentClass) {
+    
+            if(oldChild) {
+    
+                //if is component and already exists
+                return updateVnodeAndRealDOM(oldChild.__component__, harmful, newChild.props, oldChild.states);
+    
+            }
+    
+            //if is component and not already exists - render it (trigger its constructor)
+            return newChild;
+    
+        }
+    
+        if(oldChild === undefined) {
+    
+            return newChild;
+    
+        }
+    
+        //if is not component patch components inside
+        newChild.children = newChild.children.map( (newInside, i) => patchComponents(newInside, oldChild.children[i], harmful));
+    
+        return newChild;
+    }
+    
+    
 
     function patchComponents(newChild, oldChild, harmful) {
     
@@ -580,17 +609,15 @@
 
         const arrayPatches = [];
 
-        oldArray.forEach( (oldNode, i) => {
+        for (const oldNode of oldArray) {
 
-            if(Array.isArray(oldNode)) {
-
-                return diffArrays(oldNode, newArray[i]);
-
-            }
+            /**
+             * if element cannot be found by find => undefined => oldNode will be removed
+             */
     
             arrayPatches.push(diff(oldNode, newArray.find(f => f._key === oldNode._key)));
-
-        });
+    
+        }
     
         const additionalPatches = [];
     
@@ -633,7 +660,7 @@
          */
 
         
-        if(vOldNode.__component__) {
+        if(isObject(vOldNode) && vOldNode.__component__) {
 
             return node => node;
 
