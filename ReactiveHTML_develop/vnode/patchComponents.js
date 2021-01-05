@@ -43,7 +43,7 @@ export default function patchComponents(newChild, oldChild, harmful) {
 
     if(oldChild.__component__ && !(newChild.type.prototype instanceof componentClass)) {
 
-        oldChild.__component__.onComponentWillUnMount();
+        oldChild.__component__.onComponentWillUnMount(oldChild.__component__.realDOM);
 
         oldChild.__component__.realDOM = undefined;
 

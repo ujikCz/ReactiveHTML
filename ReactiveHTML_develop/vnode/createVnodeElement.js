@@ -12,7 +12,7 @@ import Component from './component.js';
  * @param  { Array of vnodes } children 
  */
 
-export default function createVnodeElement(type, props, ...children) {
+export default function createVnodeElement(type, props = null, ...children) {
 
     let _key = null;
     if(props !== null && props[':key'] !== undefined) {

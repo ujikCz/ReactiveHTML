@@ -13,7 +13,7 @@ export default class Component {
      * @param { Object } props 
      */
 
-    constructor(props = {}) {
+    constructor(props) {
 
         this.props = props;
 
@@ -60,8 +60,7 @@ export default class Component {
 
     /*
      * components has these methods too, but they doing some in addition operation so they are checked if exists 
-     * getSnapshotBeforeUpdate(oldProps, oldStates){}
-     * getSnapshotAfterUpdate(oldProps, oldStates){}
+     * getSnapshotBeforeUpdate(oldProps, oldStates) {}
      */
 
     componentShouldUpdate() {
