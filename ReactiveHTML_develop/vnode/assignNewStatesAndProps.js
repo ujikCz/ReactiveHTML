@@ -18,7 +18,7 @@ export default function assignNewStatesAndProps(oldComponent, nextProps, nextSta
 
     let oldProps, oldStates;
 
-    if( oldComponent.getSnapshotBeforeUpdate || (oldComponent.getSnapshotAfterUpdate && willUpdate) ) {
+    if(oldComponent.getSnapshotBeforeUpdate && willUpdate) {
 
         [oldProps, oldStates] = [cloneObjectWithoutReference(oldComponent.props), cloneObjectWithoutReference(oldComponent.states)];
 
@@ -38,12 +38,12 @@ export default function assignNewStatesAndProps(oldComponent, nextProps, nextSta
 
     // if old value has values => oldComponent has snapshot method => trigger it
 
-    if(oldComponent.getSnapshotBeforeUpdate) {
+    if(oldProps || oldStates) {
 
         oldComponent.getSnapshotBeforeUpdate(oldProps, oldStates);
 
     }
 
-    return [oldProps, oldStates];
+    return;
 
 }

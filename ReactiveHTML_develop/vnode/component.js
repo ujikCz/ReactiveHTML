@@ -43,6 +43,7 @@ export default class Component {
     onComponentUpdate() {}
     onComponentRender() {}
     onComponentCancelUpdate() {}
+    onComponentUnMount() {}
 
     /*
      *  future lifecycles
@@ -51,6 +52,7 @@ export default class Component {
     onComponentWillUpdate() {}
     onComponentWillRender() {}
     onComponentWillMount() {}
+    onComponentWillUnMount() {}
 
     /*
      *  manage methods

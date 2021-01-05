@@ -1,8 +1,6 @@
 import diff from '../diff/diff.js';
-import isObject from '../isObject.js';
-import componentClass from './component.js';
-import isArray from '../isArray.js';
 import assignNewStatesAndProps from './assignNewStatesAndProps.js';
+import patchComponents from './patchComponents.js';
 
 /**
  * updates virtualNode and its realNode (update whole component)
@@ -32,7 +30,7 @@ export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, 
 
     }      
 
-    const [oldProps, oldStates] = assignNewStatesAndProps(oldComponent, nextProps, nextStates, true); //patch props and states
+    assignNewStatesAndProps(oldComponent, nextProps, nextStates, true); //patch props and states
 
     oldComponent.onComponentWillUpdate();
 
@@ -60,56 +58,9 @@ export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, 
 
     oldComponent.onComponentUpdate();
 
-    // if component has getSnapshotAfterUpdate method
-
-    if(oldComponent.getSnapshotAfterUpdate) {
-
-        oldComponent.getSnapshotAfterUpdate(oldProps, oldStates);
-
-    }
-
     return oldComponent; // updated old component (so newComponent...)
 
 }
 
-/**
- * update all components inside updated component
- * @param { updated Component children } rootChildren 
- */
 
-function patchComponents(newChild, oldChild, harmful) {
-
-    if (!isObject(newChild)) return newChild; //if is text node, return it
-
-    if(isArray(newChild)) {
-
-        return newChild.map( (singleNewChild, i) => patchComponents(singleNewChild, oldChild[i], harmful));
-
-    }
-
-    if (newChild.type.prototype instanceof componentClass) {
-
-        if(oldChild) {
-
-            //if is component and already exists
-            return updateVnodeAndRealDOM(oldChild.__component__, harmful, newChild.props, oldChild.states);
-
-        }
-
-        //if is component and not already exists - render it (trigger its constructor)
-        return newChild;
-
-    }
-
-    if(oldChild === undefined) {
-
-        return newChild;
-
-    }
-
-    //if is not component patch components inside
-    newChild.children = newChild.children.map( (newInside, i) => patchComponents(newInside, oldChild.children[i], harmful));
-
-    return newChild;
-}
 
