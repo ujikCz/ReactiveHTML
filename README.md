@@ -42,8 +42,8 @@ than in real dom, because real dom need to recalculate styles, parents,...
 This library is also very lightweight, only 2Kb min+gzip
 
 ## Special thanks :heart:
-Jáchym Janoušek
-Jan Turoň
+Jáchym Janoušek https://github.com/jachymjanousek    
+Jan Turoň https://github.com/janturon     
 
 ## Hello world
 ```
