@@ -1,9 +1,14 @@
 # ReactiveHTML
 Simple reactive Virtual DOM elements for building complex reactive UI
 
-## Download
+## Download via npm
 ```
 npm i reactivehtml
+```
+
+## Download via cdn
+```
+https://cdn.jsdelivr.net/npm/reactivehtml@2.2.2/src/ReactiveHTML.min.js
 ```
 
 ## HTM.js cdn
