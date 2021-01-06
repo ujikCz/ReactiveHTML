@@ -569,13 +569,7 @@ class SnapshotLifecyclesTest extends ReactiveHTML.Component {
 
         console.log(this.states, statesBefore); //this snapshot is given before component update
 
-    } 
-
-    getSnapshotAfterUpdate(propsBefore, statesBefore) {
-
-        console.log(this.states, statesBefore); //this snapshot is given after component update
-
-    } 
+    }
 
     Element(props, states) {
 
