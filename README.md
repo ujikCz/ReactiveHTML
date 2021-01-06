@@ -9,6 +9,7 @@ npm i reactivehtml
 ## Download via cdn
 ```
 https://cdn.jsdelivr.net/npm/reactivehtml@2.2.2/src/ReactiveHTML.min.js
+<script src="https://cdn.jsdelivr.net/npm/reactivehtml@2.2.2/src/ReactiveHTML.min.js"></script>
 ```
 
 ## HTM.js cdn
