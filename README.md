@@ -41,6 +41,10 @@ than in real dom, because real dom need to recalculate styles, parents,...
 
 This library is also very lightweight, only 2Kb min+gzip
 
+## Special thanks :heart:
+Jáchym Janoušek
+Jan Turoň
+
 ## Hello world
 ```
 /* this example is create with htm.js */
