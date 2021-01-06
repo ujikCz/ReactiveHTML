@@ -26,33 +26,41 @@ function createDomElement(vnode) {
 
     const el = document.createElement(vnode.type);
 
-    for (const [k, v] of Object.entries(vnode.attrs.basic)) {
-        el.setAttribute(k, v);
-    }
+    if(vnode.attrs !== null) {
 
-    for (const [k, v] of Object.entries(vnode.attrs.events)) {
-        el.addEventListener(k, v);
-    }
-
-    for (const [k, v] of Object.entries(vnode.attrs.styles)) {
-        el.style[k] = v;
-    }
-
-    vnode.children.forEach(child => {
-
-        if (isArray(child)) {
-
-            const childGroup = child.map(singleChild => render(singleChild));
-            childGroup.forEach(domChild => el.appendChild(domChild));
-
-        } else {
-
-            const childEl = render(child);
-            el.appendChild(childEl);
-
+        for (const [k, v] of Object.entries(vnode.attrs.basic)) {
+            el.setAttribute(k, v);
+        }
+    
+        for (const [k, v] of Object.entries(vnode.attrs.events)) {
+            el.addEventListener(k, v);
+        }
+    
+        for (const [k, v] of Object.entries(vnode.attrs.styles)) {
+            el.style[k] = v;
         }
 
-    });
+    }
+
+    if(vnode.children.length) {
+
+        vnode.children.forEach(child => {
+
+            if (isArray(child)) {
+    
+                const childGroup = child.map(singleChild => render(singleChild));
+                childGroup.forEach(domChild => el.appendChild(domChild));
+    
+            } else {
+    
+                const childEl = render(child);
+                el.appendChild(childEl);
+    
+            }
+    
+        });
+
+    }
 
     return el;
 
@@ -64,7 +72,7 @@ function createDomElement(vnode) {
  * @param { Object } component - component or vNode object
  */
 
-export default function render(virtualElement) {
+export default function render(virtualElement, container) {
 
     if (!isObject(virtualElement)) {
 
@@ -96,3 +104,4 @@ export default function render(virtualElement) {
     return createDomElement(virtualElement);
 
 }
+

@@ -5,13 +5,12 @@
 */
 
 import render from './DOM/render.js';
-import mount from './DOM/mount.js';
-import onElementReady from './DOM/elementReady.js';
-import createVnodeElement from './vnode/createVnodeElement.js';
+import elementReady from './DOM/elementReady.js';
+import createElement from './vnode/createVnodeElement.js';
 import Component from './vnode/component.js';
 
 /**
- * whole library is in container funciton for use library in node.js, js, modules, ...
+ * whole library is in container funciton for use library in node.js, js, as modules, ...
  * @param  { Object } global - window object
  * @param  { Function } factory - ReactiveHTML library
  */
@@ -26,20 +25,14 @@ import Component from './vnode/component.js';
 
     const ReactiveHTML = {
 
-        /*
-         *   render virtualNode to real element
-         *   type can determine if virtualNode will be appended or replaced with this real element 
-         */
-
         Component,
 
         render: function (component, element) {
-
-            return mount(
-                render(component),
-                element
+            
+            return element.appendChild(
+                render(component)
             );
-
+            
         },
 
         /*
@@ -47,23 +40,19 @@ import Component from './vnode/component.js';
          *   then call callback function  
          */
 
-        elementReady: function (selector, callback) {
-
-            onElementReady(selector, callback);
-
-        },
+        elementReady,
 
         /*
          *   creates virtualNode 
          */
 
-        createElement: createVnodeElement,
+        createElement,
 
         createFactory: function(component) {
 
             return function(props = {}) {
 
-                return createVnodeElement(component, props);
+                return createElement(component, props);
 
             }
 

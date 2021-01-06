@@ -36,17 +36,19 @@ export default function createVnodeElement(type, props = null, ...children) {
 
     }
 
+    if(props !== null) {
+
+        props = filterAttrs(props);
+
+    }
+
     /**
      * if element is basic virtual node element
      */
 
     return {
         type,
-        attrs: props ? filterAttrs(props) : {
-            events: {},
-            styles: {},
-            basic: {}
-        },
+        attrs: props,
         children,
         _key
     }

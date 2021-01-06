@@ -24,7 +24,7 @@ export default function assignNewStatesAndProps(oldComponent, nextProps, nextSta
 
     }
 
-    if(oldComponent.states && isObject(nextStates)) {
+    if(statesNotUpdatedYet && oldComponent.states && isObject(nextStates)) {
 
         Object.assign(oldComponent.states, nextStates);
 

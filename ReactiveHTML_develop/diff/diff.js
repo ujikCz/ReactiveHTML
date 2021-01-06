@@ -41,19 +41,43 @@
         }
 
         /*
+         *   if both are not a virtual node, it is text node, so replace its value 
+         */
+
+        if(!isObject(vOldNode) && !isObject(vNewNode)) {
+
+            if (vOldNode !== vNewNode) {
+
+                return function(node) {
+
+                    node.nodeValue = vNewNode;
+
+                }
+
+            } else {
+                return node => undefined;
+            }
+
+        }
+
+        /*
          *   if one of virtualNodes is not virtualNode (means Number or String) replace it as textNode
          */
 
         if (!isObject(vOldNode) || !isObject(vNewNode)) {
+
             if (vOldNode !== vNewNode) {
+
                 return function (node) {
                     const newNode = render(vNewNode);
                     node.replaceWith(newNode);
                     return newNode;
                 };
+
             } else {
                 return node => undefined;
             }
+
         }
 
         /*
@@ -72,9 +96,30 @@
          *   creates all patch functions from diffing functions 
          */
 
-        const patchAttrs = diffAttrs(vOldNode.attrs.basic, vNewNode.attrs.basic);
-        const patchStyles = diffStyles(vOldNode.attrs.styles, vNewNode.attrs.styles);
-        const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
+        let patchAttrs, patchStyles, patchChildren;
+
+        if(vOldNode.attrs !== null) {
+
+            if(Object.keys(vOldNode.attrs.basic).length + Object.keys(vNewNode.attrs.basic).length !== 0) {
+
+                patchAttrs = diffAttrs(vOldNode.attrs.basic, vNewNode.attrs.basic);
+
+            }
+
+            if(Object.keys(vOldNode.attrs.styles).length + Object.keys(vNewNode.attrs.styles).length !== 0) {
+
+                patchStyles = diffStyles(vOldNode.attrs.styles, vNewNode.attrs.styles);
+
+            }
+
+        }
+
+        if( (vOldNode.children.length + vNewNode.children.length) !== 0) {
+
+            patchChildren = diffChildren(vOldNode.children, vNewNode.children);
+
+        }
+        
 
         /*
          *   patch the real element with all patch functions 
@@ -82,9 +127,19 @@
 
         return function (node) {
 
-            patchAttrs(node);
-            patchChildren(node);
-            patchStyles(node);
+            if(patchAttrs) {
+
+                patchAttrs(node);
+                patchStyles(node);
+
+            }
+
+            if(patchChildren) {
+
+                patchChildren(node);
+
+            }
+            
             return node;
         };
     };

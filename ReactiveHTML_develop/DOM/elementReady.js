@@ -9,13 +9,13 @@
      * @param { Boolean } mode - matches all selectors or only localNames of elements
      */
 
-    export default function onElementReady(selector, callback, disconnect = true, mode = true) {
+    export default function elementReady(selector, callback, disconnect = true) {
 
         const observer = new MutationObserver((mutations, me) => {
             mutations.forEach(mutation => {
                 Array.from(mutation.addedNodes).forEach(addedNode => {
                     if (addedNode.nodeType === Node.ELEMENT_NODE) {
-                        if ((mode && addedNode.matches(selector)) || (addedNode.localName === selector)) {
+                        if (addedNode.matches(selector)) {
                             callback(addedNode);
                             if (disconnect) me.disconnect();
                         }

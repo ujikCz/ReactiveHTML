@@ -63,12 +63,6 @@ export default class Component {
      * getSnapshotBeforeUpdate(oldProps, oldStates) {}
      */
 
-    componentShouldUpdate() {
-
-        return true;
-
-    }
-
     reactive(object = {}) {
 
         return deepProxy(object, (manipulation, args, target, prop, value) => {
@@ -97,11 +91,17 @@ export default class Component {
 
     setState(setterFunction) {
 
-        const nextStates = cloneObjectWithoutReference(this.states);
+        let nextStates;
 
-        setterFunction(nextStates);
+        if(this.componentShouldUpdate || this.getSnapshotBeforeUpdate) {
 
-        return updateVnodeAndRealDOM(this, false, this.props, nextStates);
+            nextStates = cloneObjectWithoutReference(this.states);
+
+        }
+
+        setterFunction(nextStates || this.states);
+
+        return updateVnodeAndRealDOM(this, false, this.props, nextStates || this.states, false, nextStates === undefined ? false : true);
 
     }
 

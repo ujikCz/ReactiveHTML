@@ -10,9 +10,9 @@ import patchComponents from './patchComponents.js';
  * @param { Object } nextStates - next state of states
  */
 
-export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, nextStates) {
+export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, nextStates, propsNotUpdatedYet, statesNotUpdatedYet) {
 
-    if(harmful === false) {
+    if(harmful === false && oldComponent.componentShouldUpdate) {
 
         // if forcing update is harmful don't trigger componentShouldUpdate, update it without permission
 
@@ -30,8 +30,16 @@ export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, 
 
     }      
 
-    assignNewStatesAndProps(oldComponent, nextProps, nextStates, true); //patch props and states
+    /*
+     *  if component dont have getSnapshotBeforeUpdate and his props and states are already updated, don't do reduntant function 
+     */
 
+    if(oldComponent.getSnapshotBeforeUpdate || propsNotUpdatedYet || statesNotUpdatedYet) {
+
+        assignNewStatesAndProps(oldComponent, nextProps, nextStates, true); //patch props and states
+
+    }
+    
     oldComponent.onComponentWillUpdate();
 
     // if component is going to update
