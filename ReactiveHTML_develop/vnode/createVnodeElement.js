@@ -1,7 +1,5 @@
 
 
-import filterAttrs from './filterAttrs.js';
-import componentClass from './component.js';
 import Component from './component.js';
 
 
@@ -26,7 +24,7 @@ export default function createVnodeElement(type, props = null, ...children) {
      * if element is component
      */
 
-    if(type.prototype instanceof componentClass) {
+    if(type.prototype instanceof Component) {
         
         return {
             type,
@@ -36,11 +34,6 @@ export default function createVnodeElement(type, props = null, ...children) {
 
     }
 
-    if(props !== null) {
-
-        props = filterAttrs(props);
-
-    }
 
     /**
      * if element is basic virtual node element

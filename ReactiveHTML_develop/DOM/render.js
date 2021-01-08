@@ -1,107 +1,138 @@
 import isObject from '../isObject.js';
-import componentClass from '../vnode/component.js';
 import isArray from '../isArray.js';
-
-
-/**
- * creates virtual node tree from component
- * @param { Object } component 
- */
-
-function getVnodeFromComponent(component) {
-
-    const instance = new component.type(component.props);
-
-    instance.vnode = instance.Element(instance.props, instance.states);
-    return instance;
-
-}
+import createComponentInstance from '../vnode/createComponentInstance.js';
+import triggerLifecycle from '../triggerLifecycle.js';
+import {
+    requestIdleCallbackPolyfill,
+    cancelIdleCallbackPolyfill
+} from '../polyfill/requestIdleCallback.js';
 
 /**
  * render virtual node (create real node from virtual node)
  * @param { Object } vnode 
  */
 
-function createDomElement(vnode) {
+function whenYouCanNoLaterThen(callback) {
+
+    const schedule = () => requestIdleCallbackPolyfill(deadline => {
+
+        if (deadline.timeRemaining() > 1) return callback();
+
+        schedule();
+    });
+
+    schedule();
+}
+
+function createDomElement(vnode, callback) {
+
+    if (!isObject(vnode)) {
+
+        return callback(document.createTextNode(vnode));
+
+    }
+
+    if (isArray(vnode)) {
+
+        return callback(vnode.map(singleVirtualElement => render(singleVirtualElement, el => el)));
+
+    }
 
     const el = document.createElement(vnode.type);
 
-    if(vnode.attrs !== null) {
+    for (const key in vnode.attrs) {
 
-        for (const [k, v] of Object.entries(vnode.attrs.basic)) {
-            el.setAttribute(k, v);
-        }
-    
-        for (const [k, v] of Object.entries(vnode.attrs.events)) {
-            el.addEventListener(k, v);
-        }
-    
-        for (const [k, v] of Object.entries(vnode.attrs.styles)) {
-            el.style[k] = v;
+        const value = vnode.attrs[key];
+
+        if (key === 'style') {
+
+            for (const styleKey in value) {
+
+                el.style[styleKey] = value[styleKey];
+
+            }
+
+        } else {
+
+            if (key.startsWith('on')) {
+
+                el.addEventListener(key.replace('on', ''), value);
+
+            } else {
+
+                el.setAttribute(key, value);
+
+            }
+
         }
 
     }
 
     if(vnode.children.length) {
 
-        vnode.children.forEach(child => {
+        for(let i = 0, ch = vnode.children; i < ch.length; i++) {
 
-            if (isArray(child)) {
+            if (isArray(ch[i])) {
+                
+                for(let k = 0; k < ch[i].length; k++) {
+
+                    render(ch[i][k], function(domChild) {
+
+                        el.appendChild(domChild)
     
-                const childGroup = child.map(singleChild => render(singleChild));
-                childGroup.forEach(domChild => el.appendChild(domChild));
-    
+                    })
+
+                }
+
             } else {
-    
-                const childEl = render(child);
-                el.appendChild(childEl);
-    
+
+                render(ch[i], function(childEl) {
+
+                    el.appendChild(childEl);
+
+                });
+
             }
-    
-        });
+
+        }
 
     }
 
-    return el;
+    return callback(el);
 
 }
+
+
+
 
 /**
  * render the virtualNode 
  * rendered virtualNode is not mounted, but it is now HTML element
- * @param { Object } component - component or vNode object
+ * @param { Object } virtualElement - component or vNode object
  */
 
-export default function render(virtualElement, container) {
+export default function render(virtualElement, callback) {
 
-    if (!isObject(virtualElement)) {
+    if (!isObject(virtualElement) || isArray(virtualElement) || !virtualElement.type.ReactiveHTMLComponent) {
 
-        return document.createTextNode(virtualElement);
-
-    }
-
-    if (isArray(virtualElement)) {
-
-        return virtualElement.map(singleVirtualElement => render(singleVirtualElement));
+        return whenYouCanNoLaterThen(() => createDomElement(virtualElement, callback));
 
     }
 
-    if (virtualElement.type.prototype instanceof componentClass) {
+    virtualElement = Object.assign(virtualElement, createComponentInstance(virtualElement));
 
-        const instance = getVnodeFromComponent(virtualElement);
-        instance.realDOM = render(instance.vnode);
+    return whenYouCanNoLaterThen(() => render(virtualElement.vnode, function(el) {
 
-        instance.onComponentRender(instance.realDOM);
+        virtualElement.__component__.realDOM = el;
 
-        Object.assign(virtualElement, instance);
+        triggerLifecycle(virtualElement.__component__.onComponentRender, virtualElement, el);
 
-        instance.onComponentWillMount(virtualElement.realDOM);
+        triggerLifecycle(virtualElement.__component__.onComponentWillMount, virtualElement, el);
 
-        return virtualElement.realDOM;
+        callback(el);
 
-    }
+        triggerLifecycle(virtualElement.__component__.onComponentMount, virtualElement, el);
 
-    return createDomElement(virtualElement);
+    }));
 
 }
-

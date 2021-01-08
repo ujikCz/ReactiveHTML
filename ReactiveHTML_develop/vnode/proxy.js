@@ -116,3 +116,35 @@ export default function deepProxy(obj, hook) {
     });
 
 }
+
+/*
+
+    if using proxy, this will go to Component
+
+*/
+
+reactive(object = {}) {
+
+    return deepProxy(object, (manipulation, args, target, prop, value) => {
+
+        let nextStates = Object.assign({}, target);
+
+        if (args === false) {
+
+            manipulation(nextStates, prop, value);
+            const nextStateCache = Object.assign({}, this.states);
+            nextStates = Object.assign(nextStateCache, nextStates);
+
+        } else {
+
+            nextStates = Object.assign({}, this.states);
+            const nextValue = manipulation(...args);
+            Object.assign(nextStates, nextValue);
+
+        }
+
+        return updateVnodeAndRealDOM(this, false, this.props, nextStates, target, prop, value);
+
+    });
+
+}

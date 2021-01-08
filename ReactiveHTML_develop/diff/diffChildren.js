@@ -16,30 +16,30 @@ export default function diffChildren(oldVChildren, newVChildren) {
     const childPatches = [];
     const additionalPatches = [];
 
-    oldVChildren.forEach((oldVChild, i) => {
+    for(let i = 0, l = oldVChildren.length; i < l; i++) {
 
-        if(isArray(oldVChild)) {
+        if(isArray(oldVChildren[i])) {
 
-            additionalPatches.push(diffArrays(oldVChild, newVChildren[i]));
+            additionalPatches.push(diffArrays(oldVChildren[i], newVChildren[i]));
 
         } else {
 
-            childPatches.push(diff(oldVChild, newVChildren[i]));
+            childPatches.push(diff(oldVChildren[i], newVChildren[i]));
 
         }
 
-    });
+    }
 
     /*
      *   if that virtualNode is not in old virtualNode parent, but in new it is, append it
      */
 
-
-    for (const additionalVChild of newVChildren.slice(oldVChildren.length)) {
+    for(let i = 0, additionalVChildren = newVChildren.slice(oldVChildren.length); i < additionalVChildren.length; i++) {
 
         additionalPatches.push(function (node) {
-            node.appendChild(render(additionalVChild));
-            return node;
+            return render(additionalVChildren[i], function(newNode) {
+                node.appendChild(newNode);
+            });
         });
 
     }
@@ -49,16 +49,16 @@ export default function diffChildren(oldVChildren, newVChildren) {
      */
 
     return function (parent) {
-
+        
         for (const [patch, child] of zip(childPatches, parent.childNodes)) {
 
             patch(child);
 
         }
 
-        for (const patch of additionalPatches) {
+        for(let i = 0; i < additionalPatches.length; i++) {
 
-            patch(parent);
+            additionalPatches[i](parent);
 
         }
 

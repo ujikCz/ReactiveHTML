@@ -12,26 +12,28 @@ export default function diffArrays(oldArray, newArray) {
 
     const arrayPatches = [];
 
-    for (const oldNode of oldArray) {
+    for(let i = 0; i < oldArray.length; i++) {
 
         /**
          * if element cannot be found by find => undefined => oldNode will be removed
          */
 
-        arrayPatches.push(diff(oldNode, newArray.find(f => f._key === oldNode._key)));
+        arrayPatches.push(diff(oldArray[i], newArray.find(f => f._key === oldArray[i]._key)));
 
     }
 
     const additionalPatches = [];
 
-    for (const additionalVChild of newArray.slice(oldArray.length)) {
+    for(let i = 0, additionalVChildren = newArray.slice(oldArray.length); i < additionalVChildren.length; i++) {
 
         additionalPatches.push(function (node) {
-            node.appendChild(render(additionalVChild));
-            return node;
+            return render(additionalVChildren[i], function(newNode) {
+                node.appendChild(newNode);
+            });
         });
 
     }
+
 
     /**
      * apply changes to real dom node
@@ -45,9 +47,9 @@ export default function diffArrays(oldArray, newArray) {
 
         }
 
-        for (const additionalPatch of additionalPatches) {
+        for(let i = 0; i < additionalPatches.length; i++) {
 
-            additionalPatch(parent);
+            additionalPatches[i](parent);
 
         }
 

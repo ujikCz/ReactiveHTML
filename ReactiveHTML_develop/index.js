@@ -5,8 +5,8 @@
 */
 
 import render from './DOM/render.js';
-import elementReady from './DOM/elementReady.js';
 import createElement from './vnode/createVnodeElement.js';
+import readyElement from './DOM/readyElement.js';
 import Component from './vnode/component.js';
 
 /**
@@ -27,20 +27,17 @@ import Component from './vnode/component.js';
 
         Component,
 
-        render: function (component, element) {
-            
-            return element.appendChild(
-                render(component)
-            );
-            
+        render: function(element, container) {
+
+            return render(element, function(el){
+                
+                container.appendChild(el);
+
+            });
+
         },
 
-        /*
-         *   wait until elements is parsed by HTML parser
-         *   then call callback function  
-         */
-
-        elementReady,
+        readyElement,
 
         /*
          *   creates virtualNode 
@@ -49,6 +46,12 @@ import Component from './vnode/component.js';
         createElement,
 
         createFactory: function(component) {
+
+            if(!(component.prototype instanceof Component)) {
+
+                throw Error('createFactory expecting first parameter as component class');
+
+            }
 
             return function(props = {}) {
 

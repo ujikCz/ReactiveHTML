@@ -1,5 +1,4 @@
-import updateVnodeAndRealDOM from './updateVnodeAndRealDOM.js';
-import deepProxy from './proxy.js';
+import updateVnodeAndRealDOM from '../update/updateVnodeAndRealDOM.js';
 import cloneObjectWithoutReference from '../cloneObjectWithoutReference.js';
 
 /**
@@ -19,8 +18,6 @@ export default class Component {
 
         this.__component__ = this;
 
-        this.onComponentCreate();
-
         return this;
 
     }
@@ -31,83 +28,42 @@ export default class Component {
 
     Element() {
 
-        throw Error('You have to specify Element method in your Component');
+        throw new Error('You have to specify Element method in your Component');
 
     }
 
-    /*
-     *  basic lifecycles
-     */
-
-    onComponentCreate() {}
-    onComponentUpdate() {}
-    onComponentRender() {}
-    onComponentCancelUpdate() {}
-    onComponentUnMount() {}
-
-    /*
-     *  future lifecycles
-     */
-
-    onComponentWillUpdate() {}
-    onComponentWillRender() {}
-    onComponentWillMount() {}
-    onComponentWillUnMount() {}
-
-    /*
-     *  manage methods
-     */
-
-    /*
-     * components has these methods too, but they doing some in addition operation so they are checked if exists 
-     * getSnapshotBeforeUpdate(oldProps, oldStates) {}
-     */
-
-    reactive(object = {}) {
-
-        return deepProxy(object, (manipulation, args, target, prop, value) => {
-
-            let nextStates = Object.assign({}, target);
-
-            if (args === false) {
-
-                manipulation(nextStates, prop, value);
-                const nextStateCache = Object.assign({}, this.states);
-                nextStates = Object.assign(nextStateCache, nextStates);
-
-            } else {
-
-                nextStates = Object.assign({}, this.states);
-                const nextValue = manipulation(...args);
-                Object.assign(nextStates, nextValue);
-
-            }
-
-            return updateVnodeAndRealDOM(this, false, this.props, nextStates, target, prop, value);
-
-        });
-
-    }
+    static ReactiveHTMLComponent = true
 
     setState(setterFunction) {
 
-        let nextStates;
+        if(typeof setterFunction !== 'function') {
 
-        if(this.componentShouldUpdate || this.getSnapshotBeforeUpdate) {
-
-            nextStates = cloneObjectWithoutReference(this.states);
+            throw new TypeError('setState expecting function as first parameter');
 
         }
 
-        setterFunction(nextStates || this.states);
+        let nextStates;
 
-        return updateVnodeAndRealDOM(this, false, this.props, nextStates || this.states, false, nextStates === undefined ? false : true);
+        if(this.getSnapshotBeforeUpdate || this.componentShouldUpdate) {
+
+            nextStates = cloneObjectWithoutReference(this.states);
+
+        } else {
+
+            nextStates = this.states;
+
+        }
+
+        setterFunction(nextStates);
+
+
+        return updateVnodeAndRealDOM(this, false, null, nextStates);
 
     }
 
     forceComponentUpdate(harmful = false) {
 
-        return updateVnodeAndRealDOM(this, harmful, this.props, this.states);
+        return updateVnodeAndRealDOM(this, harmful, null, null);
 
     }
 
