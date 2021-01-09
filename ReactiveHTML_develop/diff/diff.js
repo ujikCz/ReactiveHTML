@@ -20,7 +20,7 @@ export default function diff(vOldNode, vNewNode) {
 
     if (isObject(vOldNode) && vOldNode.__component__ && isObject(vNewNode) && vNewNode.__component__) {
 
-        return node => node;
+        return () => undefined;
 
     }
 

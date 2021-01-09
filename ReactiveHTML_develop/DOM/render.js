@@ -14,7 +14,7 @@ import {
 
 function whenYouCanNoLaterThen(callback) {
 
-    const schedule = () => requestIdleCallbackPolyfill(deadline => {
+    const schedule = () => window.requestIdleCallback(deadline => {
 
         if (deadline.timeRemaining() > 1) return callback();
 

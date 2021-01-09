@@ -24,7 +24,7 @@ export default function patchComponents(newChild, oldChild, harmful) {
         if(oldChild.__component__) {
 
             //if is component and already exists
-            return updateVnodeAndRealDOM(oldChild.__component__, harmful, newChild.props, oldChild.states, true, true);
+            return updateVnodeAndRealDOM(oldChild.__component__, harmful, newChild.props, []);
 
         }
 

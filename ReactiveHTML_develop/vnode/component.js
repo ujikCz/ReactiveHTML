@@ -1,5 +1,6 @@
 import updateVnodeAndRealDOM from '../update/updateVnodeAndRealDOM.js';
 import cloneObjectWithoutReference from '../cloneObjectWithoutReference.js';
+import createProxy from '../createProxy.js';
 
 /**
  *  Component class
@@ -42,22 +43,22 @@ export default class Component {
 
         }
 
-        let nextStates;
+        /*let nextStates, statesPatches;
 
         if(this.getSnapshotBeforeUpdate || this.componentShouldUpdate) {
 
-            nextStates = cloneObjectWithoutReference(this.states);
+            [nextStates, statesPatches] = createProxy(this.states, [], true);
 
         } else {
 
             nextStates = this.states;
 
-        }
+        }*/
 
-        setterFunction(nextStates);
+        setterFunction(this.states);
 
 
-        return updateVnodeAndRealDOM(this, false, null, nextStates);
+        return updateVnodeAndRealDOM(this, false, null, this.states);
 
     }
 

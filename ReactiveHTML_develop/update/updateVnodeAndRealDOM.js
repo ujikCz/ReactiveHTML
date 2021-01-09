@@ -2,7 +2,7 @@ import diff from '../diff/diff.js';
 import assignNewStatesAndProps from './assignNewStatesAndProps.js';
 import patchComponents from './patchComponents.js';
 import triggerLifecycle from '../triggerLifecycle.js';
-
+import createProxy from '../createProxy.js';
 /**
  * updates virtualNode and its realNode (update whole component)
  * @param { Class } oldComponent - updated component instance
@@ -14,11 +14,11 @@ import triggerLifecycle from '../triggerLifecycle.js';
 export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, nextStates) {
 
 
-    if(harmful === false && triggerLifecycle(oldComponent.componentShouldUpdate, nextProps, nextStates) === false) {
+    if(harmful === false && triggerLifecycle(oldComponent.componentShouldUpdate, oldComponent, nextProps, nextStates) === false) {
 
         // check if component should update (undefined mean everytime update)
 
-        assignNewStatesAndProps(oldComponent, nextProps, nextStates, false); //patch props and states
+        //assignNewStatesAndProps(oldComponent, nextProps, nextStates, false); //patch props and states
 
         triggerLifecycle(oldComponent.onComponentCancelUpdate, oldComponent);
 
@@ -32,7 +32,7 @@ export default function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, 
 
     if(oldComponent.getSnapshotBeforeUpdate || nextProps || nextStates) {
 
-        assignNewStatesAndProps(oldComponent, nextProps, nextStates, true); //patch props and states
+        //assignNewStatesAndProps(oldComponent, nextProps, nextStates, true); //patch props and states
 
     }
     

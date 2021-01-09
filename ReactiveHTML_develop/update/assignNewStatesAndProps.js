@@ -9,7 +9,7 @@ import cloneObjectWithoutReference from '../cloneObjectWithoutReference.js';
  * @param { Boolean } willUpdate - if component will update, check if has getSnapshotAfterUpdate for extra operations
  */
 
-export default function assignNewStatesAndProps(oldComponent, nextProps, nextStates, willUpdate) {
+export default function assignNewStatesAndProps(oldComponent, nextProps, statesPatches, willUpdate) {
 
     // prepare for update states and prop, not update now because of next values of props and states 
 
@@ -25,9 +25,13 @@ export default function assignNewStatesAndProps(oldComponent, nextProps, nextSta
 
     }
 
-    if(nextStates !== null) {
+    if(statesPatches) {
 
-        oldComponent.states = nextStates; 
+        for(let i = 0; i < statesPatches.length; i++) {
+
+            statesPatches[i](oldComponent.states);
+
+        }
 
     }
     
