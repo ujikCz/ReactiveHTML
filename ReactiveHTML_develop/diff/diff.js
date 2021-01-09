@@ -52,7 +52,9 @@ export default function diff(vOldNode, vNewNode) {
             }
 
         } else {
-            return node => undefined;
+
+            return () => undefined;
+
         }
 
     }
@@ -61,7 +63,7 @@ export default function diff(vOldNode, vNewNode) {
      *   if one of virtualNodes is not virtualNode (means Number or String) replace it as textNode
      */
 
-    if (!isObject(vOldNode) || !isObject(vNewNode)) {
+    if ( (!isObject(vOldNode) && isObject(vNewNode)) || (isObject(vOldNode) && !isObject(vNewNode))) {
 
         return function (node) {
             return render(vNewNode, function (newNode) {
@@ -86,16 +88,17 @@ export default function diff(vOldNode, vNewNode) {
             });
         };
     }
+    
 
     return function (node) {
 
-        if (vOldNode.attrs !== null) {
+        if (vOldNode.attrs !== null && ((Object.keys(vOldNode.attrs).length + Object.keys(vNewNode.attrs).length) > 0) ) {
 
             diffAttrs(vOldNode.attrs, vNewNode.attrs)(node);
 
         }
 
-        if ((vOldNode.children.length + vNewNode.children.length) !== 0) {
+        if ((vOldNode.children.length + vNewNode.children.length) > 0) {
 
             diffChildren(vOldNode.children, vNewNode.children)(node);
 

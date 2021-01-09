@@ -36,7 +36,7 @@ export default function diffAttrs(oldAttrs, newAttrs, styles = false) {
                     if (k === 'value') {
                         node.value = newAttrs[k];
                     }
-                    
+
                     node.setAttribute(k, newAttrs[k]);
                     return node;
                 }
@@ -46,29 +46,26 @@ export default function diffAttrs(oldAttrs, newAttrs, styles = false) {
 
     }
 
-    if ((Object.keys(oldAttrs).length - Object.keys(newAttrs).length) !== 0) {
+    // remove old attributes
+    for (const k in oldAttrs) {
+        if (!(k in newAttrs)) {
+            attrsPatches.push(
+                function (node) {
 
-        // remove old attributes
-        for (const k in oldAttrs) {
-            if (!(k in newAttrs)) {
-                attrsPatches.push(
-                    function (node) {
+                    if (styles) {
 
-                        if (styles) {
-
-                            node.style[k] = null;
-                            return node;
-
-                        }
-
-                        node.removeAttribute(k);
+                        node.style[k] = null;
                         return node;
-                    }
-                );
-            }
-        }
 
+                    }
+
+                    node.removeAttribute(k);
+                    return node;
+                }
+            );
+        }
     }
+
 
 
     return function (node) {

@@ -2,17 +2,16 @@ import isObject from '../isObject.js';
 import isArray from '../isArray.js';
 import createComponentInstance from '../vnode/createComponentInstance.js';
 import triggerLifecycle from '../triggerLifecycle.js';
-import {
-    requestIdleCallbackPolyfill,
-    cancelIdleCallbackPolyfill
-} from '../polyfill/requestIdleCallback.js';
+import requestIdleCallbackPolyfill from '../polyfill/requestIdleCallback.js';
+
+window.requestIdleCallback = window.requestIdleCallback || requestIdleCallbackPolyfill;
 
 /**
- * render virtual node (create real node from virtual node)
- * @param { Object } vnode 
+ * request idle callback on function
+ * @param { Function } callback 
  */
 
-function whenYouCanNoLaterThen(callback) {
+function req(callback) {
 
     const schedule = () => window.requestIdleCallback(deadline => {
 
@@ -23,6 +22,13 @@ function whenYouCanNoLaterThen(callback) {
 
     schedule();
 }
+
+/**
+ * render virtual node (create real node from virtual node)
+ * recursion to create DOM is so heavy operation, to solve this problem we request idle callback
+ * @param { Object } vnode - virtual node element
+ * @param { Function } callback - after render is done call callback with rendered element
+ */
 
 function createDomElement(vnode, callback) {
 
@@ -102,26 +108,26 @@ function createDomElement(vnode, callback) {
 
 }
 
+ /**
+  * render the virtualNode 
+  * mount rendered element
+  * use idle callback
+  * @param { Class || Object } virtualElement - class or object that represent virtual dom or component
+  * @param { Function } callback - triggered after rendered to mount
+  */
 
-
-
-/**
- * render the virtualNode 
- * rendered virtualNode is not mounted, but it is now HTML element
- * @param { Object } virtualElement - component or vNode object
- */
 
 export default function render(virtualElement, callback) {
 
     if (!isObject(virtualElement) || isArray(virtualElement) || !virtualElement.type.ReactiveHTMLComponent) {
 
-        return whenYouCanNoLaterThen(() => createDomElement(virtualElement, callback));
+        return req(() => createDomElement(virtualElement, callback));
 
     }
 
     virtualElement = Object.assign(virtualElement, createComponentInstance(virtualElement));
 
-    return whenYouCanNoLaterThen(() => render(virtualElement.vnode, function(el) {
+    return req(() => render(virtualElement.vnode, function(el) {
 
         virtualElement.__component__.realDOM = el;
 

@@ -17,18 +17,13 @@
 /*
  * @see https://developers.google.com/web/updates/2015/08/using-requestidlecallback
  */
-export function requestIdleCallbackPolyfill(cb) {
+export default function requestIdleCallbackPolyfill(cb) {
     return setTimeout(function () {
         var start = Date.now();
         cb({
-            didTimeout: false,
             timeRemaining: function () {
                 return Math.max(0, 50 - (Date.now() - start));
             }
         });
     }, 1);
-}
-
-export function cancelIdleCallbackPolyfill(id) {
-    clearTimeout(id);
 }

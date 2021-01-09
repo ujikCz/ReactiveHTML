@@ -1,8 +1,5 @@
 
 
-import Component from './component.js';
-
-
 /**
  * creates virtual node
  * @param { Component, tagName } type 
@@ -13,10 +10,10 @@ import Component from './component.js';
 export default function createVnodeElement(type, props = null, ...children) {
 
     let _key = null;
-    if(props !== null && props[':key'] !== undefined) {
+    if(props !== null && props._key !== undefined) {
 
-        _key = props[':key'];
-        delete props[':key'];
+        _key = props._key;
+        Reflect.deleteProperty(props, '_key');
 
     }
     
@@ -24,7 +21,7 @@ export default function createVnodeElement(type, props = null, ...children) {
      * if element is component
      */
 
-    if(type.prototype instanceof Component) {
+    if(type.ReactiveHTMLComponent) {
         
         return {
             type,
