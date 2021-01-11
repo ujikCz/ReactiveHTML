@@ -14,9 +14,10 @@ export default function createComponentInstance(component) {
     instance.vnode = instance.Element(instance.props, instance.states);
 
     Object.setPrototypeOf(component, Object.getPrototypeOf(instance));
-    Object.assign(component, instance);
 
     triggerLifecycle(instance.onComponentWillRender, instance);
+
+    Object.assign(component, instance);
 
     return component;
 

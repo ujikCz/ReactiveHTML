@@ -40,7 +40,7 @@ export default function diff(vOldNode, vNewNode) {
     const isVOldNodeComponent = isFunction(vOldNode.type);
     const isVNewNodeComponent = isFunction(vNewNode.type);
 
-    if (isVOldNodeObject && isVOldNodeComponent) {
+    if (isVOldNodeObject && isVOldNodeComponent && vOldNode.ref) {
 
         if (isVNewNodeComponent) {
 

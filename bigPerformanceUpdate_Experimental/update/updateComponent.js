@@ -9,7 +9,6 @@ import triggerLifecycle from '../triggerLifecycle.js';
  */
 
 export default function updateComponent(oldComponent, newComponent) {
-    console.log(oldComponent);
 
     if(newComponent && newComponent.props !== undefined) {
 
@@ -26,10 +25,7 @@ export default function updateComponent(oldComponent, newComponent) {
 
     const patch = diff(oldComponent.vnode, newVNode);
 
-    newComponent.vnode = newVNode;
-    Object.assign(newComponent, oldComponent);
-
-    oldComponent.vnode = newComponent.vnode;
+    oldComponent.vnode = newVNode;
 
 
     triggerLifecycle(oldComponent.onComponentUpdate, oldComponent);
