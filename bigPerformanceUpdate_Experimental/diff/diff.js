@@ -2,7 +2,7 @@ import diffAttrs from './diffAttrs.js';
 import diffChildren from './diffChildren.js';
 import render from '../DOM/render.js';
 import isObject from '../isObject.js';
-import updateComponent from '../update/updateComponent.js';
+import updateComponent, { updateDifferentComponent, updateTreeWithComponent } from '../update/updateComponent.js';
 import triggerLifecycle from '../triggerLifecycle.js';
 import isFunction from '../isFunction.js';
 
@@ -53,17 +53,17 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node, callback) {
 
-            render(vNewNode, function (newNode) {
+            render(vNewNode, function(/*newNode*/) {
 
-                triggerLifecycle(vOldNode.onComponentWillUnMount, vOldNode, node);
+                const patch = updateDifferentComponent(vOldNode, vNewNode);
 
-                node.replaceWith(newNode);
+                patch(node, el => {
 
-                triggerLifecycle(vOldNode.onComponentUnMount, vOldNode);
+                    callback(el);
 
-                callback(newNode);
+                });
 
-            });
+            }); 
 
         } 
 
@@ -71,19 +71,13 @@ export default function diff(vOldNode, vNewNode) {
 
     if(isVOldNodeComponent && !isVNewNodeComponent) {
 
-        return function (node, callback) {
+        return function (node) {
 
-            render(vNewNode, function (newNode) {
+            const patch = updateTreeWithComponent(vOldNode, vNewNode);
+                
+            patch(node);
 
-                triggerLifecycle(vOldNode.onComponentWillUnMount, vOldNode, node);
-
-                node.replaceWith(newNode);
-
-                triggerLifecycle(vOldNode.onComponentUnMount, vOldNode);
-
-                callback(newNode);
-
-            });
+            return node;
 
         }
 
@@ -93,11 +87,13 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node, callback) {
 
-            render(vNewNode, function (newNode) {
+            render(vNewNode, function (/*newNode*/) {
 
-                node.replaceWith(newNode);
+                const patch = updateTreeWithComponent(vOldNode, vNewNode);
+                
+                patch(node);
 
-                callback(newNode);
+                callback(node);
 
             });
 
