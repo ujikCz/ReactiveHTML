@@ -1,6 +1,5 @@
 import diff from '../diff/diff.js';
 import triggerLifecycle from '../triggerLifecycle.js';
-import createProxy from '../createProxy.js';
 /**
  * updates virtualNode and its realNode (update whole component)
  * @param { Class } oldComponent - updated component instance

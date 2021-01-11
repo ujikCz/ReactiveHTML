@@ -15,7 +15,7 @@ export default function createComponentInstance(component) {
 
     instance._key = component._key;
 
-    Object.assign(component, instance);
+    component = instance;
 
     triggerLifecycle(instance.onComponentWillRender, instance);
 

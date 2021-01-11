@@ -1,5 +1,4 @@
 import updateComponent from '../update/updateComponent.js';
-import createProxy from '../createProxy.js';
 
 /**
  *  Component class

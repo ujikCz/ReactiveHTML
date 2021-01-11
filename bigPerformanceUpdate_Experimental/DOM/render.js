@@ -123,15 +123,16 @@ function createDomElement(vnode, callback) {
 
 export default function render(virtualElement, callback) {
 
+
     if (!isObject(virtualElement) || isArray(virtualElement) || !virtualElement.type.ReactiveHTMLComponent) {
 
-        reqestIdle(() => createDomElement(virtualElement, callback));
+        requestIdle(() => createDomElement(virtualElement, callback));
 
     } else {
 
         virtualElement = createComponentInstance(virtualElement);
 
-        reqestIdle(() => render(virtualElement.vnode, function (el) {
+        requestIdle(() => render(virtualElement.vnode, function (el) {
 
             triggerLifecycle(virtualElement.__component__.onComponentRender, virtualElement, el);
 

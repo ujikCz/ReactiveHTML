@@ -52,7 +52,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
                             
                             if(i === (newVChildren.length - 1)) {
 
-                               return node.appendChild(newNode);
+                                return node.appendChild(newNode);
 
                             } 
 
@@ -65,8 +65,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
                 }
 
             } else {
-
-                i = oldVChildren.length;
 
                 additionalPatches.push(function (node) {
 

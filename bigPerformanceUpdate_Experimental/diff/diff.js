@@ -19,6 +19,21 @@ export default function diff(vOldNode, vNewNode) {
      * if it is component, return node only, update is pathed already cause updateVnodeAndRealDOM patch all components
      */
 
+    /*
+     *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
+     */
+
+    if (vNewNode === undefined) {
+
+        return function (node) {
+
+            node.remove();
+            return undefined;
+
+        };
+
+    }
+
     const isVOldNodeObject = isObject(vOldNode);
     const isVNewNodeObject = isObject(vNewNode);
 
@@ -62,13 +77,19 @@ export default function diff(vOldNode, vNewNode) {
 
     if (isVNewNodeObject && typeof vNewNode.type === 'function') {
 
-        return function (node, callback) {
+        if(isVOldNodeObject && typeof vOldNode.type === 'function') {
+
+            return () => undefined;
+
+        }
+
+        return function (node) {
 
             render(vNewNode, function (newNode) {
 
                 node.replaceWith(newNode);
 
-                callback(newNode);
+                return newNode;
 
             });
 
@@ -76,21 +97,6 @@ export default function diff(vOldNode, vNewNode) {
 
     }
 
-
-    /*
-     *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
-     */
-
-    if (vNewNode === undefined) {
-
-        return function (node) {
-
-            node.remove();
-            return undefined;
-
-        };
-
-    }
 
     /*
      *   if both are not a virtual node, it is text node, so replace its value 
@@ -146,6 +152,12 @@ export default function diff(vOldNode, vNewNode) {
 
 
     return function (node) {
+
+        if (vOldNode._memo) {
+
+            return node;
+
+        }
 
         if (vOldNode.attrs !== null && ((Object.keys(vOldNode.attrs).length + Object.keys(vNewNode.attrs).length) > 0)) {
 
