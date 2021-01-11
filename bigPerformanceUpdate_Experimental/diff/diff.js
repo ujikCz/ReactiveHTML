@@ -16,9 +16,6 @@ import isFunction from '../isFunction.js';
 
 export default function diff(vOldNode, vNewNode) {
 
-    /*
-     * if it is component, return node only, update is pathed already cause updateVnodeAndRealDOM patch all components
-     */
 
     /*
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
@@ -37,12 +34,12 @@ export default function diff(vOldNode, vNewNode) {
 
     const isVOldNodeObject = isObject(vOldNode);
     const isVNewNodeObject = isObject(vNewNode);
-    const isVOldNodeComponent = isFunction(vOldNode.type);
-    const isVNewNodeComponent = isFunction(vNewNode.type);
+    const isVOldNodeComponent = isVOldNodeObject ? isFunction(vOldNode.type) : false;
+    const isVNewNodeComponent = isVNewNodeObject ? isFunction(vNewNode.type) : false;
 
-    if (isVOldNodeObject && isVOldNodeComponent && vOldNode.ref) {
+    if(isVOldNodeComponent && isVNewNodeComponent) {
 
-        if (isVNewNodeComponent) {
+        if(vOldNode.type === vNewNode.type) {
 
             return function (node, callback) {
 
@@ -54,7 +51,7 @@ export default function diff(vOldNode, vNewNode) {
 
                 });
 
-            }
+            } 
 
         }
 
@@ -68,7 +65,30 @@ export default function diff(vOldNode, vNewNode) {
 
                 triggerLifecycle(vOldNode.onComponentUnMount, vOldNode);
 
-                return callback(newNode);
+                callback(newNode);
+                return newNode;
+
+            });
+
+        } 
+
+    }
+
+    if(isVOldNodeComponent && !isVNewNodeComponent) {
+
+        return function (node, callback) {
+
+            render(vNewNode, function (newNode) {
+
+                triggerLifecycle(vOldNode.onComponentWillUnMount, vOldNode, node);
+
+                node.replaceWith(newNode);
+
+                triggerLifecycle(vOldNode.onComponentUnMount, vOldNode);
+
+                callback(newNode);
+
+                return newNode;
 
             });
 
@@ -76,21 +96,15 @@ export default function diff(vOldNode, vNewNode) {
 
     }
 
-    if (isVNewNodeObject && isVNewNodeComponent) {
+    if(!isVOldNodeComponent && isVNewNodeComponent) {
 
-        if(isVOldNodeObject && isVOldNodeComponent) {
-
-            return () => undefined;
-
-        }
-
-        return function (node) {
+        return function (node, callback) {
 
             render(vNewNode, function (newNode) {
 
                 node.replaceWith(newNode);
 
-                return newNode;
+                callback(newNode);
 
             });
 
