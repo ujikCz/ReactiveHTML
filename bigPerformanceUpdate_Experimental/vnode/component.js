@@ -15,7 +15,7 @@ export default class Component {
 
         this.props = props;
 
-        this.__component__ = this;
+        this.ref = {};
 
         return this;
 
@@ -57,8 +57,8 @@ export default class Component {
 
         const patch = updateComponent(this, this);
 
-        patch(this.realDOM, el => {
-            this.realDOM = el;
+        patch(this.ref.realDOM, el => {
+            this.ref.realDOM = el;
         });
 
     }
@@ -67,8 +67,8 @@ export default class Component {
 
         const patch = updateComponent(this, this);
 
-        patch(this.realDOM, el => {
-            this.realDOM = el;
+        patch(this.ref.realDOM, el => {
+            this.ref.realDOM = el;
         });
 
     }

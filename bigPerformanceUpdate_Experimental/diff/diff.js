@@ -4,6 +4,7 @@ import render from '../DOM/render.js';
 import isObject from '../isObject.js';
 import updateComponent from '../update/updateComponent.js';
 import triggerLifecycle from '../triggerLifecycle.js';
+import isFunction from '../isFunction.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -36,20 +37,20 @@ export default function diff(vOldNode, vNewNode) {
 
     const isVOldNodeObject = isObject(vOldNode);
     const isVNewNodeObject = isObject(vNewNode);
+    const isVOldNodeComponent = isFunction(vOldNode.type);
+    const isVNewNodeComponent = isFunction(vNewNode.type);
 
+    if (isVOldNodeObject && isVOldNodeComponent) {
 
-    if (isVOldNodeObject && vOldNode.__component__) {
-
-        if (typeof vNewNode.type === 'function') {
+        if (isVNewNodeComponent) {
 
             return function (node, callback) {
 
-                const patch = updateComponent(vOldNode.__component__, vNewNode);
+                const patch = updateComponent(vOldNode, vNewNode);
 
                 patch(node, el => {
 
-                    vOldNode.__component__.realDOM = el;
-                    callback(el);
+                    return callback(el);
 
                 });
 
@@ -61,13 +62,13 @@ export default function diff(vOldNode, vNewNode) {
 
             render(vNewNode, function (newNode) {
 
-                triggerLifecycle(vOldNode.__component__.onComponentWillUnMount, vOldNode.__component__, node);
+                triggerLifecycle(vOldNode.onComponentWillUnMount, vOldNode, node);
 
                 node.replaceWith(newNode);
 
-                triggerLifecycle(vOldNode.__component__.onComponentUnMount, vOldNode.__component__);
+                triggerLifecycle(vOldNode.onComponentUnMount, vOldNode);
 
-                callback(newNode);
+                return callback(newNode);
 
             });
 
@@ -75,9 +76,9 @@ export default function diff(vOldNode, vNewNode) {
 
     }
 
-    if (isVNewNodeObject && typeof vNewNode.type === 'function') {
+    if (isVNewNodeObject && isVNewNodeComponent) {
 
-        if(isVOldNodeObject && typeof vOldNode.type === 'function') {
+        if(isVOldNodeObject && isVOldNodeComponent) {
 
             return () => undefined;
 
@@ -149,7 +150,6 @@ export default function diff(vOldNode, vNewNode) {
             });
         };
     }
-
 
     return function (node) {
 

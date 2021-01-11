@@ -8,7 +8,7 @@ import triggerLifecycle from '../triggerLifecycle.js';
  * @param { Function } callback 
  */
 
-let requestIdle = function(callback) {
+function requestIdle(callback) {
 
     return window.requestAnimationFrame(callback);
 
@@ -113,13 +113,13 @@ export default function render(virtualElement, callback) {
 
         requestIdle(() => render(virtualElement.vnode, function (el) {
 
-            triggerLifecycle(virtualElement.__component__.onComponentRender, virtualElement, el);
+            triggerLifecycle(virtualElement.onComponentRender, virtualElement, el);
 
-            triggerLifecycle(virtualElement.__component__.onComponentWillMount, virtualElement, el);
+            triggerLifecycle(virtualElement.onComponentWillMount, virtualElement, el);
 
-            virtualElement.__component__.realDOM = el;
+            virtualElement.ref.realDOM = el;
 
-            triggerLifecycle(virtualElement.__component__.onComponentMount, virtualElement, el);
+            triggerLifecycle(virtualElement.onComponentMount, virtualElement, el);
 
             callback(el);
 
