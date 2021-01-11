@@ -45,11 +45,7 @@ export default function diff(vOldNode, vNewNode) {
 
                 const patch = updateComponent(vOldNode, vNewNode);
 
-                patch(node, el => {
-
-                    return callback(el);
-
-                });
+                patch(node, el => callback(el));
 
             } 
 
@@ -66,7 +62,6 @@ export default function diff(vOldNode, vNewNode) {
                 triggerLifecycle(vOldNode.onComponentUnMount, vOldNode);
 
                 callback(newNode);
-                return newNode;
 
             });
 
@@ -87,8 +82,6 @@ export default function diff(vOldNode, vNewNode) {
                 triggerLifecycle(vOldNode.onComponentUnMount, vOldNode);
 
                 callback(newNode);
-
-                return newNode;
 
             });
 
