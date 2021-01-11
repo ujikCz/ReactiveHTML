@@ -82,19 +82,22 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
     }
 
-
-    
     /*
      *   apply all childNodes changes to parent realNode
      */
 
     return function (parent) {
-        
-        zip(childPatches, parent.childNodes).forEach(([patch, child]) => {
 
-            patch(child);
+        if(parent) { // check if parent exists cause async operations (fetch, async/await, Promises)
 
-        });
+            zip(childPatches, parent.childNodes).forEach(([patch, child]) => {
+
+                patch(child);
+    
+            });
+
+        }
+
 
         for(let i = 0; i < additionalPatches.length; i++) {
 

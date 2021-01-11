@@ -8,32 +8,11 @@ import triggerLifecycle from '../triggerLifecycle.js';
  * @param { Function } callback 
  */
 
-let requestIdle;
+let requestIdle = function(callback) {
 
-if(!window.requestIdleCallback) {
+    return window.requestAnimationFrame(callback);
 
-    requestIdle = function(callback) {
-
-        return window.requestAnimationFrame(callback);
-
-    }
-
-} else {
-
-    requestIdle = function (callback) {
-    
-        const schedule = () => window.requestIdleCallback(deadline => {
-    
-            if (deadline.timeRemaining() > 1) return callback();
-        
-            schedule();
-        });
-        
-        schedule();
-    
-    }
-
-}
+};
 
 /**
  * render virtual node (create real node from virtual node)
