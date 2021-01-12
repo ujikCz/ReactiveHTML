@@ -15,6 +15,14 @@ import isFunction from '../isFunction.js';
 
 export default function diff(vOldNode, vNewNode) {
 
+    /**
+     * cache all statements
+     */
+
+    const isVOldNodeObject = isObject(vOldNode);
+    const isVNewNodeObject = isObject(vNewNode);
+    const isVOldNodeComponent = isVOldNodeObject ? isFunction(vOldNode.type) : false;
+    const isVNewNodeComponent = isVNewNodeObject ? isFunction(vNewNode.type) : false;
 
     /*
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
@@ -24,17 +32,27 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
+            if(isVOldNodeComponent) {
+
+                vOldNode.onComponentWillUnMount();
+
+            }
+
             node.remove();
+
+            if(isVOldNodeComponent) {
+
+                vOldNode.onComponentUnMount();
+
+            }
+
             return undefined;
 
         };
 
     }
 
-    const isVOldNodeObject = isObject(vOldNode);
-    const isVNewNodeObject = isObject(vNewNode);
-    const isVOldNodeComponent = isVOldNodeObject ? isFunction(vOldNode.type) : false;
-    const isVNewNodeComponent = isVNewNodeObject ? isFunction(vNewNode.type) : false;
+
 
     if(isVOldNodeComponent && isVNewNodeComponent) {
 
@@ -55,9 +73,13 @@ export default function diff(vOldNode, vNewNode) {
 
             render(vNewNode, function(/*newNode*/) {
 
+                vOldNode.onComponentWillUnMount();
+
                 const patch = updateTreeWithComponent(vOldNode, vNewNode);
 
                 patch(node, el => callback(el));
+
+                vOldNode.onComponentUnMount();
 
             }); 
 
@@ -70,8 +92,12 @@ export default function diff(vOldNode, vNewNode) {
         return function (node) {
 
             const patch = updateTreeWithComponent(vOldNode, vNewNode);
-                
+            
+            vOldNode.onComponentWillUnMount();
+
             patch(node);
+
+            vOldNode.onComponentUnMount();
 
             return node;
 
