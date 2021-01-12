@@ -1,5 +1,4 @@
 
-import triggerLifecycle from "../triggerLifecycle.js";
 
 /**
  * creates virtual node tree from component
@@ -15,7 +14,7 @@ export default function createComponentInstance(component) {
 
     Object.setPrototypeOf(component, Object.getPrototypeOf(instance));
 
-    triggerLifecycle(instance.onComponentWillRender, instance);
+    instance.onComponentWillRender();
 
     Object.assign(component, instance);
 

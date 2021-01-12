@@ -2,8 +2,7 @@ import diffAttrs from './diffAttrs.js';
 import diffChildren from './diffChildren.js';
 import render from '../DOM/render.js';
 import isObject from '../isObject.js';
-import updateComponent, { updateDifferentComponent, updateTreeWithComponent } from '../update/updateComponent.js';
-import triggerLifecycle from '../triggerLifecycle.js';
+import updateComponent, { updateTreeWithComponent } from '../update/updateComponent.js';
 import isFunction from '../isFunction.js';
 
 /**
@@ -43,7 +42,8 @@ export default function diff(vOldNode, vNewNode) {
 
             return function (node, callback) {
 
-                const patch = updateComponent(vOldNode, vNewNode);
+                const patch = updateComponent(vOldNode, vNewNode, vOldNode.states);
+                vNewNode.vnode = vOldNode.vnode;
 
                 patch(node, el => callback(el));
 
@@ -55,13 +55,9 @@ export default function diff(vOldNode, vNewNode) {
 
             render(vNewNode, function(/*newNode*/) {
 
-                const patch = updateDifferentComponent(vOldNode, vNewNode);
+                const patch = updateTreeWithComponent(vOldNode, vNewNode);
 
-                patch(node, el => {
-
-                    callback(el);
-
-                });
+                patch(node, el => callback(el));
 
             }); 
 

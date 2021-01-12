@@ -1,7 +1,6 @@
 import isObject from '../isObject.js';
 import isArray from '../isArray.js';
 import createComponentInstance from '../vnode/createComponentInstance.js';
-import triggerLifecycle from '../triggerLifecycle.js';
 
 /**
  * request idle callback on function
@@ -10,7 +9,7 @@ import triggerLifecycle from '../triggerLifecycle.js';
 
 function requestIdle(callback) {
 
-    return window.requestAnimationFrame(callback);
+    return callback(); // window.requestAnimationFrame(callback);
 
 };
 
@@ -113,13 +112,12 @@ export default function render(virtualElement, callback) {
 
         requestIdle(() => render(virtualElement.vnode, function (el) {
 
-            triggerLifecycle(virtualElement.onComponentRender, virtualElement, el);
+            virtualElement.onComponentRender(el);
 
-            triggerLifecycle(virtualElement.onComponentWillMount, virtualElement, el);
-
+            virtualElement.onComponentWillMount(el);
             virtualElement.ref.realDOM = el;
 
-            triggerLifecycle(virtualElement.onComponentMount, virtualElement, el);
+            virtualElement.onComponentMount(el);
 
             callback(el);
 

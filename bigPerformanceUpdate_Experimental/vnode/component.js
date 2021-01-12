@@ -1,4 +1,5 @@
 import updateComponent from '../update/updateComponent.js';
+import isFunction from '../isFunction.js';
 
 /**
  *  Component class
@@ -27,51 +28,41 @@ export default class Component {
 
     Element() {
 
-        throw new Error('You have to specify Element method in your Component');
+        throw Error('You have to specify Element method in your Component');
 
     }
 
     static ReactiveHTMLComponent = true
 
-    setState(setterFunction) {
+    setState(setter) {
 
-        if(typeof setterFunction !== 'function') {
+        if (isFunction(setter)) {
 
-            throw new TypeError('setState expecting function as first parameter');
+            setter.bind(this)();
+
+            const patch = updateComponent(this, this);
+            return patch(this.ref.realDOM, el => this.ref.realDOM = el);
 
         }
 
-        /*let nextStates, statesPatches;
-
-        if(this.getSnapshotBeforeUpdate || this.componentShouldUpdate) {
-
-            [nextStates, statesPatches] = createProxy(this.states, [], true);
-
-        } else {
-
-            nextStates = this.states;
-
-        }*/
-
-        setterFunction(this.states);
-
-        const patch = updateComponent(this, this);
-
-        patch(this.ref.realDOM, el => {
-            this.ref.realDOM = el;
-        });
+        throw TypeError(`setState method expecting 1 parameter as Function, you given ${ typeof setter }`);
 
     }
 
-    forceComponentUpdate(harmful = false) {
+    onComponentUpdate() {}
+    onComponentWillUpdate() {}
 
-        const patch = updateComponent(this, this);
+    onComponentRender() {}
+    onComponentWillRender() {}
 
-        patch(this.ref.realDOM, el => {
-            this.ref.realDOM = el;
-        });
+    onComponentMount() {}
+    onComponentWillMount() {}
 
-    }
+    onComponentUnMount() {}
+    onComponentWillUnMount() {}
+
+    shouldComponentUpdate() { return true; }
+    getSnapshotBeforeUpdate() {}
+    onComponentCancelUpdate() {}
 
 }
-
