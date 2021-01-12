@@ -1,14 +1,11 @@
 # ReactiveHTML
 Simple reactive Virtual DOM elements for building complex reactive UI
 
-## Download via npm
+## Download
 ```
 npm i reactivehtml
-```
 
-## Download via cdn
-```
-<script src="https://cdn.jsdelivr.net/npm/reactivehtml@2.2.2/src/ReactiveHTML.min.js"></script>
+<script scr="https://cdn.jsdelivr.net/npm/reactivehtml@2.3.0/src/ReactiveHTML.min.js"></script>
 ```
 
 ## HTM.js cdn
@@ -37,13 +34,27 @@ Every change in components are done in virtual dom.
 Virtual dom is lightweight copy of real dom, virtual dom is json javascript object, that means every diffing are faster
 than in real dom, because real dom need to recalculate styles, parents,... 
 
+The library is much faster than React, Vue and Angular (benchmarks will be added).
+
 ![benchmark](benchmark/bench.png)
 
 This library is also very lightweight, only 2Kb min+gzip
 
 ## Special thanks :heart:
 Jáchym Janoušek https://github.com/jachymjanousek    
-Jan Turoň https://github.com/janturon     
+Jan Turoň https://github.com/janturon    
+
+## defer script
+I highly recommend to create your scripts with ReactiveHTML with defer attribute, that script is parsed asynchronnaly with your html parsing and it is evaluated after html document is ready, but before DOMContentLoaded event, so you can manipulate with your elements and don't stop your main thread with html parsing.
+
+```
+<script src="ReactiveHTML.min.js"></script>
+<script defer>
+
+    //your script here....
+
+</script>
+```
 
 ## Hello world
 ```
@@ -60,24 +71,6 @@ This method render virtual dom into real dom and mount it to specific element.
 
 ```
 ReactiveHTML.render(html`<div>Hello, world!</div>`, document.getElementById('app'));
-```
-
-## elementReady method
-This method wait until selector in the first parameter matched element.
-Element is matched before whole DOM is loaded, it is matched after element was parsed.
-That means you can modify element before whole DOM loaded, so if it is some big modification, user don't see "blick" effect.
-
-If element was matches, it will call asynchronnous callback function in second parameter, where you can render to this element.
-Callback function paramater is the matched element.
-
-Note: call elementReady before element in document, else callback function will never be called.
-```
-ReactiveHTML.elementReady('#app', function(element){
-
-    console.log(element);
-    ReactiveHTML.render(html`<div>Hello, world!</div>`, element);
-
-});
 ```
 
 ## createElement method
@@ -109,9 +102,9 @@ On call factory function the first parameter is Object - props of component.
 ```
 class myComponent extends ReactiveHTML.Component {
 
-    Element(props, states) {
+    Element() {
 
-        return html`<div>${ props.message }</div>`
+        return html`<div>${ this.props.message }</div>`
 
     }
 
@@ -135,7 +128,7 @@ this example with component has the same output as the Hello world example, but 
 ```
 class HelloWorldComponent extends ReactiveHTML.Component {
 
-    Element(props, states) {
+    Element() {
 
         return html`<div>Hello, world!</div>`
 
@@ -143,7 +136,7 @@ class HelloWorldComponent extends ReactiveHTML.Component {
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ HelloWorldComponent } />`, el));
+ReactiveHTML.render(html`<${ HelloWorldComponent } />`, document.getElementById('app'));
 ```
 
 ### Component Factory
@@ -152,7 +145,7 @@ if you don't like element based component write, you can create factory of class
 ```
 const HelloWorldComponent = ReactiveHTML.createFactory(class extends ReactiveHTML.Component {
 
-    Element(props, states) {
+    Element() {
 
         return html`<div>Hello, world!</div>`
 
@@ -160,7 +153,7 @@ const HelloWorldComponent = ReactiveHTML.createFactory(class extends ReactiveHTM
 
 });
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(HelloWorldComponent(), el));
+ReactiveHTML.render(html`<${ HelloWorldComponent } />`, document.getElementById('app'));
 ```
 
 ### Component with props
@@ -169,15 +162,15 @@ props is object that should be read-only, it is for add child components some da
 ```
 class HelloWorldComponent extends ReactiveHTML.Component {
 
-    Element(props, states) {
+    Element() {
 
-        return html`<div>${ props.message }</div>`
+        return html`<div>${ this.props.message }</div>`
 
     }
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ HelloWorldComponent } message=${ "Hello, world!" }/>`, el));
+ReactiveHTML.render(html`<${ List } />`, document.getElementById('app'));
 ```
 
 ### Factory funciton with props
@@ -185,15 +178,15 @@ if you are using factory function as your component, your first parameter are pr
 ```
 const HelloWorldComponent = ReactiveHTML.createFactory(class extends ReactiveHTML.Component {
 
-    Element(props, states) {
+    Element() {
 
-        return html`<div>${ props.message }</div>`
+        return html`<div>${ this.props.message }</div>`
 
     }
 
 });
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(HelloWorldComponent({ message: "Hello, world!" }), el));
+ReactiveHTML.render(html`<${ List } />`, document.getElementById('app'));
 ```
 
 ### Component with states
@@ -202,7 +195,7 @@ States are internally only in component where they was created.
 You can create only one state object.
 
 ```
-class HelloWorldComponent extends ReactiveHTML.Component {
+class Counter extends ReactiveHTML.Component {
 
     constructor(props) {
 
@@ -214,15 +207,15 @@ class HelloWorldComponent extends ReactiveHTML.Component {
 
     }
 
-    Element(props, states) {
+    Element() {
 
-        return html`<button onclick=${ (e) => this.setState(states => states.count++) }>${ states.count }</button>`
+        return html`<button onclick=${ (e) => this.setState(() => this.states.count++) }>${ this.states.count }</button>`
 
     }
 
 });
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ HelloWorldComponent } count=${ 3 }/>`, el));
+ReactiveHTML.render(html`<${ Counter } />`, document.getElementById('app'));
 ```
 
 ### Conditional rendering
@@ -240,7 +233,7 @@ class Welcome extends ReactiveHTML.Component {
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ Welcome } isSignedIn=${ true }/>`, el));
+ReactiveHTML.render(html`<${ Welcome } />`, document.getElementById('app'));
 ```
 
 ### List rendering
@@ -262,19 +255,19 @@ class List extends ReactiveHTML.Component {
             products: ["Milk", "Butter", "Chesse", "Water"]
         };
 
-        setTimeout(() => this.setState(states => states.products.push("Sugar")), 2500);
+        setTimeout(() => this.setState(() => this.states.products.push("Sugar")), 2500);
 
     }
 
-    Element(props, states) {
+    Element() {
 
-        return html`<ul>${ states.products.map(product => html`<li :key=${ product }>${ product }</li>`) }</ul>`
+        return html`<ul>${ this.states.products.map(product => html`<li :key=${ product }>${ product }</li>`) }</ul>`
 
     }
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ List } />`, el));
+ReactiveHTML.render(html`<${ List } />`, document.getElementById('app'));
 ```
 
 ### List rendering with flatMap
@@ -292,15 +285,15 @@ class List extends ReactiveHTML.Component {
             products: [["Milk", "Butter"], ["Chesse", "Water"]]
         };
 
-        setTimeout(() => this.setState(states => states.products.push(["Lemon"])), 2500);
+        setTimeout(() => this.setState(() => this.states.products.push(["Lemon"])), 2500);
 
     }
 
-    Element(props, states) {
+    Element() {
 
     return html`
     <ul>
-        ${ states.products.flatMap(container => container.map(product => html`<li :key=${ product }>${ product }</li>`)) }
+        ${ this.states.products.flatMap(container => container.map(product => html`<li :key=${ product }>${ product }</li>`)) }
     </ul>`
 
     }
@@ -318,9 +311,9 @@ Components can share states by props, that means child component can manipulate 
 ```
 class child extends ReactiveHTML.Component {
 
-    Element(props, states) {
+    Element() {
 
-        return html`<button onclick=${ props.add }>${ props.count }</button>`
+        return html`<button onclick=${ this.props.add }>${ this.props.count }</button>`
 
     }
 
@@ -342,19 +335,19 @@ class parent extends ReactiveHTML.Component {
 
     add() {
 
-        this.setState(states => states.count++);
+        this.setState(() => this.states.count++);
 
     }
 
-    Element(props, states) {
+    Element() {
 
-        return html`<h2><${ child } add=${ this.add } count=${ states.count } /></h2>`
+        return html`<h2><${ child } add=${ this.add } count=${ this.states.count } /></h2>`
 
     }
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ parent } />`, el));
+ReactiveHTML.render(html`<${ parent } />`, document.getElementById('app'));
 ```
 
 ### Attributes
@@ -363,7 +356,7 @@ Dynamic attributes are same as static, but you have tu use template syntax.
 ```
 class AttributesTest extends ReactiveHTML.Component {
 
-    Element(props, states) {
+    Element() {
 
         return html`<div id=test class="t e s t" data-rand=${ Math.random() }></div>`
 
@@ -371,7 +364,7 @@ class AttributesTest extends ReactiveHTML.Component {
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ AttributesTest } />`, el));
+ReactiveHTML.render(html`<${ AttributesTest } />`, document.getElementById('app'));
 ```
 
 ### Events
@@ -381,7 +374,7 @@ Events can be custom, e.g. custom event "swipe" will be onswipe.
 ```
 class EventTest extends ReactiveHTML.Component {
 
-    Element(props, states) {
+    Element() {
 
         return html`<button onclick=${ (e) => console.log(e.target.value) } value=secret>Click me</button>`
 
@@ -389,7 +382,7 @@ class EventTest extends ReactiveHTML.Component {
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ EventTest } />`, el));
+ReactiveHTML.render(html`<${ EventTest } />`, document.getElementById('app'));
 ```
 
 ### Styles
@@ -397,7 +390,7 @@ Styles are objects with camelCase syntax vs regular css hyp-hens.
 ```
 class StylesTest extends ReactiveHTML.Component {
 
-    Element(props, states) {
+    Element() {
 
         return html`<div style=${{ backgroundColor: "red" }}>I am red</div>`
 
@@ -405,7 +398,7 @@ class StylesTest extends ReactiveHTML.Component {
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ StylesTest } />`, el));
+ReactiveHTML.render(html`<${ StylesTest } />`, document.getElementById('app'));
 ```
 
 ### Lifecycles
@@ -436,53 +429,40 @@ class ManageLifecyclesTest extends ReactiveHTML.Component {
 
         this.states = {
 
-            a: 1,
-            b: 1
+            a: 1
 
         };
 
-        let canChange = false;
 
         setInterval( () => {
 
-            if(canChange) {
-
-                this.setState(states => states.a++);
-                canChange = !canChange;
-
-            } else {
-
-                this.setState(states => states.b++);
-                canChange = !canChange;
-
-            }
+            this.setState(() => this.states.a++);
 
         }, 1000);
 
     }
 
-    componentShouldUpdate(nextProps, nextStates) {
+    shouldComponentUpdate() {
 
-        if(nextStates.a !== this.states.a) return true;
-        else return false;
+        return false;
 
     }
 
     onComponentUpdate() {
 
-        console.log("update"); //every two seconds
+        console.log("update"); //this will not log
 
     }   
 
-    Element(props, states) {
+    Element() {
 
-        return html`<div>${ states.a }</div>`
+        return html`<div>${ this.states.a }</div>`
 
     }
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ ManageLifecyclesTest } />`, el));
+ReactiveHTML.render(html`<${ ManageLifecyclesTest } />`, document.getElementById('app'));
 ```
 
 #### Callback lifecycles
@@ -497,13 +477,7 @@ class CallbackLifecyclesTest extends ReactiveHTML.Component {
 
         console.log("init"); // called only once per component used
 
-    }
-
-    onComponentCreate() {
-
-        console.log("create"); // called only once per component used. Called after component is created.
-
-    }   
+    } 
 
     onComponentUpdate() {
 
@@ -517,13 +491,25 @@ class CallbackLifecyclesTest extends ReactiveHTML.Component {
 
     }    
 
-    onComponentRender() {
+    onComponentRender(element) {
 
-        console.log("render"); // called once per component used. Called after component is rendered
+        console.log("render", element); // called once per component used. Called after component is rendered
 
     }  
 
-    Element(props, states) {
+    onComponentMount(element) {
+
+        console.log("mount", element); // called after component is mounted
+
+    }
+
+    onComponenUntMount() {
+
+        console.log("unmount"); // called after component is unmounted (removed from DOM tree)
+
+    }
+
+    Element() {
 
         return html`<div>Hello, world!</div>`
 
@@ -531,7 +517,7 @@ class CallbackLifecyclesTest extends ReactiveHTML.Component {
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ CallbackLifecyclesTest } />`, el));
+ReactiveHTML.render(html`<${ CallbackLifecyclesTest } />`, document.getElementById('app'));
 ```
 
 #### Future callback lifecycles
@@ -558,6 +544,12 @@ class FutureCallbackLifecyclesTest extends ReactiveHTML.Component {
 
     }  
 
+    onComponentWillUnMount() {
+
+        console.log("will unmount"); // called before component will unmount (representing element will be removed from DOM tree)
+
+    }  
+
     Element(props, states) {
 
         return html`<div>Hello, world!</div>`
@@ -566,7 +558,7 @@ class FutureCallbackLifecyclesTest extends ReactiveHTML.Component {
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ FutureCallbackLifecyclesTest } />`, el));
+ReactiveHTML.render(html`<${ FutureCallbackLifecyclesTest } />`, document.getElementById('app'));
 ```
 
 #### Snapshot lifecycles
@@ -574,13 +566,13 @@ ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ FutureCallb
 ```
 class SnapshotLifecyclesTest extends ReactiveHTML.Component {
 
-    getSnapshotBeforeUpdate(propsBefore, statesBefore) {
+    getSnapshotBeforeUpdate() {
 
-        console.log(this.states, statesBefore); //this snapshot is given before component update
+        console.log("snapshot"); //this snapshot is given before component update, so you can manipulate your data exactly before update
 
-    }
+    } 
 
-    Element(props, states) {
+    Element() {
 
         return html`<div>Hello, world!</div>`
 
@@ -588,16 +580,15 @@ class SnapshotLifecyclesTest extends ReactiveHTML.Component {
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ SnapshotLifecyclesTest } />`, el));
+ReactiveHTML.render(html`<${ SnapshotLifecyclesTest } />`, document.getElementById('app'));
 ```
 
 ### Component methods
 Components have some methods that can manipulate with component.
 
 #### Component.setState
-This method expecting one parameter that is function with one parameter that is states.
-It is important to use function states parameter instead of this.states!
-
+This method expecting one parameter that is function.
+In this function you can set your states, component will react on that changes.
 ```
 class reactiveTest extends ReactiveHTML.Component {
 
@@ -612,51 +603,14 @@ class reactiveTest extends ReactiveHTML.Component {
         };
     }
 
-    Element(props, states) {
+    Element() {
 
-        return html`<button onclick=${ (e) => this.setState(states => states.count++) }>${ states.count }</button>`
-
-    }
-
-}
-
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ reactiveTest } />`, el));
-```
-
-#### Component.forceComponentUpdate
-This method expecting one parameter that must be Boolean. Parameter is not required, default value is false.
-Parameter sais if force udpate will be harmful or not, false means not, true means harmful.
-If forcing update without parameter, or with false it will on update query componentShouldUpdate if update component or not.
-If forcing update with true, componentShouldUpdate will not called and component will update although componentShouldUpdate return false.
-
-I highly recommend to use forceComponentUpdate with harmful mode only if there is no other way to update component.
-```
-class forceUpdateTest extends ReactiveHTML.Component {
-
-    constructor(props) {
-
-        super(props);
-
-        this.count = 0;
-
-        setInterval( () => {
-
-            this.count++;
-            this.forceComponentUpdate();
-
-        }, 1000);
-    }
-
-    Element(props, states) {
-
-        return html`<div>${ this.count }</div>`
+        return html`<button onclick=${ (e) => this.setState(() => this.states.count++) }>${ this.states.count }</button>`
 
     }
 
 }
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ forceUpdateTest } />`, el));
+ReactiveHTML.render(html`<${ reactiveTest } />`, document.getElementById('app'));
 ```
-
-
 
