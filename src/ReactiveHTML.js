@@ -15,142 +15,283 @@
     function isObject(object) {
 
         return (typeof object === 'object' && object !== null);
-    
+
+    }
+
+    function isFunction(func) {
+
+        return typeof func === 'function';
+
     }
 
     function isArray(array) {
 
         return Array.isArray(array);
-    
+
     }
 
-    function cloneObjectWithoutReference(object) {
+    function createElement(type, props = null, ...children) {
 
-        if(!isObject(object)) {
-    
-            return object;
-    
+        let _key = null;
+        if (props !== null && props._key !== undefined) {
+
+            _key = props._key;
+            Reflect.deleteProperty(props, '_key');
+
         }
-    
-        const clone = isArray(object) ? [] : {};
-    
-        for(const k in object) {
-    
-            clone[k] = cloneObjectWithoutReference(object[k]);
-    
+
+        /**
+         * if element is component
+         */
+
+        if (type.ReactiveHTMLComponent) {
+
+            return {
+                type,
+                props,
+                _key
+            }
+
         }
-    
-        return clone;
-    
+
+
+        /**
+         * if element is basic virtual node element
+         */
+
+        return {
+            type,
+            attrs: props,
+            children,
+            _key
+        }
+
     }
 
-    function getVnodeFromComponent(component) {
+    function createComponentInstance(component) {
 
         const instance = new component.type(component.props);
-    
+
         instance.vnode = instance.Element(instance.props, instance.states);
-        return instance;
-    
+
+        Object.setPrototypeOf(component, Object.getPrototypeOf(instance));
+
+        instance.onComponentWillRender();
+
+        Object.assign(component, instance);
+
+        return component;
+
     }
-    
-    function createDomElement(vnode) {
-    
+
+    class Component {
+
+        /**
+         * constructor of component
+         * @param { Object } props 
+         */
+
+        constructor(props) {
+
+            this.props = props;
+
+            this.ref = {};
+
+            return this;
+
+        }
+
+        /*
+         * Element creator method 
+         */
+
+        Element() {
+
+            throw Error('You have to specify Element method in your Component');
+
+        }
+
+        setState(setter) {
+
+            if (isFunction(setter)) {
+
+                setter.bind(this)();
+
+                const patch = updateComponent(this, this);
+                return patch(this.ref.realDOM, el => this.ref.realDOM = el);
+
+            }
+
+            throw TypeError(`setState method expecting 1 parameter as Function, you given ${ typeof setter }`);
+
+        }
+
+        onComponentUpdate() {}
+        onComponentWillUpdate() {}
+
+        onComponentRender() {}
+        onComponentWillRender() {}
+
+        onComponentMount() {}
+        onComponentWillMount() {}
+
+        onComponentUnMount() {}
+        onComponentWillUnMount() {}
+
+        shouldComponentUpdate() {
+            return true;
+        }
+        getSnapshotBeforeUpdate() {}
+        onComponentCancelUpdate() {}
+
+    }
+
+    Component.ReactiveHTMLComponent = true;
+
+    function updateComponent(oldComponent, newComponent) {
+
+        if (oldComponent._memo) {
+
+            return () => undefined;
+
+        }
+
+
+        if (oldComponent.shouldComponentUpdate() === false) {
+
+            oldComponent.onComponentCancelUpdate();
+            return () => undefined;
+
+        }
+
+
+        oldComponent.getSnapshotBeforeUpdate();
+
+        oldComponent.props = newComponent.props;
+
+        oldComponent.onComponentWillUpdate();
+
+        const newVNode = oldComponent.Element();
+
+        const patch = diff(oldComponent.vnode, newVNode);
+
+        oldComponent.vnode = newVNode;
+
+        oldComponent.onComponentUpdate()
+
+        return patch;
+
+    }
+
+    function updateTreeWithComponent(oldComponent, newComponent) {
+
+        return diff(oldComponent.vnode || oldComponent, newComponent.vnode || newComponent);
+
+    }
+
+
+    function requestIdle(callback) {
+
+        return callback(); // window.requestAnimationFrame(callback);
+
+    };
+
+
+    function createDomElement(vnode, callback) {
+
+        if (!isObject(vnode)) {
+
+            return callback(document.createTextNode(vnode));
+
+        }
+
+        if (isArray(vnode)) {
+
+            return callback(vnode.map(singleVirtualElement => render(singleVirtualElement, el => el)));
+
+        }
+
         const el = document.createElement(vnode.type);
-    
-        if(vnode.attrs !== null) {
-    
-            for (const [k, v] of Object.entries(vnode.attrs.basic)) {
-                el.setAttribute(k, v);
-            }
-        
-            for (const [k, v] of Object.entries(vnode.attrs.events)) {
-                el.addEventListener(k, v);
-            }
-        
-            for (const [k, v] of Object.entries(vnode.attrs.styles)) {
-                el.style[k] = v;
-            }
-    
-        }
-    
-        if(vnode.children.length) {
-    
-            vnode.children.forEach(child => {
-    
-                if (isArray(child)) {
-        
-                    const childGroup = child.map(singleChild => render(singleChild));
-                    childGroup.forEach(domChild => el.appendChild(domChild));
-        
-                } else {
-        
-                    const childEl = render(child);
-                    el.appendChild(childEl);
-        
-                }
-        
-            });
-    
-        }
-    
-        return el;
-    
-    }
-    
-    function render(virtualElement, container) {
-    
-        if (!isObject(virtualElement)) {
-    
-            return document.createTextNode(virtualElement);
-    
-        }
-    
-        if (isArray(virtualElement)) {
-    
-            return virtualElement.map(singleVirtualElement => render(singleVirtualElement));
-    
-        }
-    
-        if (virtualElement.type.prototype instanceof Component) {
-    
-            const instance = getVnodeFromComponent(virtualElement);
-            instance.realDOM = render(instance.vnode);
-    
-            instance.onComponentRender(instance.realDOM);
-    
-            Object.assign(virtualElement, instance);
-    
-            instance.onComponentWillMount(virtualElement.realDOM);
-    
-            return virtualElement.realDOM;
-    
-        }
-    
-        return createDomElement(virtualElement);
-    
-    }
 
-    function elementReady(selector, callback, disconnect = true) {
+        for (const key in vnode.attrs) {
 
-        const observer = new MutationObserver((mutations, me) => {
-            mutations.forEach(mutation => {
-                Array.from(mutation.addedNodes).forEach(addedNode => {
-                    if (addedNode.nodeType === Node.ELEMENT_NODE) {
-                        if (addedNode.matches(selector)) {
-                            callback(addedNode);
-                            if (disconnect) me.disconnect();
-                        }
+            if (key.startsWith('on')) {
+
+                el.addEventListener(key.replace('on', ''), vnode.attrs[key]);
+                continue;
+
+            } else if (isObject(vnode.attrs[key])) {
+
+                Object.assign(el[key], vnode.attrs[key]);
+                continue;
+
+            } else {
+
+                el[key] = vnode.attrs[key];
+
+            }
+
+        }
+
+        if (vnode.children.length) {
+
+            for (let i = 0, ch = vnode.children; i < ch.length; i++) {
+
+                if (isArray(ch[i])) {
+
+                    for (let k = 0; k < ch[i].length; k++) {
+
+                        render(ch[i][k], function (domChild) {
+
+                            el.appendChild(domChild)
+
+                        })
+
                     }
-                });
-            });
-        });
 
-        observer.observe(document.documentElement, {
-            childList: true,
-            subtree: true
-        });
+                } else {
 
-        return observer;
+                    render(ch[i], function (childEl) {
+
+                        el.appendChild(childEl);
+
+                    });
+
+                }
+
+            }
+
+        }
+
+        callback(el);
+
+    }
+
+    function render(virtualElement, callback) {
+
+
+        if (!isObject(virtualElement) || isArray(virtualElement) || !virtualElement.type.ReactiveHTMLComponent) {
+
+            requestIdle(() => createDomElement(virtualElement, callback));
+
+        } else {
+
+            virtualElement = createComponentInstance(virtualElement);
+
+            requestIdle(() => render(virtualElement.vnode, function (el) {
+
+                virtualElement.onComponentRender(el);
+
+                virtualElement.onComponentWillMount(el);
+                virtualElement.ref.realDOM = el;
+
+                virtualElement.onComponentMount(el);
+
+                callback(el);
+
+            }));
+
+        }
 
     }
 
@@ -165,159 +306,161 @@
 
     }
 
-    function diffStyles(oldStyles, newStyles) {
-
-        const stylesPatches = [];
-    
-        for (const [k, v] of Object.entries(newStyles)) {
-            if (v !== oldStyles[k]) {
-                stylesPatches.push(
-                    function (node) {
-                        node.style[k] = v;
-                        return node;
-                    }
-                );
-            }
-        }
-    
-        // remove old attributes
-        for (const k in oldStyles) {
-            if (!(k in newStyles)) {
-                stylesPatches.push(
-                    function (node) {
-                        node.style[k] = null;
-                        return node;
-                    }
-                );
-            }
-        }
-    
-        return function (node) {
-            for (const patchstyle of stylesPatches) {
-                patchstyle(node);
-            }
-        };
-    
-    }
-
     function diffChildren(oldVChildren, newVChildren) {
+
         const childPatches = [];
         const additionalPatches = [];
     
-        oldVChildren.forEach((oldVChild, i) => {
+        for(let i = 0, l = oldVChildren.length; i < l; i++) {
     
-            if(isArray(oldVChild)) {
+            if(isArray(oldVChildren[i])) {
     
-                additionalPatches.push(diffArrays(oldVChild, newVChildren[i]));
+                additionalPatches.push(diffChildren(oldVChildren[i], newVChildren[i]));
     
-            } else {
+            } else { 
     
-                childPatches.push(diff(oldVChild, newVChildren[i]));
+                if(oldVChildren[i]._key !== null) {
+                    
+                    childPatches.push(diff(oldVChildren[i], newVChildren.find(f => f._key === oldVChildren[i]._key)));
+                    
+                } else {
+    
+                    childPatches.push(diff(oldVChildren[i], newVChildren[i]));
+    
+                }
     
             }
-    
-        });
-    
-        for (const additionalVChild of newVChildren.slice(oldVChildren.length)) {
-    
-            additionalPatches.push(function (node) {
-                node.appendChild(render(additionalVChild));
-                return node;
-            });
     
         }
     
+        for(let i = 0, l = newVChildren.length; i < l; i++) {
+    
+            if(!isArray(newVChildren[i])) {
+    
+                if(newVChildren[i]._key !== null) {
+    
+                    if(!oldVChildren.some(f => f._key === newVChildren[i]._key)) {
+    
+                        additionalPatches.push(function(node) {
+    
+                            return render(newVChildren[i], function(newNode) {
+                                
+                                if(i === (newVChildren.length - 1)) {
+    
+                                    return node.appendChild(newNode);
+    
+                                } 
+    
+                                return node.insertBefore(newNode, node.childNodes[i]);
+        
+                            });
+        
+                        });
+        
+                    }
+    
+                } else {
+    
+                    additionalPatches.push(function (node) {
+    
+                        return render(newVChildren[i], function(newNode) {
+    
+                            node.appendChild(newNode);
+    
+                        });
+    
+                    });
+    
+                }
+    
+            } 
+    
+        }
+    
+        /*
+         *   apply all childNodes changes to parent realNode
+         */
+    
         return function (parent) {
     
-            for (const [patch, child] of zip(childPatches, parent.childNodes)) {
+            if(parent) { // check if parent exists cause async operations (fetch, async/await, Promises)
     
-                patch(child);
+                zip(childPatches, parent.childNodes).forEach(([patch, child]) => {
+    
+                    patch(child);
+        
+                });
     
             }
     
-            for (const patch of additionalPatches) {
     
-                patch(parent);
+            for(let i = 0; i < additionalPatches.length; i++) {
+    
+                additionalPatches[i](parent);
     
             }
     
             return parent;
         };
-    };
+    }
 
     function diffAttrs(oldAttrs, newAttrs) {
 
         const attrsPatches = [];
     
-        for (const [k, v] of Object.entries(newAttrs)) {
-            if (v !== oldAttrs[k]) {
-                attrsPatches.push(
-                    function (node) {
-                        if (k === 'value') {
-                            node.value = v;
-                        }
-                        node.setAttribute(k, v);
-                        return node;
-                    }
-                );
+        for (const key in newAttrs) {
+    
+            if (key.startsWith('on')) {
+    
+                continue;
+    
+            } else if(isObject(newAttrs[key])) {
+                
+                attrsPatches.push(function(node) {
+    
+                    Object.assign(node[key], newAttrs[key]);
+                    return node;
+    
+                });
+    
+                continue;
+    
+            } else {
+    
+                attrsPatches.push(function(node) {
+    
+                    node[key] = newAttrs[key];
+                    return node;
+    
+                });
+                
             }
+    
         }
     
+        // remove old attributes
         for (const k in oldAttrs) {
             if (!(k in newAttrs)) {
                 attrsPatches.push(
                     function (node) {
+    
                         node.removeAttribute(k);
                         return node;
+    
                     }
                 );
             }
         }
     
+    
+    
         return function (node) {
-            for (const patchattr of attrsPatches) {
-                patchattr(node);
-            }
-        };
     
-    }
-
-    function diffArrays(oldArray, newArray) {
-
-        const arrayPatches = [];
+            for(let i = 0; i < attrsPatches.length; i++) {
     
-        for (const oldNode of oldArray) {
-
-            arrayPatches.push(diff(oldNode, newArray.find(f => f._key === oldNode._key)));
-    
-        }
-    
-        const additionalPatches = [];
-    
-        for (const additionalVChild of newArray.slice(oldArray.length)) {
-    
-            additionalPatches.push(function (node) {
-                node.appendChild(render(additionalVChild));
-                return node;
-            });
-    
-        }
-    
-        return function (parent) {
-    
-            for (const [patch, child] of zip(arrayPatches, parent.childNodes)) {
-    
-                patch(child);
+                attrsPatches[i](node);
     
             }
-    
-            for (const additionalPatch of additionalPatches) {
-    
-                additionalPatch(parent);
-    
-            }
-    
-            return parent;
     
         };
     
@@ -325,381 +468,221 @@
 
     function diff(vOldNode, vNewNode) {
 
-        if(isObject(vOldNode) && vOldNode.__component__ && isObject(vNewNode) && vNewNode.__component__) {
-
-            return node => node; 
-
-        }
-
+        /**
+         * cache all statements
+         */
+    
+        const isVOldNodeObject = isObject(vOldNode);
+        const isVNewNodeObject = isObject(vNewNode);
+        const isVOldNodeComponent = isVOldNodeObject ? isFunction(vOldNode.type) : false;
+        const isVNewNodeComponent = isVNewNodeObject ? isFunction(vNewNode.type) : false;
+    
+        /*
+         *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
+         */
+    
         if (vNewNode === undefined) {
-
+    
             return function (node) {
-                node.remove();
-                return undefined;
-            };
-
-        }
-
-        if(!isObject(vOldNode) && !isObject(vNewNode)) {
-
-            if (vOldNode !== vNewNode) {
-
-                return function(node) {
-
-                    node.nodeValue = vNewNode;
-
+    
+                if(isVOldNodeComponent) {
+    
+                    vOldNode.onComponentWillUnMount();
+    
                 }
-
-            } else {
-                return node => undefined;
-            }
-
+    
+                node.remove();
+    
+                if(isVOldNodeComponent) {
+    
+                    vOldNode.onComponentUnMount();
+    
+                }
+    
+                return undefined;
+    
+            };
+    
         }
-
-        if (!isObject(vOldNode) || !isObject(vNewNode)) {
-
+    
+    
+    
+        if(isVOldNodeComponent && isVNewNodeComponent) {
+    
+            if(vOldNode.type === vNewNode.type) {
+    
+                return function (node, callback) {
+    
+                    const patch = updateComponent(vOldNode, vNewNode, vOldNode.states);
+                    vNewNode.vnode = vOldNode.vnode;
+    
+                    patch(node, el => callback(el));
+    
+                } 
+    
+            }
+    
+            return function (node, callback) {
+    
+                render(vNewNode, function(/*newNode*/) {
+    
+                    vOldNode.onComponentWillUnMount();
+    
+                    const patch = updateTreeWithComponent(vOldNode, vNewNode);
+    
+                    patch(node, el => callback(el));
+    
+                    vOldNode.onComponentUnMount();
+    
+                }); 
+    
+            } 
+    
+        }
+    
+        if(isVOldNodeComponent && !isVNewNodeComponent) {
+    
+            return function (node) {
+    
+                const patch = updateTreeWithComponent(vOldNode, vNewNode);
+                
+                vOldNode.onComponentWillUnMount();
+    
+                patch(node);
+    
+                vOldNode.onComponentUnMount();
+    
+                return node;
+    
+            }
+    
+        }
+    
+        if(!isVOldNodeComponent && isVNewNodeComponent) {
+    
+            return function (node, callback) {
+    
+                render(vNewNode, function (/*newNode*/) {
+    
+                    const patch = updateTreeWithComponent(vOldNode, vNewNode);
+                    
+                    patch(node);
+    
+                    callback(node);
+    
+                });
+    
+            }
+    
+        }
+    
+    
+        /*
+         *   if both are not a virtual node, it is text node, so replace its value 
+         */
+    
+        if (!isVOldNodeObject && !isVNewNodeObject) {
+    
             if (vOldNode !== vNewNode) {
-
+    
                 return function (node) {
-                    const newNode = render(vNewNode);
-                    node.replaceWith(newNode);
-                    return newNode;
-                };
-
+    
+                    node.nodeValue = vNewNode;
+    
+                }
+    
             } else {
-                return node => undefined;
+    
+                return () => undefined;
+    
             }
-
+    
         }
-
+    
+        /*
+         *   if one of virtualNodes is not virtualNode (means Number or String) replace it as textNode
+         */
+    
+        if ((!isVOldNodeObject && isVNewNodeObject) || (isVOldNodeObject && !isVNewNodeObject)) {
+    
+            return function (node) {
+                render(vNewNode, function (newNode) {
+    
+                    node.replaceWith(newNode);
+    
+                });
+            };
+    
+        }
+    
+        /*
+         *   if tagNames of virtualNodes doesn't match replace it with new rendered virtualNode 
+         */
+    
         if (vOldNode.type !== vNewNode.type) {
             return function (node) {
-                const newNode = render(vNewNode);
-                node.replaceWith(newNode);
-                return newNode;
+                return render(vNewNode, function (newNode) {
+    
+                    node.replaceWith(newNode);
+    
+                });
             };
         }
-
-        let patchAttrs, patchStyles, patchChildren;
-
-        if(vOldNode.attrs !== null) {
-
-            if(Object.keys(vOldNode.attrs.basic).length + Object.keys(vNewNode.attrs.basic).length !== 0) {
-
-                patchAttrs = diffAttrs(vOldNode.attrs.basic, vNewNode.attrs.basic);
-
-            }
-
-            if(Object.keys(vOldNode.attrs.styles).length + Object.keys(vNewNode.attrs.styles).length !== 0) {
-
-                patchStyles = diffStyles(vOldNode.attrs.styles, vNewNode.attrs.styles);
-
-            }
-
-        }
-
-        if( (vOldNode.children.length + vNewNode.children.length) !== 0) {
-
-            patchChildren = diffChildren(vOldNode.children, vNewNode.children);
-
-        }
-
+    
         return function (node) {
-
-            if(patchAttrs) {
-
-                patchAttrs(node);
-
+    
+            if (vOldNode._memo) {
+    
+                return node;
+    
             }
-
-            if(patchStyles) {
-
-                patchStyles(node);
-
+    
+            if (vOldNode.attrs !== null && ((Object.keys(vOldNode.attrs).length + Object.keys(vNewNode.attrs).length) > 0)) {
+    
+                diffAttrs(vOldNode.attrs, vNewNode.attrs)(node);
+    
             }
-
-            if(patchChildren) {
-
-                patchChildren(node);
-
+    
+            if ((vOldNode.children.length + vNewNode.children.length) > 0) {
+    
+                diffChildren(vOldNode.children, vNewNode.children)(node);
+    
             }
-            
+    
             return node;
-        };
-    };
-
-    function assignNewStatesAndProps(oldComponent, nextProps, nextStates, willUpdate) {
-
-        let oldProps, oldStates;
-    
-        if(oldComponent.getSnapshotBeforeUpdate && willUpdate) {
-    
-            [oldProps, oldStates] = [cloneObjectWithoutReference(oldComponent.props), cloneObjectWithoutReference(oldComponent.states)];
-    
-        }
-    
-        if(statesNotUpdatedYet && oldComponent.states && isObject(nextStates)) {
-    
-            Object.assign(oldComponent.states, nextStates);
-    
-        }
-        
-        if(oldComponent.props && isObject(nextProps)) {
-    
-            Object.assign(oldComponent.props, nextProps);
-    
-        }
-        
-        if(oldProps || oldStates) {
-    
-            oldComponent.getSnapshotBeforeUpdate(oldProps, oldStates);
-    
-        }
-    
-        return;
-    
-    }
-
-    class Component {
-    
-        constructor(props) {
-    
-            this.props = props;
-    
-            this.__component__ = this;
-    
-            this.onComponentCreate();
-    
-            return this;
-    
-        }
-    
-        Element() {
-    
-            throw new Error('You have to specify Element method in your Component');
-    
-        }
-    
-        onComponentCreate() {}
-        onComponentUpdate() {}
-        onComponentRender() {}
-        onComponentCancelUpdate() {}
-        onComponentUnMount() {}
-    
-        onComponentWillUpdate() {}
-        onComponentWillRender() {}
-        onComponentWillMount() {}
-        onComponentWillUnMount() {}
-    
-        setState(setterFunction) {
-            
-            if(typeof setterFunction !== 'function') {
-
-                throw new Error('setState, first parameter must be a function with one parameter that represent the states');
-
-            }
-
-            let nextStates;
-    
-            if(this.componentShouldUpdate || this.getSnapshotBeforeUpdate) {
-    
-                nextStates = cloneObjectWithoutReference(this.states);
-    
-            }
-    
-            setterFunction(nextStates || this.states);
-    
-            return updateVnodeAndRealDOM(this, false, this.props, nextStates || this.states, false, nextStates === undefined ? false : true);
-    
-        }
-    
-        forceComponentUpdate(harmful = false) {
-    
-            return updateVnodeAndRealDOM(this, harmful, this.props, this.states);
-    
-        }
-    
-    }
-
-    function createElement(type, props = null, ...children) {
-
-        let _key = null;
-        if(props !== null && props[':key'] !== undefined) {
-    
-            _key = props[':key'];
-            delete props[':key'];
-    
-        }
-    
-        if(type.prototype instanceof Component) {
-            
-            return {
-                type,
-                props,
-                _key
-            }
-    
-        }
-    
-        if(props !== null) {
-    
-            props = filterAttrs(props);
-    
-        }
-    
-        return {
-            type,
-            attrs: props,
-            children,
-            _key
-        }
-    
-    }
-
-    function filterAttrs(basic) {
-
-        let events = {};
-        let styles = {};
-    
-        for (const [k, v] of Object.entries(basic)) {
-    
-            if (k.startsWith('on')) {
-    
-                events[k.replace('on', '')] = v;
-                delete basic[k];
-    
-            }
-    
-            if (k === 'style') {
-    
-                styles = v;
-                delete basic[k];
-    
-            }
-        }
-    
-        return {
-    
-            basic,
-            events,
-            styles,
     
         };
-    
-    }
-
-    function patchComponents(newChild, oldChild, harmful) {
-
-        if (!isObject(newChild)) return newChild;
-    
-        if(isArray(newChild)) {
-    
-            return newChild.map( (singleNewChild, i) => patchComponents(singleNewChild, oldChild[i], harmful));
-    
-        }
-       
-        if (newChild.type.prototype instanceof Component) {
-    
-            if(oldChild.__component__) {
-    
-                return updateVnodeAndRealDOM(oldChild.__component__, harmful, newChild.props, oldChild.states);
-    
-            }
-    
-            return newChild;
-    
-        }
-        
-        if(oldChild === undefined) {
-    
-            return newChild;
-    
-        }
-    
-        if(oldChild.__component__ && !(newChild.type.prototype instanceof Component)) {
-    
-            oldChild.__component__.onComponentWillUnMount(oldChild.__component__.realDOM);
-    
-            oldChild.__component__.realDOM = undefined;
-    
-            oldChild.__component__.onComponentUnMount();
-    
-            return newChild;
-    
-        }
-    
-        newChild.children = newChild.children.map( (newInside, i) => patchComponents(newInside, oldChild.children[i], harmful));
-    
-        return newChild;
-    }
-
-    function updateVnodeAndRealDOM(oldComponent, harmful, nextProps, nextStates, propsNotUpdatedYet, statesNotUpdatedYet) {
-
-        if(harmful === false && oldComponent.componentShouldUpdate) {
-        
-            if(oldComponent.componentShouldUpdate(nextProps, nextStates) === false) {
-        
-                assignNewStatesAndProps(oldComponent, nextProps, nextStates, false);
-    
-                oldComponent.onComponentCancelUpdate();
-    
-                return oldComponent;
-        
-            }  
-    
-        }      
-    
-        if(oldComponent.getSnapshotBeforeUpdate || propsNotUpdatedYet || statesNotUpdatedYet) {
-    
-            assignNewStatesAndProps(oldComponent, nextProps, nextStates, true);
-    
-        }
-        
-        oldComponent.onComponentWillUpdate();
-        
-        const newVNode = patchComponents(
-    
-            oldComponent.Element(
-                oldComponent.props, 
-                oldComponent.states
-            ),
-            oldComponent.vnode, 
-            harmful
-    
-        ); 
-     
-        if (oldComponent.realDOM) { 
-    
-            const patch = diff(oldComponent.vnode, newVNode); 
-            oldComponent.realDOM = patch(oldComponent.realDOM); 
-    
-        }
-        
-        oldComponent.vnode = newVNode;
-    
-        oldComponent.onComponentUpdate();
-    
-        return oldComponent;
-    
     }
 
     const ReactiveHTML = {
 
         Component,
 
-        render: function (component, element) {
-            
-            return element.appendChild(
-                render(component)
-            );
-            
+        render: function(element, container) {
+
+            return render(element, function(el){
+                
+                container.appendChild(el);
+
+                return el;
+
+            });
+
         },
 
-        elementReady,
+        /*
+         *   creates virtualNode 
+         */
 
         createElement,
 
         createFactory: function(component) {
+
+            if(!(component.ReactiveHTMLComponent)) {
+
+                throw TypeError('createFactory expecting first parameter as Component class');
+
+            }
 
             return function(props = {}) {
 
@@ -707,10 +690,18 @@
 
             }
 
+        },
+
+        memo: function(virtualNode) {
+
+            virtualNode._memo = true;
+            return virtualNode;
+
         }
 
     };
 
+
     return ReactiveHTML;
-    
+
 }));
