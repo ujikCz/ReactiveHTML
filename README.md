@@ -116,6 +116,16 @@ ReactiveHTML.render(myComponentFactory({ message: "Hello, world!" }), document.g
 
 ```
 
+## memo method
+This method is for better performance in your app.
+If this used on any virtual node or component, this component or virtual node will never update its children and attributes, props and states.
+
+So if we have static virtual nodes or static components, this feature is very handy.
+Your app will be better optimized and faster.
+```
+ReactiveHTML.memo(html`<div>Hello, world!</div>`);
+```
+
 ## Components
 
 ### Element method
