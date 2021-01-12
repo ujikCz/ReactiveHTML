@@ -2,6 +2,8 @@ import diffAttrs from './diffAttrs.js';
 import diffChildren from './diffChildren.js';
 import render from '../DOM/render.js';
 import isObject from '../isObject.js';
+import updateComponent, { updateTreeWithComponent } from '../update/updateComponent.js';
+import isFunction from '../isFunction.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -13,16 +15,14 @@ import isObject from '../isObject.js';
 
 export default function diff(vOldNode, vNewNode) {
 
-    /*
-     * if it is component, return node only, update is pathed already cause updateVnodeAndRealDOM patch all components
+    /**
+     * cache all statements
      */
 
-
-    if (isObject(vOldNode) && vOldNode.__component__ && isObject(vNewNode) && vNewNode.__component__) {
-
-        return () => undefined;
-
-    }
+    const isVOldNodeObject = isObject(vOldNode);
+    const isVNewNodeObject = isObject(vNewNode);
+    const isVOldNodeComponent = isVOldNodeObject ? isFunction(vOldNode.type) : false;
+    const isVNewNodeComponent = isVNewNodeObject ? isFunction(vNewNode.type) : false;
 
     /*
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
@@ -31,17 +31,104 @@ export default function diff(vOldNode, vNewNode) {
     if (vNewNode === undefined) {
 
         return function (node) {
+
+            if(isVOldNodeComponent) {
+
+                vOldNode.onComponentWillUnMount();
+
+            }
+
             node.remove();
+
+            if(isVOldNodeComponent) {
+
+                vOldNode.onComponentUnMount();
+
+            }
+
             return undefined;
+
         };
 
     }
+
+
+
+    if(isVOldNodeComponent && isVNewNodeComponent) {
+
+        if(vOldNode.type === vNewNode.type) {
+
+            return function (node, callback) {
+
+                const patch = updateComponent(vOldNode, vNewNode, vOldNode.states);
+                vNewNode.vnode = vOldNode.vnode;
+
+                patch(node, el => callback(el));
+
+            } 
+
+        }
+
+        return function (node, callback) {
+
+            render(vNewNode, function(/*newNode*/) {
+
+                vOldNode.onComponentWillUnMount();
+
+                const patch = updateTreeWithComponent(vOldNode, vNewNode);
+
+                patch(node, el => callback(el));
+
+                vOldNode.onComponentUnMount();
+
+            }); 
+
+        } 
+
+    }
+
+    if(isVOldNodeComponent && !isVNewNodeComponent) {
+
+        return function (node) {
+
+            const patch = updateTreeWithComponent(vOldNode, vNewNode);
+            
+            vOldNode.onComponentWillUnMount();
+
+            patch(node);
+
+            vOldNode.onComponentUnMount();
+
+            return node;
+
+        }
+
+    }
+
+    if(!isVOldNodeComponent && isVNewNodeComponent) {
+
+        return function (node, callback) {
+
+            render(vNewNode, function (/*newNode*/) {
+
+                const patch = updateTreeWithComponent(vOldNode, vNewNode);
+                
+                patch(node);
+
+                callback(node);
+
+            });
+
+        }
+
+    }
+
 
     /*
      *   if both are not a virtual node, it is text node, so replace its value 
      */
 
-    if (!isObject(vOldNode) && !isObject(vNewNode)) {
+    if (!isVOldNodeObject && !isVNewNodeObject) {
 
         if (vOldNode !== vNewNode) {
 
@@ -63,10 +150,10 @@ export default function diff(vOldNode, vNewNode) {
      *   if one of virtualNodes is not virtualNode (means Number or String) replace it as textNode
      */
 
-    if ( (!isObject(vOldNode) && isObject(vNewNode)) || (isObject(vOldNode) && !isObject(vNewNode))) {
+    if ((!isVOldNodeObject && isVNewNodeObject) || (isVOldNodeObject && !isVNewNodeObject)) {
 
         return function (node) {
-            return render(vNewNode, function (newNode) {
+            render(vNewNode, function (newNode) {
 
                 node.replaceWith(newNode);
 
@@ -88,11 +175,16 @@ export default function diff(vOldNode, vNewNode) {
             });
         };
     }
-    
 
     return function (node) {
 
-        if (vOldNode.attrs !== null && ((Object.keys(vOldNode.attrs).length + Object.keys(vNewNode.attrs).length) > 0) ) {
+        if (vOldNode._memo) {
+
+            return node;
+
+        }
+
+        if (vOldNode.attrs !== null && ((Object.keys(vOldNode.attrs).length + Object.keys(vNewNode.attrs).length) > 0)) {
 
             diffAttrs(vOldNode.attrs, vNewNode.attrs)(node);
 

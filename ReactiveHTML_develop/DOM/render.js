@@ -1,27 +1,17 @@
 import isObject from '../isObject.js';
 import isArray from '../isArray.js';
 import createComponentInstance from '../vnode/createComponentInstance.js';
-import triggerLifecycle from '../triggerLifecycle.js';
-import requestIdleCallbackPolyfill from '../polyfill/requestIdleCallback.js';
-
-window.requestIdleCallback = window.requestIdleCallback || requestIdleCallbackPolyfill;
 
 /**
  * request idle callback on function
  * @param { Function } callback 
  */
 
-function req(callback) {
+function requestIdle(callback) {
 
-    const schedule = () => window.requestIdleCallback(deadline => {
+    return callback(); // window.requestAnimationFrame(callback);
 
-        if (deadline.timeRemaining() > 1) return callback();
-
-        schedule();
-    });
-
-    schedule();
-}
+};
 
 /**
  * render virtual node (create real node from virtual node)
@@ -48,51 +38,43 @@ function createDomElement(vnode, callback) {
 
     for (const key in vnode.attrs) {
 
-        const value = vnode.attrs[key];
+        if (key.startsWith('on')) {
 
-        if (key === 'style') {
+            el.addEventListener(key.replace('on', ''), vnode.attrs[key]);
+            continue;
 
-            for (const styleKey in value) {
+        } else if (isObject(vnode.attrs[key])) {
 
-                el.style[styleKey] = value[styleKey];
-
-            }
+            Object.assign(el[key], vnode.attrs[key]);
+            continue;
 
         } else {
 
-            if (key.startsWith('on')) {
-
-                el.addEventListener(key.replace('on', ''), value);
-
-            } else {
-
-                el.setAttribute(key, value);
-
-            }
+            el[key] = vnode.attrs[key];
 
         }
 
     }
 
-    if(vnode.children.length) {
+    if (vnode.children.length) {
 
-        for(let i = 0, ch = vnode.children; i < ch.length; i++) {
+        for (let i = 0, ch = vnode.children; i < ch.length; i++) {
 
             if (isArray(ch[i])) {
-                
-                for(let k = 0; k < ch[i].length; k++) {
 
-                    render(ch[i][k], function(domChild) {
+                for (let k = 0; k < ch[i].length; k++) {
+
+                    render(ch[i][k], function (domChild) {
 
                         el.appendChild(domChild)
-    
+
                     })
 
                 }
 
             } else {
 
-                render(ch[i], function(childEl) {
+                render(ch[i], function (childEl) {
 
                     el.appendChild(childEl);
 
@@ -104,41 +86,43 @@ function createDomElement(vnode, callback) {
 
     }
 
-    return callback(el);
+    callback(el);
 
 }
 
- /**
-  * render the virtualNode 
-  * mount rendered element
-  * use idle callback
-  * @param { Class || Object } virtualElement - class or object that represent virtual dom or component
-  * @param { Function } callback - triggered after rendered to mount
-  */
+/**
+ * render the virtualNode 
+ * mount rendered element
+ * use idle callback
+ * @param { Class || Object } virtualElement - class or object that represent virtual dom or component
+ * @param { Function } callback - triggered after rendered to mount
+ */
 
 
 export default function render(virtualElement, callback) {
 
+
     if (!isObject(virtualElement) || isArray(virtualElement) || !virtualElement.type.ReactiveHTMLComponent) {
 
-        return req(() => createDomElement(virtualElement, callback));
+        requestIdle(() => createDomElement(virtualElement, callback));
+
+    } else {
+
+        virtualElement = createComponentInstance(virtualElement);
+
+        requestIdle(() => render(virtualElement.vnode, function (el) {
+
+            virtualElement.onComponentRender(el);
+
+            virtualElement.onComponentWillMount(el);
+            virtualElement.ref.realDOM = el;
+
+            virtualElement.onComponentMount(el);
+
+            callback(el);
+
+        }));
 
     }
-
-    virtualElement = Object.assign(virtualElement, createComponentInstance(virtualElement));
-
-    return req(() => render(virtualElement.vnode, function(el) {
-
-        virtualElement.__component__.realDOM = el;
-
-        triggerLifecycle(virtualElement.__component__.onComponentRender, virtualElement, el);
-
-        triggerLifecycle(virtualElement.__component__.onComponentWillMount, virtualElement, el);
-
-        callback(el);
-
-        triggerLifecycle(virtualElement.__component__.onComponentMount, virtualElement, el);
-
-    }));
 
 }

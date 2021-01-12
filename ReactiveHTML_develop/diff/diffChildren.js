@@ -25,7 +25,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
         } else { 
 
             if(oldVChildren[i]._key !== null) {
-
+                
                 childPatches.push(diff(oldVChildren[i], newVChildren.find(f => f._key === oldVChildren[i]._key)));
                 
             } else {
@@ -47,12 +47,12 @@ export default function diffChildren(oldVChildren, newVChildren) {
                 if(!oldVChildren.some(f => f._key === newVChildren[i]._key)) {
 
                     additionalPatches.push(function(node) {
-    
+
                         return render(newVChildren[i], function(newNode) {
                             
                             if(i === (newVChildren.length - 1)) {
 
-                               return node.appendChild(newNode)
+                                return node.appendChild(newNode);
 
                             } 
 
@@ -65,8 +65,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
                 }
 
             } else {
-
-                i = oldVChildren.length;
 
                 additionalPatches.push(function (node) {
 
@@ -89,12 +87,17 @@ export default function diffChildren(oldVChildren, newVChildren) {
      */
 
     return function (parent) {
-        
-        zip(childPatches, parent.childNodes).forEach(([patch, child]) => {
 
-            patch(child);
+        if(parent) { // check if parent exists cause async operations (fetch, async/await, Promises)
 
-        });
+            zip(childPatches, parent.childNodes).forEach(([patch, child]) => {
+
+                patch(child);
+    
+            });
+
+        }
+
 
         for(let i = 0; i < additionalPatches.length; i++) {
 

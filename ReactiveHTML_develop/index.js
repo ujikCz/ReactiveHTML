@@ -6,7 +6,6 @@
 
 import render from './DOM/render.js';
 import createElement from './vnode/createVnodeElement.js';
-import readyElement from './DOM/readyElement.js';
 import Component from './vnode/component.js';
 
 /**
@@ -33,11 +32,11 @@ import Component from './vnode/component.js';
                 
                 container.appendChild(el);
 
+                return el;
+
             });
 
         },
-
-        readyElement,
 
         /*
          *   creates virtualNode 
@@ -58,6 +57,13 @@ import Component from './vnode/component.js';
                 return createElement(component, props);
 
             }
+
+        },
+
+        memo: function(virtualNode) {
+
+            virtualNode._memo = true;
+            return virtualNode;
 
         }
 

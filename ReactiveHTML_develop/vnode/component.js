@@ -1,6 +1,5 @@
-import updateVnodeAndRealDOM from '../update/updateVnodeAndRealDOM.js';
-import cloneObjectWithoutReference from '../cloneObjectWithoutReference.js';
-import createProxy from '../createProxy.js';
+import updateComponent from '../update/updateComponent.js';
+import isFunction from '../isFunction.js';
 
 /**
  *  Component class
@@ -17,7 +16,7 @@ export default class Component {
 
         this.props = props;
 
-        this.__component__ = this;
+        this.ref = {};
 
         return this;
 
@@ -29,44 +28,41 @@ export default class Component {
 
     Element() {
 
-        throw new Error('You have to specify Element method in your Component');
+        throw Error('You have to specify Element method in your Component');
 
     }
 
     static ReactiveHTMLComponent = true
 
-    setState(setterFunction) {
+    setState(setter) {
 
-        if(typeof setterFunction !== 'function') {
+        if (isFunction(setter)) {
 
-            throw new TypeError('setState expecting function as first parameter');
+            setter.bind(this)();
+
+            const patch = updateComponent(this, this);
+            return patch(this.ref.realDOM, el => this.ref.realDOM = el);
 
         }
 
-        /*let nextStates, statesPatches;
-
-        if(this.getSnapshotBeforeUpdate || this.componentShouldUpdate) {
-
-            [nextStates, statesPatches] = createProxy(this.states, [], true);
-
-        } else {
-
-            nextStates = this.states;
-
-        }*/
-
-        setterFunction(this.states);
-
-
-        return updateVnodeAndRealDOM(this, false, null, this.states);
+        throw TypeError(`setState method expecting 1 parameter as Function, you given ${ typeof setter }`);
 
     }
 
-    forceComponentUpdate(harmful = false) {
+    onComponentUpdate() {}
+    onComponentWillUpdate() {}
 
-        return updateVnodeAndRealDOM(this, harmful, null, null);
+    onComponentRender() {}
+    onComponentWillRender() {}
 
-    }
+    onComponentMount() {}
+    onComponentWillMount() {}
+
+    onComponentUnMount() {}
+    onComponentWillUnMount() {}
+
+    shouldComponentUpdate() { return true; }
+    getSnapshotBeforeUpdate() {}
+    onComponentCancelUpdate() {}
 
 }
-

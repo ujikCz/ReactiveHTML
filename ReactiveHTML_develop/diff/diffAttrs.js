@@ -5,43 +5,38 @@
  * @param { Object } newAttrs - new virtual node attributes
  */
 
-export default function diffAttrs(oldAttrs, newAttrs, styles = false) {
+import isObject from '../isObject.js';
+
+export default function diffAttrs(oldAttrs, newAttrs) {
 
     const attrsPatches = [];
 
-    for (const k in newAttrs) {
+    for (const key in newAttrs) {
 
-        if (k.startsWith('on')) {
+        if (key.startsWith('on')) {
 
             continue;
 
-        } else if (k === 'style') {
+        } else if(isObject(newAttrs[key])) {
+            
+            attrsPatches.push(function(node) {
 
-            attrsPatches.push(
-                diffAttrs(oldAttrs[k], newAttrs[k], true)
-            );
+                Object.assign(node[key], newAttrs[key]);
+                return node;
 
-        } else if (newAttrs[k] !== oldAttrs[k]) {
+            });
 
-            attrsPatches.push(
-                function (node) {
+            continue;
 
-                    if (styles) {
+        } else {
 
-                        node.style[k] = newAttrs[k];
-                        return node;
+            attrsPatches.push(function(node) {
 
-                    }
+                node[key] = newAttrs[key];
+                return node;
 
-                    if (k === 'value') {
-                        node.value = newAttrs[k];
-                    }
-
-                    node.setAttribute(k, newAttrs[k]);
-                    return node;
-                }
-            );
-
+            });
+            
         }
 
     }
@@ -52,15 +47,9 @@ export default function diffAttrs(oldAttrs, newAttrs, styles = false) {
             attrsPatches.push(
                 function (node) {
 
-                    if (styles) {
-
-                        node.style[k] = null;
-                        return node;
-
-                    }
-
                     node.removeAttribute(k);
                     return node;
+
                 }
             );
         }
@@ -69,9 +58,13 @@ export default function diffAttrs(oldAttrs, newAttrs, styles = false) {
 
 
     return function (node) {
-        for (const patchattr of attrsPatches) {
-            patchattr(node);
+
+        for(let i = 0; i < attrsPatches.length; i++) {
+
+            attrsPatches[i](node);
+
         }
+
     };
 
 }
