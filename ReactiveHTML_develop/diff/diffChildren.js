@@ -13,24 +13,31 @@ import isArray from '../isArray.js';
 
 export default function diffChildren(oldVChildren, newVChildren) {
 
+
     const childPatches = [];
     const additionalPatches = [];
 
-    for(let i = 0, l = oldVChildren.length; i < l; i++) {
+    for (let i = 0, l = oldVChildren.length; i < l; i++) {
 
-        if(isArray(oldVChildren[i])) {
+        if (isArray(oldVChildren[i])) {
 
             additionalPatches.push(diffChildren(oldVChildren[i], newVChildren[i]));
 
-        } else { 
+        } else {
 
-            if(oldVChildren[i]._key !== null) {
-                
-                childPatches.push(diff(oldVChildren[i], newVChildren.find(f => f._key === oldVChildren[i]._key)));
-                
+            if (oldVChildren[i]._key !== null) {
+
+                const pairByKey = newVChildren.find(f => f._key === oldVChildren[i]._key);
+
+                childPatches.push(diff(oldVChildren[i], pairByKey));
+
+                newVChildren[newVChildren.indexOf(pairByKey)] = oldVChildren[i];
+
             } else {
 
                 childPatches.push(diff(oldVChildren[i], newVChildren[i]));
+
+                newVChildren[i] = oldVChildren[i];
 
             }
 
@@ -38,49 +45,56 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
     }
 
-    for(let i = 0, l = newVChildren.length; i < l; i++) {
+    if (newVChildren.length > oldVChildren.length) {
 
-        if(!isArray(newVChildren[i])) {
+        for (let i = 0, l = newVChildren.length; i < l; i++) {
 
-            if(newVChildren[i]._key !== null) {
+            if (!isArray(newVChildren[i])) {
 
-                if(!oldVChildren.some(f => f._key === newVChildren[i]._key)) {
+                if (newVChildren[i]._key !== null) {
 
-                    additionalPatches.push(function(node) {
+                    if (!oldVChildren.some(f => f._key === newVChildren[i]._key)) {
 
-                        return render(newVChildren[i], function(newNode) {
-                            
-                            if(i === (newVChildren.length - 1)) {
+                        additionalPatches.push(function (node) {
 
-                                return node.appendChild(newNode);
+                            const newVNode = render(newVChildren[i]);
 
-                            } 
+                            newVChildren[i] = newVNode;
 
-                            return node.insertBefore(newNode, node.childNodes[i]);
-    
+                            if (i === (newVChildren.length - 1)) {
+
+                                node.appendChild(newVNode.ref.realDOM);
+
+                            }
+
+                            node.insertBefore(newVNode.ref.realDOM, node.childNodes[i]);
+
                         });
-    
+
+                    }
+
+                } else {
+
+                    i = oldVChildren.length;
+
+                    additionalPatches.push(function (node) {
+
+                        const newVNode = render(newVChildren[i]);
+
+                        newVChildren[i] = newVNode;
+
+                        node.appendChild(newVNode.ref.realDOM);
+
                     });
-    
+
                 }
-
-            } else {
-
-                additionalPatches.push(function (node) {
-
-                    return render(newVChildren[i], function(newNode) {
-
-                        node.appendChild(newNode);
-
-                    });
-
-                });
 
             }
 
-        } 
+        }
 
     }
+
 
     /*
      *   apply all childNodes changes to parent realNode
@@ -88,18 +102,14 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
     return function (parent) {
 
-        if(parent) { // check if parent exists cause async operations (fetch, async/await, Promises)
+        zip(childPatches, parent.childNodes).forEach(([patch, child]) => {
 
-            zip(childPatches, parent.childNodes).forEach(([patch, child]) => {
+            patch(child);
 
-                patch(child);
-    
-            });
-
-        }
+        });
 
 
-        for(let i = 0; i < additionalPatches.length; i++) {
+        for (let i = 0; i < additionalPatches.length; i++) {
 
             additionalPatches[i](parent);
 

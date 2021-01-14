@@ -32,22 +32,20 @@ export default class Component {
 
     }
 
-    static ReactiveHTMLComponent = true
-
     setState(setter) {
 
         if (isFunction(setter)) {
 
             setter.bind(this)();
 
-            const patch = updateComponent(this, this);
-            return patch(this.ref.realDOM, el => this.ref.realDOM = el);
+            return updateComponent(this, this)(this.ref.realDOM);
 
         }
 
         throw TypeError(`setState method expecting 1 parameter as Function, you given ${ typeof setter }`);
 
     }
+
 
     onComponentUpdate() {}
     onComponentWillUpdate() {}
@@ -66,3 +64,5 @@ export default class Component {
     onComponentCancelUpdate() {}
 
 }
+
+Component.ReactiveHTMLComponent = true;

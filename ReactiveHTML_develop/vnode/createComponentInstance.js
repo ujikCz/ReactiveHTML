@@ -10,14 +10,14 @@ export default function createComponentInstance(component) {
     
     const instance = new component.type(component.props);
 
-    instance.vnode = instance.Element(instance.props, instance.states);
-
-    Object.setPrototypeOf(component, Object.getPrototypeOf(instance));
+    instance.vnode = instance.Element();
 
     instance.onComponentWillRender();
 
-    Object.assign(component, instance);
+    instance.type = component.type;
 
-    return component;
+    instance._key = component._key;
+
+    return instance;
 
 }

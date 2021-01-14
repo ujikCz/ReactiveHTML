@@ -4,6 +4,7 @@ import render from '../DOM/render.js';
 import isObject from '../isObject.js';
 import updateComponent, { updateTreeWithComponent } from '../update/updateComponent.js';
 import isFunction from '../isFunction.js';
+import createComponentInstance from '../vnode/createComponentInstance.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -34,7 +35,7 @@ export default function diff(vOldNode, vNewNode) {
 
             if(isVOldNodeComponent) {
 
-                vOldNode.onComponentWillUnMount();
+                vOldNode.onComponentWillUnMount(node);
 
             }
 
@@ -52,36 +53,26 @@ export default function diff(vOldNode, vNewNode) {
 
     }
 
-
-
     if(isVOldNodeComponent && isVNewNodeComponent) {
 
         if(vOldNode.type === vNewNode.type) {
 
-            return function (node, callback) {
+            return function (node) {
 
-                const patch = updateComponent(vOldNode, vNewNode, vOldNode.states);
-                vNewNode.vnode = vOldNode.vnode;
+                updateComponent(vOldNode, vNewNode)(node);
 
-                patch(node, el => callback(el));
+                return node;
 
             } 
 
         }
 
-        return function (node, callback) {
+        return function (node) {
 
-            render(vNewNode, function(/*newNode*/) {
+            vOldNode.onComponentWillUnMount();
 
-                vOldNode.onComponentWillUnMount();
-
-                const patch = updateTreeWithComponent(vOldNode, vNewNode);
-
-                patch(node, el => callback(el));
-
-                vOldNode.onComponentUnMount();
-
-            }); 
+            updateTreeWithComponent(vOldNode, createComponentInstance(vNewNode))(node);
+            return node;
 
         } 
 
@@ -107,17 +98,13 @@ export default function diff(vOldNode, vNewNode) {
 
     if(!isVOldNodeComponent && isVNewNodeComponent) {
 
-        return function (node, callback) {
+        return function (node) {
 
-            render(vNewNode, function (/*newNode*/) {
+            const patch = updateTreeWithComponent(vOldNode, createComponentInstance(vNewNode));
 
-                const patch = updateTreeWithComponent(vOldNode, vNewNode);
-                
-                patch(node);
+            patch(node);
 
-                callback(node);
-
-            });
+            return node;
 
         }
 
@@ -135,6 +122,7 @@ export default function diff(vOldNode, vNewNode) {
             return function (node) {
 
                 node.nodeValue = vNewNode;
+                return node;
 
             }
 
@@ -153,11 +141,11 @@ export default function diff(vOldNode, vNewNode) {
     if ((!isVOldNodeObject && isVNewNodeObject) || (isVOldNodeObject && !isVNewNodeObject)) {
 
         return function (node) {
-            render(vNewNode, function (newNode) {
 
-                node.replaceWith(newNode);
+            const newNode = render(vNewNode);
+            node.replaceWith(newNode);
+            return newNode;
 
-            });
         };
 
     }
@@ -168,11 +156,11 @@ export default function diff(vOldNode, vNewNode) {
 
     if (vOldNode.type !== vNewNode.type) {
         return function (node) {
-            return render(vNewNode, function (newNode) {
 
-                node.replaceWith(newNode);
+            const newNode = render(vNewNode);
+            node.replaceWith(newNode);
+            return newNode;
 
-            });
         };
     }
 
@@ -184,9 +172,9 @@ export default function diff(vOldNode, vNewNode) {
 
         }
 
-        if (vOldNode.attrs !== null && ((Object.keys(vOldNode.attrs).length + Object.keys(vNewNode.attrs).length) > 0)) {
+        if (isObject(vOldNode.attrs) || isObject(vNewNode.attrs)) {
 
-            diffAttrs(vOldNode.attrs, vNewNode.attrs)(node);
+            diffAttrs(vOldNode.attrs || {}, vNewNode.attrs || {})(node);
 
         }
 

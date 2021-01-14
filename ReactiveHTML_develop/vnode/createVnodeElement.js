@@ -40,7 +40,8 @@ export default function createVnodeElement(type, props = null, ...children) {
         type,
         attrs: props,
         children,
-        _key
+        _key,
+        ref: {}
     }
 
 }

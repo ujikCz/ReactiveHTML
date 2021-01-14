@@ -14,14 +14,12 @@ export default function updateComponent(oldComponent, newComponent) {
 
     }
 
-
     if (oldComponent.shouldComponentUpdate() === false) {
 
         oldComponent.onComponentCancelUpdate();
         return () => undefined;
 
     }
-
 
     oldComponent.getSnapshotBeforeUpdate();
 
@@ -34,8 +32,8 @@ export default function updateComponent(oldComponent, newComponent) {
     const patch = diff(oldComponent.vnode, newVNode);
 
     oldComponent.vnode = newVNode;
-
-    oldComponent.onComponentUpdate()
+    
+    oldComponent.onComponentUpdate();
 
     return patch;
 

@@ -9,7 +9,7 @@ import createComponentInstance from '../vnode/createComponentInstance.js';
 
 function requestIdle(callback) {
 
-    return callback(); // window.requestAnimationFrame(callback);
+    return window.requestAnimationFrame(callback);
 
 };
 
@@ -20,19 +20,7 @@ function requestIdle(callback) {
  * @param { Function } callback - after render is done call callback with rendered element
  */
 
-function createDomElement(vnode, callback) {
-
-    if (!isObject(vnode)) {
-
-        return callback(document.createTextNode(vnode));
-
-    }
-
-    if (isArray(vnode)) {
-
-        return callback(vnode.map(singleVirtualElement => render(singleVirtualElement, el => el)));
-
-    }
+function createDomElement(vnode) {
 
     const el = document.createElement(vnode.type);
 
@@ -60,25 +48,24 @@ function createDomElement(vnode, callback) {
 
         for (let i = 0, ch = vnode.children; i < ch.length; i++) {
 
-            if (isArray(ch[i])) {
+            const rendered = render(ch[i]);
 
-                for (let k = 0; k < ch[i].length; k++) {
+            if(isArray(rendered)) {
 
-                    render(ch[i][k], function (domChild) {
+                for(let j = 0; j < rendered.length; j++) {
 
-                        el.appendChild(domChild)
-
-                    })
+                    const renderedFromArray = render(rendered[j]);
+                    rendered[j] = renderedFromArray;
+                    el.appendChild(renderedFromArray.ref.realDOM);
 
                 }
 
+                vnode.children[i] = rendered;
+
             } else {
 
-                render(ch[i], function (childEl) {
-
-                    el.appendChild(childEl);
-
-                });
+                vnode.children[i] = rendered;
+                el.appendChild(isObject(rendered) ? rendered.ref.realDOM : document.createTextNode(rendered));
 
             }
 
@@ -86,7 +73,7 @@ function createDomElement(vnode, callback) {
 
     }
 
-    callback(el);
+    return el;
 
 }
 
@@ -99,30 +86,52 @@ function createDomElement(vnode, callback) {
  */
 
 
-export default function render(virtualElement, callback) {
+export default function render(virtualElement) {
+    
+    if(isVirtualElement(virtualElement)) {
+        //element
+        virtualElement.ref.realDOM = createDomElement(virtualElement);
 
-
-    if (!isObject(virtualElement) || isArray(virtualElement) || !virtualElement.type.ReactiveHTMLComponent) {
-
-        requestIdle(() => createDomElement(virtualElement, callback));
-
-    } else {
-
-        virtualElement = createComponentInstance(virtualElement);
-
-        requestIdle(() => render(virtualElement.vnode, function (el) {
-
-            virtualElement.onComponentRender(el);
-
-            virtualElement.onComponentWillMount(el);
-            virtualElement.ref.realDOM = el;
-
-            virtualElement.onComponentMount(el);
-
-            callback(el);
-
-        }));
+        return virtualElement;
 
     }
+
+    if(isArray(virtualElement)) {
+
+        //array
+        return virtualElement.map(virtualNode => render(virtualNode));
+
+    } 
+
+    if (!isObject(virtualElement)) {
+
+        //text node
+        return virtualElement;
+
+    } 
+
+    //component
+
+    virtualElement = createComponentInstance(virtualElement);
+
+    virtualElement.vnode = render(virtualElement.vnode);
+
+    virtualElement.onComponentRender(virtualElement.vnode.ref.realDOM);
+
+    virtualElement.onComponentWillMount(virtualElement.vnode.ref.realDOM);
+
+    virtualElement.ref.realDOM = virtualElement.vnode.ref.realDOM;
+
+    virtualElement.onComponentMount(virtualElement.vnode.ref.realDOM);
+
+    return virtualElement;
+
+}
+
+
+function isVirtualElement(virtualElement) {
+
+    if(isObject(virtualElement) && !isArray(virtualElement) && !virtualElement.type.ReactiveHTMLComponent) return true;
+    return false;
 
 }
