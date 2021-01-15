@@ -2,7 +2,7 @@ import diffAttrs from './diffAttrs.js';
 import diffChildren from './diffChildren.js';
 import render from '../DOM/render.js';
 import isObject from '../isObject.js';
-import updateComponent, { updateTreeWithComponent } from '../update/updateComponent.js';
+import updateComponent from '../update/updateComponent.js';
 import isFunction from '../isFunction.js';
 import createComponentInstance from '../vnode/createComponentInstance.js';
 
@@ -47,7 +47,7 @@ export default function diff(vOldNode, vNewNode) {
 
             }
 
-            return undefined;
+            return [vNewNode, undefined];
 
         };
 
@@ -57,11 +57,11 @@ export default function diff(vOldNode, vNewNode) {
 
         if(vOldNode.type === vNewNode.type) {
 
+
             return function (node) {
 
-                updateComponent(vOldNode, vNewNode)(node);
-
-                return node;
+                [vOldNode.vnode, node] = updateComponent(vOldNode, vNewNode)(node);
+                return [vOldNode, node];
 
             } 
 
@@ -70,9 +70,19 @@ export default function diff(vOldNode, vNewNode) {
         return function (node) {
 
             vOldNode.onComponentWillUnMount();
+            
+            const vNewNodeInstance = createComponentInstance(vNewNode);
 
-            updateTreeWithComponent(vOldNode, createComponentInstance(vNewNode))(node);
-            return node;
+            [vNewNodeInstance.vnode, node] = diff(vOldNode.vnode, vNewNodeInstance.vnode)(node);
+
+            vOldNode.onComponentUnMount();
+
+            vNewNodeInstance.ref.realDOM = node;
+            vOldNode.ref.realDOM = undefined;
+
+            vOldNode.onComponentUnMount();
+
+            return [vNewNodeInstance, node];
 
         } 
 
@@ -82,15 +92,15 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
-            const patch = updateTreeWithComponent(vOldNode, vNewNode);
+            const patch = diff(vOldNode.vnode, vNewNode);
             
             vOldNode.onComponentWillUnMount();
 
-            patch(node);
+            [vNewNode, node] = patch(node);
 
             vOldNode.onComponentUnMount();
 
-            return node;
+            return [vNewNode, node];
 
         }
 
@@ -100,11 +110,15 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
-            const patch = updateTreeWithComponent(vOldNode, createComponentInstance(vNewNode));
+            const vNewNodeInstance = createComponentInstance(vNewNode);
 
-            patch(node);
+            const patch = diff(vOldNode, vNewNodeInstance.vnode);
 
-            return node;
+            [vNewNode, node] = patch(node);
+
+            vNewNodeInstance.ref.realDOM = node;
+
+            return [vNewNode, node];
 
         }
 
@@ -122,13 +136,13 @@ export default function diff(vOldNode, vNewNode) {
             return function (node) {
 
                 node.nodeValue = vNewNode;
-                return node;
+                return [vNewNode, node];
 
             }
 
         } else {
 
-            return () => undefined;
+            return (node) => [vOldNode, node];
 
         }
 
@@ -143,8 +157,8 @@ export default function diff(vOldNode, vNewNode) {
         return function (node) {
 
             const newNode = render(vNewNode);
-            node.replaceWith(newNode);
-            return newNode;
+            node.replaceWith(newNode.ref.realDOM);
+            return [newNode, newNode.ref.realDOM];
 
         };
 
@@ -158,8 +172,8 @@ export default function diff(vOldNode, vNewNode) {
         return function (node) {
 
             const newNode = render(vNewNode);
-            node.replaceWith(newNode);
-            return newNode;
+            node.replaceWith(newNode.ref.realDOM);
+            return [newNode, newNode.ref.realDOM];
 
         };
     }
@@ -168,23 +182,23 @@ export default function diff(vOldNode, vNewNode) {
 
         if (vOldNode._memo) {
 
-            return node;
+            return [vOldNode, node];
 
         }
 
         if (isObject(vOldNode.attrs) || isObject(vNewNode.attrs)) {
 
-            diffAttrs(vOldNode.attrs || {}, vNewNode.attrs || {})(node);
+            [vNewNode.attrs, node] = diffAttrs(vOldNode.attrs || {}, vNewNode.attrs || {})(node);
 
         }
 
         if ((vOldNode.children.length + vNewNode.children.length) > 0) {
 
-            diffChildren(vOldNode.children, vNewNode.children)(node);
+            [vNewNode.children, node] = diffChildren(vOldNode.children, vNewNode.children)(node);
 
         }
 
-        return node;
+        return [vNewNode, node];
 
     };
 };

@@ -27,17 +27,24 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
             if (oldVChildren[i]._key !== null) {
 
-                const pairByKey = newVChildren.find(f => f._key === oldVChildren[i]._key);
+                childPatches.push(function(node) {
 
-                childPatches.push(diff(oldVChildren[i], pairByKey));
+                    const findedByKey = newVChildren.find(f => f._key === oldVChildren[i]._key);
+                    const indexInNewVChildren = newVChildren.indexOf(findedByKey);
 
-                newVChildren[newVChildren.indexOf(pairByKey)] = oldVChildren[i];
+                    [newVChildren[indexInNewVChildren], node] = diff(oldVChildren[i], findedByKey)(node);
+                    return [newVChildren[indexInNewVChildren], node];
+
+                });
 
             } else {
 
-                childPatches.push(diff(oldVChildren[i], newVChildren[i]));
+                childPatches.push(function(node) {
+                    
+                    [newVChildren[i], node] = diff(oldVChildren[i], newVChildren[i])(node);
+                    return [newVChildren[i], node];
 
-                newVChildren[i] = oldVChildren[i];
+                });
 
             }
 
@@ -64,10 +71,12 @@ export default function diffChildren(oldVChildren, newVChildren) {
                             if (i === (newVChildren.length - 1)) {
 
                                 node.appendChild(newVNode.ref.realDOM);
+                                return [newVNode, node];
 
                             }
 
                             node.insertBefore(newVNode.ref.realDOM, node.childNodes[i]);
+                            return [newVNode, node];
 
                         });
 
@@ -84,6 +93,8 @@ export default function diffChildren(oldVChildren, newVChildren) {
                         newVChildren[i] = newVNode;
 
                         node.appendChild(newVNode.ref.realDOM);
+
+                        return [newVNode, node];
 
                     });
 
@@ -115,6 +126,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
         }
 
-        return parent;
+        return [newVChildren, parent];
     };
 };

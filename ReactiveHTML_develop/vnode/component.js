@@ -33,12 +33,14 @@ export default class Component {
     }
 
     setState(setter) {
-
+        console.log(this);
         if (isFunction(setter)) {
 
             setter.bind(this)();
-
-            return updateComponent(this, this)(this.ref.realDOM);
+            
+            [this.vnode, this.ref.realDOM] = updateComponent(this, this)(this.ref.realDOM);
+            
+            return this;
 
         }
 

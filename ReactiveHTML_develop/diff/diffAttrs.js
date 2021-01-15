@@ -15,56 +15,77 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
         if (key.startsWith('on')) {
 
-            continue;
+            if (!(key in oldAttrs)) { // add event listeners
 
-        } else if(isObject(newAttrs[key])) {
-            
-            attrsPatches.push(function(node) {
+                attrsPatches.push(function (node) {
+
+                    node.addEventListener(key.replace('on', ''), newAttrs[key], true);
+                    return node;
+
+                });
+
+            }
+
+        } else if (isObject(newAttrs[key])) { // if is object set property by object assign
+
+            attrsPatches.push(function (node) {
 
                 Object.assign(node[key], newAttrs[key]);
+                return node;
 
             });
 
-            continue;
+        } else if (newAttrs[key] !== oldAttrs[key] || !(key in oldAttrs)) {
 
-        } else {
+            attrsPatches.push(function (node) {
 
-            if(newAttrs[key] !== oldAttrs[key] || !(key in oldAttrs)) {
+                node[key] = newAttrs[key];
+                return node;
 
-                attrsPatches.push(function(node) {
+            });
 
-                    node[key] = newAttrs[key];
-    
-                });
-
-            }  
-            
         }
 
     }
 
     // remove old attributes
     for (const k in oldAttrs) {
+
         if (!(k in newAttrs)) {
-            attrsPatches.push(
-                function (node) {
+
+            if (k.startsWith('on')) { // is event, remove event listener
+
+                attrsPatches.push(function (node) {
+
+                    node.removeEventListener(k.replace('on', ''), oldAttrs[k], true);
+                    return node;
+
+                });
+
+            } else { // else remove attribute from element
+
+                attrsPatches.push(function (node) {
 
                     node.removeAttribute(k);
+                    return node;
 
-                }
-            );
+                });
+
+            }
+
         }
+
     }
 
     return function (node) {
 
-        for(let i = 0; i < attrsPatches.length; i++) {
+        for (let i = 0; i < attrsPatches.length; i++) {
 
             attrsPatches[i](node);
 
         }
 
-        return node;
+        return [newAttrs, node];
 
     };
 

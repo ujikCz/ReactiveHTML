@@ -8,39 +8,29 @@ import diff from '../diff/diff.js';
 
 export default function updateComponent(oldComponent, newComponent) {
 
+
     if (oldComponent._memo) {
 
-        return () => undefined;
+        oldComponent.onComponentCancelUpdate({ cancelType: 'memo' });
+        return () => [oldComponent.vnode, oldComponent.ref.realDOM];
 
     }
 
+    oldComponent.props = newComponent.props;
+
     if (oldComponent.shouldComponentUpdate() === false) {
 
-        oldComponent.onComponentCancelUpdate();
-        return () => undefined;
+        oldComponent.onComponentCancelUpdate({ cancelType: 'shouldComponentUpdate' });
+        return () => [oldComponent.vnode, oldComponent.ref.realDOM];
 
     }
 
     oldComponent.getSnapshotBeforeUpdate();
 
-    oldComponent.props = newComponent.props;
-
     oldComponent.onComponentWillUpdate();
 
     const newVNode = oldComponent.Element();
 
-    const patch = diff(oldComponent.vnode, newVNode);
-
-    oldComponent.vnode = newVNode;
-    
-    oldComponent.onComponentUpdate();
-
-    return patch;
-
-}
-
-export function updateTreeWithComponent(oldComponent, newComponent) {
-
-    return diff(oldComponent.vnode || oldComponent, newComponent.vnode || newComponent);
+    return diff(oldComponent.vnode, newVNode);
 
 }
