@@ -2,6 +2,7 @@ import zip from './zip.js';
 import render from '../DOM/render.js';
 import diff from './diff.js';
 import isArray from '../isArray.js';
+import isObject from '../isObject.js';
 
 
 /**
@@ -25,7 +26,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
         } else {
 
-            if (oldVChildren[i]._key !== null) {
+            if (isObject(oldVChildren[i]) && oldVChildren[i]._key !== null) {
 
                 childPatches.push(function(node) {
 
