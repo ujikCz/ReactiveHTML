@@ -19,7 +19,7 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
                 attrsPatches.push(function (node) {
 
-                    node.addEventListener(key.replace('on', ''), newAttrs[key], true);
+                    node.addEventListener(key.replace('on', ''), newAttrs[key]);
                     return node;
 
                 });
@@ -57,7 +57,8 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
                 attrsPatches.push(function (node) {
 
-                    node.removeEventListener(k.replace('on', ''), oldAttrs[k], true);
+                    node.removeEventListener(k.replace('on', ''), oldAttrs[k]);
+                    console.log(node)
                     return node;
 
                 });
@@ -81,7 +82,7 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
         for (let i = 0; i < attrsPatches.length; i++) {
 
-            attrsPatches[i](node);
+            node = attrsPatches[i](node);
 
         }
 

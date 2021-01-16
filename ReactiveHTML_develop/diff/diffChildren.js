@@ -1,5 +1,7 @@
 import zip from './zip.js';
-import render from '../DOM/render.js';
+import render, {
+    createDOMfromRenderedVirtualNode
+} from '../DOM/render.js';
 import diff from './diff.js';
 import isArray from '../isArray.js';
 import isObject from '../isObject.js';
@@ -28,7 +30,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
             if (isObject(oldVChildren[i]) && oldVChildren[i]._key !== null) {
 
-                childPatches.push(function(node) {
+                childPatches.push(function (node) {
 
                     const findedByKey = newVChildren.find(f => f._key === oldVChildren[i]._key);
                     const indexInNewVChildren = newVChildren.indexOf(findedByKey);
@@ -40,8 +42,8 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
             } else {
 
-                childPatches.push(function(node) {
-                    
+                childPatches.push(function (node) {
+
                     [newVChildren[i], node] = diff(oldVChildren[i], newVChildren[i])(node);
                     return [newVChildren[i], node];
 
@@ -71,12 +73,12 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                             if (i === (newVChildren.length - 1)) {
 
-                                node.appendChild(newVNode.ref.realDOM);
+                                node.appendChild(createDOMfromRenderedVirtualNode(newVNode));
                                 return [newVNode, node];
 
                             }
 
-                            node.insertBefore(newVNode.ref.realDOM, node.childNodes[i]);
+                            node.insertBefore(createDOMfromRenderedVirtualNode(newVNode), node.childNodes[i]);
                             return [newVNode, node];
 
                         });
@@ -93,7 +95,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                         newVChildren[i] = newVNode;
 
-                        node.appendChild(newVNode.ref.realDOM);
+                        node.appendChild(createDOMfromRenderedVirtualNode(newVNode));
 
                         return [newVNode, node];
 
@@ -119,7 +121,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
             patch(child);
 
         });
-
 
         for (let i = 0; i < additionalPatches.length; i++) {
 

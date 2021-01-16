@@ -33,13 +33,17 @@ export default class Component {
     }
 
     setState(setter) {
-        console.log(this);
+
         if (isFunction(setter)) {
 
             setter.bind(this)();
-            
-            [this.vnode, this.ref.realDOM] = updateComponent(this, this)(this.ref.realDOM);
-            
+
+            if (this.ref.realDOM) {
+
+                [this.vnode, this.ref.realDOM] = updateComponent(this, this)(this.ref.realDOM);
+
+            } //if setState is called before mount, it can affect only virtual DOM before render
+
             return this;
 
         }
@@ -61,7 +65,9 @@ export default class Component {
     onComponentUnMount() {}
     onComponentWillUnMount() {}
 
-    shouldComponentUpdate() { return true; }
+    shouldComponentUpdate() {
+        return true;
+    }
     getSnapshotBeforeUpdate() {}
     onComponentCancelUpdate() {}
 

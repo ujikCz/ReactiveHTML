@@ -1,4 +1,5 @@
 import diff from '../diff/diff.js';
+import memo from '../vnode/memo.js';
 
 /**
  * updates virtualNode and its realNode (update whole component)
@@ -11,7 +12,7 @@ export default function updateComponent(oldComponent, newComponent) {
 
     if (oldComponent._memo) {
 
-        oldComponent.onComponentCancelUpdate({ cancelType: 'memo' });
+        oldComponent.onComponentCancelUpdate({ cancelType: memo });
         return () => [oldComponent.vnode, oldComponent.ref.realDOM];
 
     }
@@ -20,7 +21,7 @@ export default function updateComponent(oldComponent, newComponent) {
 
     if (oldComponent.shouldComponentUpdate() === false) {
 
-        oldComponent.onComponentCancelUpdate({ cancelType: 'shouldComponentUpdate' });
+        oldComponent.onComponentCancelUpdate({ cancelType: oldComponent.onComponentCancelUpdate });
         return () => [oldComponent.vnode, oldComponent.ref.realDOM];
 
     }

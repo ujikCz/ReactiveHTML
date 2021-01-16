@@ -1,6 +1,6 @@
 import diffAttrs from './diffAttrs.js';
 import diffChildren from './diffChildren.js';
-import render from '../DOM/render.js';
+import render, { createDOMfromRenderedVirtualNode } from '../DOM/render.js';
 import isObject from '../isObject.js';
 import updateComponent from '../update/updateComponent.js';
 import isFunction from '../isFunction.js';
@@ -28,6 +28,7 @@ export default function diff(vOldNode, vNewNode) {
     /*
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
      */
+
 
     if (vNewNode === undefined) {
 
@@ -69,13 +70,11 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
-            vOldNode.onComponentWillUnMount();
+            vOldNode.onComponentWillUnMount(vOldNode.ref.realDOM);
             
             const vNewNodeInstance = createComponentInstance(vNewNode);
 
             [vNewNodeInstance.vnode, node] = diff(vOldNode.vnode, vNewNodeInstance.vnode)(node);
-
-            vOldNode.onComponentUnMount();
 
             vNewNodeInstance.ref.realDOM = node;
             vOldNode.ref.realDOM = undefined;
@@ -94,9 +93,11 @@ export default function diff(vOldNode, vNewNode) {
 
             const patch = diff(vOldNode.vnode, vNewNode);
             
-            vOldNode.onComponentWillUnMount();
+            vOldNode.onComponentWillUnMount(vOldNode.ref.realDOM);
 
             [vNewNode, node] = patch(node);
+
+            vOldNode.ref.realDOM = undefined;
 
             vOldNode.onComponentUnMount();
 
@@ -116,7 +117,15 @@ export default function diff(vOldNode, vNewNode) {
 
             [vNewNode, node] = patch(node);
 
+            vNewNodeInstance.onComponentWillRender();
+
             vNewNodeInstance.ref.realDOM = node;
+
+            vNewNodeInstance.onComponentRender(node);
+
+            vNewNodeInstance.onComponentWillMount(node);
+
+            vNewNodeInstance.onComponentMount(node);
 
             return [vNewNode, node];
 
@@ -156,9 +165,10 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
-            const newNode = render(vNewNode);
-            node.replaceWith(newNode.ref.realDOM);
-            return [newNode, newNode.ref.realDOM];
+            const newVirtualNode = render(vNewNode);
+            const newRealNode = createDOMfromRenderedVirtualNode(newVirtualNode);
+            node.replaceWith(newRealNode);
+            return [newVirtualNode, newRealNode];
 
         };
 
@@ -169,13 +179,16 @@ export default function diff(vOldNode, vNewNode) {
      */
 
     if (vOldNode.type !== vNewNode.type) {
+
         return function (node) {
 
-            const newNode = render(vNewNode);
-            node.replaceWith(newNode.ref.realDOM);
-            return [newNode, newNode.ref.realDOM];
+            const newVirtualNode = render(vNewNode);
+            const newRealNode = createDOMfromRenderedVirtualNode(newVirtualNode);
+            node.replaceWith(newRealNode);
+            return [newVirtualNode, newRealNode];
 
         };
+        
     }
 
     return function (node) {

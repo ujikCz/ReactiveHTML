@@ -13,6 +13,27 @@ function requestIdle(callback) {
 
 };
 
+export function createDOMfromRenderedVirtualNode(virtualNode) {
+
+    if(isVirtualElement(virtualNode)) {
+
+        //element
+        return createDomElement(virtualNode);
+
+    }
+
+    if(isObject(virtualNode)) {
+
+        //component
+        return virtualNode.ref.realDOM;
+
+    }
+
+    //text node
+    return document.createTextNode(virtualNode);
+
+}
+
 /**
  * render virtual node (create real node from virtual node)
  * recursion to create DOM is so heavy operation, to solve this problem we request idle callback
@@ -56,7 +77,7 @@ function createDomElement(vnode) {
 
                     const renderedFromArray = render(rendered[j]);
                     rendered[j] = renderedFromArray;
-                    el.appendChild(renderedFromArray.ref.realDOM);
+                    el.appendChild(createDOMfromRenderedVirtualNode(renderedFromArray));
 
                 }
 
@@ -65,7 +86,7 @@ function createDomElement(vnode) {
             } else {
 
                 vnode.children[i] = rendered;
-                el.appendChild(isObject(rendered) ? rendered.ref.realDOM : document.createTextNode(rendered));
+                el.appendChild(createDOMfromRenderedVirtualNode(rendered));
 
             }
 
@@ -87,10 +108,11 @@ function createDomElement(vnode) {
 
 
 export default function render(virtualElement) {
-    
-    if(isVirtualElement(virtualElement)) {
-        //element
-        virtualElement.ref.realDOM = createDomElement(virtualElement);
+
+    if(isVirtualElement(virtualElement) || !isObject(virtualElement)) {
+        //element 
+        //OR
+        //text node
 
         return virtualElement;
 
@@ -103,26 +125,21 @@ export default function render(virtualElement) {
 
     } 
 
-    if (!isObject(virtualElement)) {
-
-        //text node
-        return virtualElement;
-
-    } 
-
     //component
 
     virtualElement = createComponentInstance(virtualElement);
 
-    virtualElement.vnode = render(virtualElement.vnode);
+    virtualElement.vnode = render(virtualElement.vnode, true);
 
-    virtualElement.onComponentRender(virtualElement.vnode.ref.realDOM);
+    const componentHookedNode = createDOMfromRenderedVirtualNode(virtualElement.vnode);
 
-    virtualElement.onComponentWillMount(virtualElement.vnode.ref.realDOM);
+    virtualElement.onComponentRender(componentHookedNode);
 
-    virtualElement.ref.realDOM = virtualElement.vnode.ref.realDOM;
+    virtualElement.onComponentWillMount(componentHookedNode);
 
-    virtualElement.onComponentMount(virtualElement.vnode.ref.realDOM);
+    virtualElement.ref.realDOM = componentHookedNode;
+
+    virtualElement.onComponentMount(componentHookedNode);
 
     return virtualElement;
 

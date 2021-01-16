@@ -4,10 +4,10 @@
     !This version is not recomended for production use
 */
 
-import render from './DOM/render.js';
+import render, { createDOMfromRenderedVirtualNode } from './DOM/render.js';
 import createElement from './vnode/createVnodeElement.js';
 import Component from './vnode/component.js';
-import isFunction from './isFunction.js';
+import memo from './vnode/memo.js';
 
 /**
  * whole library is in container funciton for use library in node.js, js, as modules, ...
@@ -31,8 +31,9 @@ import isFunction from './isFunction.js';
 
             const instance = render(element);
 
+            const elementFromInstance = createDOMfromRenderedVirtualNode(instance);
 
-            return container.appendChild(instance.ref.realDOM);
+            return container.appendChild(elementFromInstance);
 
         },
 
@@ -58,24 +59,7 @@ import isFunction from './isFunction.js';
 
         },
 
-        memo: function(virtualNode) {
-
-            virtualNode._memo = true;
-            return virtualNode;
-
-        },
-
-        fallback(fallFunction, context) {
-
-            if(isFunction(fallFunction)) {
-
-                context.ref._owner.appendChild(render(fallFunction.bind(context)()));
-
-            }
-
-            throw TypeError(`setState method expecting 1 parameter as Function, you given ${ typeof fallFunction }`);
-
-        }
+        memo
 
     };
 
