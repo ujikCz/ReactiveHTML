@@ -27,19 +27,13 @@ import memo from './vnode/memo.js';
 
         Component,
 
-        render: function(element, container) {
+        render: function(virtualElement, container) {
 
-            const instance = render(element);
-
-            const elementFromInstance = createDOMfromRenderedVirtualNode(instance);
+            const elementFromInstance = createDOMfromRenderedVirtualNode(render(virtualElement));
 
             return container.appendChild(elementFromInstance);
 
         },
-
-        /*
-         *   creates virtualNode 
-         */
 
         createElement,
 

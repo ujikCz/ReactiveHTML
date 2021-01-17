@@ -129,7 +129,7 @@ export default function render(virtualElement) {
 
     virtualElement = createComponentInstance(virtualElement);
 
-    virtualElement.vnode = render(virtualElement.vnode, true);
+    virtualElement.vnode = render(virtualElement.vnode);
 
     const componentHookedNode = createDOMfromRenderedVirtualNode(virtualElement.vnode);
 

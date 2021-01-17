@@ -1,12 +1,15 @@
 import updateComponent from '../update/updateComponent.js';
 import isFunction from '../isFunction.js';
 import isObject from '../isObject.js';
+import afterUpdateLifecycles from './componentAfterUpdateLifecycles.js';
+import { createDOMfromRenderedVirtualNode } from '../DOM/render.js';
+import assignNewPropsAndStates from './assignNewPropsAndStates.js';
 
 /**
  *  Component class
  */
 
-export default class Component {
+ export default class Component {
 
     /**
      * constructor of component
@@ -41,7 +44,21 @@ export default class Component {
 
                 [_this.vnode, _this.ref.realDOM] = updateComponent(_this, _this, nextStates)(_this.ref.realDOM);
 
-            } //if setState is called before mount, it can affect only virtual DOM before render
+                afterUpdateLifecycles(_this);
+
+            } else if(_this.ref.parent) {
+
+                assignNewPropsAndStates(_this, _this, nextStates);
+
+                const newVNode = _this.Element();
+                const newNode = createDOMfromRenderedVirtualNode(newVNode);
+
+                _this.vnode = newVNode;
+                _this.ref.realDOM = newNode;
+                _this.ref.parent.appendChild(newNode);
+                _this.ref.parent = undefined;
+
+            }
 
             return _this;
 

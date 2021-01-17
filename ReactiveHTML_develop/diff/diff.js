@@ -5,6 +5,7 @@ import isObject from '../isObject.js';
 import updateComponent from '../update/updateComponent.js';
 import isFunction from '../isFunction.js';
 import createComponentInstance from '../vnode/createComponentInstance.js';
+import afterUpdateLifecycles from '../vnode/componentAfterUpdateLifecycles.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -34,21 +35,9 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
-            if(isVOldNodeComponent) {
-
-                vOldNode.onComponentWillUnMount(node);
-
-            }
-
             node.remove();
 
-            if(isVOldNodeComponent) {
-
-                vOldNode.onComponentUnMount();
-
-            }
-
-            return [vNewNode, undefined];
+            return [undefined, undefined];
 
         };
 
@@ -58,10 +47,12 @@ export default function diff(vOldNode, vNewNode) {
 
         if(vOldNode.type === vNewNode.type) {
 
-
             return function (node) {
 
                 [vOldNode.vnode, node] = updateComponent(vOldNode, vNewNode)(node);
+
+                afterUpdateLifecycles(vOldNode);
+
                 return [vOldNode, node];
 
             } 
@@ -76,10 +67,16 @@ export default function diff(vOldNode, vNewNode) {
 
             [vNewNodeInstance.vnode, node] = diff(vOldNode.vnode, vNewNodeInstance.vnode)(node);
 
+            vNewNodeInstance.onComponentRender(node);
+
+            vNewNodeInstance.onComponentWillMount(node);
+
             vNewNodeInstance.ref.realDOM = node;
+            vOldNode.ref.parent = vOldNode.ref.realDOM.parentNode;
             vOldNode.ref.realDOM = undefined;
 
             vOldNode.onComponentUnMount();
+            vNewNodeInstance.onComponentMount(node);
 
             return [vNewNodeInstance, node];
 
@@ -97,6 +94,7 @@ export default function diff(vOldNode, vNewNode) {
 
             [vNewNode, node] = patch(node);
 
+            vOldNode.ref.parent = vOldNode.ref.realDOM.parentNode;
             vOldNode.ref.realDOM = undefined;
 
             vOldNode.onComponentUnMount();

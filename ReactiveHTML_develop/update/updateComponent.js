@@ -1,5 +1,7 @@
 import diff from '../diff/diff.js';
 import isObject from '../isObject.js';
+import assignNewPropsAndStates from '../vnode/assignNewPropsAndStates.js';
+import componentBeforeUpdateLifecycles from '../vnode/componentBeforeUpdateLifecycles.js';
 import memo from '../vnode/memo.js';
 
 /**
@@ -26,36 +28,22 @@ export default function updateComponent(oldComponent, newComponent, nextStates) 
 
     }
 
+    let snapshot = null;
+
     if(oldComponent.getSnapshotBeforeUpdate) {
 
-        oldComponent.getSnapshotBeforeUpdate({ ...oldComponent.props }, { ...oldComponent.states });
+        snapshot = oldComponent.getSnapshotBeforeUpdate({ ...oldComponent.props }, { ...oldComponent.states }) || null;
 
     }
 
     oldComponent = assignNewPropsAndStates(oldComponent, newComponent.props, nextStates);
 
-    oldComponent.onComponentWillUpdate();
-
     const newVNode = oldComponent.Element();
+
+    componentBeforeUpdateLifecycles(oldComponent, newVNode, snapshot);
 
     return diff(oldComponent.vnode, newVNode);
 
 }
 
-function assignNewPropsAndStates(oldComponent, nextProps, nextStates) {
 
-    if(isObject(nextProps)) {
-
-        Object.assign(oldComponent.props, nextProps);
-
-    }
-
-    if(isObject(nextStates)) {
-
-        Object.assign(oldComponent.states, nextStates);
-
-    }
-
-    return oldComponent;
-
-}
