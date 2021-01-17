@@ -1,5 +1,6 @@
 import updateComponent from '../update/updateComponent.js';
 import isFunction from '../isFunction.js';
+import isObject from '../isObject.js';
 
 /**
  *  Component class
@@ -34,21 +35,33 @@ export default class Component {
 
     setState(setter) {
 
-        if (isFunction(setter)) {
+        function initUpdate(_this, nextStates) {
 
-            setter.bind(this)();
+            if (_this.ref.realDOM) {
 
-            if (this.ref.realDOM) {
-
-                [this.vnode, this.ref.realDOM] = updateComponent(this, this)(this.ref.realDOM);
+                [_this.vnode, _this.ref.realDOM] = updateComponent(_this, _this, nextStates)(_this.ref.realDOM);
 
             } //if setState is called before mount, it can affect only virtual DOM before render
 
-            return this;
+            return _this;
 
         }
 
-        throw TypeError(`setState method expecting 1 parameter as Function, you given ${ typeof setter }`);
+        if (isFunction(setter)) {
+
+            const nextStates = setter.bind(this)();
+
+            return initUpdate(this, nextStates);
+
+        }
+
+        if(isObject(setter)) {
+
+            return initUpdate(this, setter);
+
+        }
+
+        throw TypeError(`setState method expecting 1 parameter as Function or Object, you give ${ typeof setter }`);
 
     }
 
@@ -68,7 +81,6 @@ export default class Component {
     shouldComponentUpdate() {
         return true;
     }
-    getSnapshotBeforeUpdate() {}
     onComponentCancelUpdate() {}
 
 }
