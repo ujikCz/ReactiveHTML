@@ -24,7 +24,7 @@ export function createDOMfromRenderedVirtualNode(virtualNode) {
 
     if(isObject(virtualNode)) {
 
-        //component
+        //virtualNode
         return virtualNode.ref.realDOM;
 
     }

@@ -50,12 +50,22 @@ import assignNewPropsAndStates from './assignNewPropsAndStates.js';
 
                 assignNewPropsAndStates(_this, _this, nextStates);
 
+                _this.onComponentWillRender();
+
                 const newVNode = _this.Element();
                 const newNode = createDOMfromRenderedVirtualNode(newVNode);
 
                 _this.vnode = newVNode;
                 _this.ref.realDOM = newNode;
+
+                _this.onComponentRender(newNode);
+
+                _this.onComponentWillMount(newNode);
+
                 _this.ref.parent.appendChild(newNode);
+
+                _this.onComponentMount(newNode);
+
                 _this.ref.parent = undefined;
 
             }
