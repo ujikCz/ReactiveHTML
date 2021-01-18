@@ -4,10 +4,11 @@
     !This version is not recomended for production use
 */
 
-import render, { createDOMfromRenderedVirtualNode } from './DOM/render.js';
 import createElement from './vnode/createVnodeElement.js';
-import Component from './vnode/component.js';
-import memo from './vnode/memo.js';
+import Component from './vnode/component/component.js';
+import memo from './memo.js';
+import mount from './DOM/mount.js';
+import isComponent from './isComponent.js';
 
 /**
  * whole library is in container funciton for use library in node.js, js, as modules, ...
@@ -29,9 +30,7 @@ import memo from './vnode/memo.js';
 
         render: function(virtualElement, container) {
 
-            const elementFromInstance = createDOMfromRenderedVirtualNode(render(virtualElement));
-
-            return container.appendChild(elementFromInstance);
+            mount(virtualElement, container, 'appendChild');
 
         },
 
@@ -39,9 +38,9 @@ import memo from './vnode/memo.js';
 
         createFactory: function(component) {
 
-            if(!(component.prototype instanceof Component)) {
+            if(isComponent(component)) {
 
-                throw Error('createFactory expecting first parameter as component class');
+                throw TypeError(`createFactory expecting first parameter as component Class, you give ${ typeof component }`);
 
             }
 

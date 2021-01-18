@@ -1,8 +1,7 @@
 import diff from '../diff/diff.js';
-import isObject from '../isObject.js';
-import assignNewPropsAndStates from '../vnode/assignNewPropsAndStates.js';
-import componentBeforeUpdateLifecycles from '../vnode/componentBeforeUpdateLifecycles.js';
-import memo from '../vnode/memo.js';
+import assignNewPropsAndStates from '../vnode/component/assignNewPropsAndStates.js';
+import componentBeforeUpdateLifecycles from '../vnode/component/componentBeforeUpdateLifecycles.js';
+import memo from '../memo.js';
 
 /**
  * updates virtualNode and its realNode (update whole component)

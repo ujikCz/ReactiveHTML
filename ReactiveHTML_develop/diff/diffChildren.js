@@ -1,10 +1,9 @@
 import zip from './zip.js';
-import render, {
-    createDOMfromRenderedVirtualNode
-} from '../DOM/render.js';
+import render from '../DOM/render.js';
 import diff from './diff.js';
 import isArray from '../isArray.js';
 import isObject from '../isObject.js';
+import mount from '../DOM/mount.js';
 
 
 /**
@@ -73,12 +72,12 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                             if (i === (newVChildren.length - 1)) {
 
-                                node.appendChild(createDOMfromRenderedVirtualNode(newVNode));
+                                mount(newVNode, node, 'appendChild'); 
                                 return [newVNode, node];
 
                             }
 
-                            node.insertBefore(createDOMfromRenderedVirtualNode(newVNode), node.childNodes[i]);
+                            mount(newVNode, node, 'insertBefore', node.childNodes[i]);
                             return [newVNode, node];
 
                         });
@@ -95,7 +94,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                         newVChildren[i] = newVNode;
 
-                        node.appendChild(createDOMfromRenderedVirtualNode(newVNode));
+                        mount(newVNode, node, 'appendChild');
 
                         return [newVNode, node];
 

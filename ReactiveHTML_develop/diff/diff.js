@@ -1,11 +1,13 @@
 import diffAttrs from './diffAttrs.js';
 import diffChildren from './diffChildren.js';
-import render, { createDOMfromRenderedVirtualNode } from '../DOM/render.js';
+import render from '../DOM/render.js';
 import isObject from '../isObject.js';
 import updateComponent from '../update/updateComponent.js';
 import isFunction from '../isFunction.js';
-import createComponentInstance from '../vnode/createComponentInstance.js';
-import afterUpdateLifecycles from '../vnode/componentAfterUpdateLifecycles.js';
+import createComponentInstance from '../vnode/component/createComponentInstance.js';
+import afterUpdateLifecycles from '../vnode/component/componentAfterUpdateLifecycles.js';
+import createDOMfromRenderedVirtualNode from '../DOM/createDOMfromRenderedVirtualNode.js';
+import mount from '../DOM/mount.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -76,6 +78,7 @@ export default function diff(vOldNode, vNewNode) {
             vOldNode.ref.realDOM = undefined;
 
             vOldNode.onComponentUnMount();
+            
             vNewNodeInstance.onComponentMount(node);
 
             return [vNewNodeInstance, node];
@@ -164,8 +167,8 @@ export default function diff(vOldNode, vNewNode) {
         return function (node) {
 
             const newVirtualNode = render(vNewNode);
-            const newRealNode = createDOMfromRenderedVirtualNode(newVirtualNode);
-            node.replaceWith(newRealNode);
+            const newRealNode = mount(newVirtualNode, node, 'replaceWith');
+
             return [newVirtualNode, newRealNode];
 
         };
@@ -181,8 +184,9 @@ export default function diff(vOldNode, vNewNode) {
         return function (node) {
 
             const newVirtualNode = render(vNewNode);
-            const newRealNode = createDOMfromRenderedVirtualNode(newVirtualNode);
-            node.replaceWith(newRealNode);
+
+            const newRealNode = mount(newVirtualNode, node, 'replaceWith');
+
             return [newVirtualNode, newRealNode];
 
         };
