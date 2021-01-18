@@ -1,6 +1,6 @@
 
 
-export default function afterUpdateLifecycles(component) {
+export default function componentAfterUpdateLifecycles(component, snapshot) {
 
     if(component.vnode === undefined) {
 
@@ -8,7 +8,7 @@ export default function afterUpdateLifecycles(component) {
 
     } else {
 
-        component.onComponentUpdate();
+        component.onComponentUpdate(component.ref.realDOM, snapshot);
 
     }
 

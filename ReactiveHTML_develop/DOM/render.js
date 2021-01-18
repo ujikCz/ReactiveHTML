@@ -1,42 +1,28 @@
-import isObject from '../isObject.js';
-import isArray from '../isArray.js';
-import createComponentInstance from '../vnode/component/createComponentInstance.js';
-import isComponent from '../isComponent.js';
+import isComponent from "../isComponent.js";
+import isObject from "../isObject.js";
+import createDomElement from "./createDomElement.js";
 
 
-/**
- * render the virtualNode 
- * mount rendered element
- * use idle callback
- * @param { Class || Object } virtualElement - class or object that represent virtual dom or component
- */
+export default function render(virtualNode) {
+    
+    if(!isObject(virtualNode)) {
 
-
-export default function render(virtualElement) {
-
-    if (isArray(virtualElement)) {
-
-        //array
-        return virtualElement.map(virtualNode => render(virtualNode));
-
-    }
-
-    if (!isObject(virtualElement) || !isComponent(virtualElement.type)) {
-        //element 
-        //OR
         //text node
-
-        return virtualElement;
+        return document.createTextNode(virtualNode);
 
     }
-    //component
 
-    virtualElement = createComponentInstance(virtualElement);
+    if(isComponent(virtualNode.type)) {
 
-    virtualElement.vnode = render(virtualElement.vnode);
+        virtualNode.ref.realDOM = render(virtualNode.vnode);
 
-    virtualElement.onComponentWillRender();
+        virtualNode.onComponentRender(virtualNode.ref.realDOM);
 
-    return virtualElement;
+        //virtualNode
+        return virtualNode.ref.realDOM;
+
+    }
+
+    return createDomElement(virtualNode);
 
 }

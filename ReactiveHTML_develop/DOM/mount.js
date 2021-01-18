@@ -1,11 +1,11 @@
 import isComponent from "../isComponent.js";
 import isObject from "../isObject.js";
-import createDOMfromRenderedVirtualNode from "./createDOMfromRenderedVirtualNode.js";
+import render from "./render.js";
 
 
 export default function mount(instance, container, method, ...args) {
 
-    const elementFromInstance = createDOMfromRenderedVirtualNode(instance);
+    const elementFromInstance = render(instance);
 
     const isComponentCache = isObject(instance) && isComponent(instance.type);
 

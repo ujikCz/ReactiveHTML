@@ -1,5 +1,5 @@
 import zip from './zip.js';
-import render from '../DOM/render.js';
+import filterVirtualElements from '../vnode/filterVirtualElements.js';
 import diff from './diff.js';
 import isArray from '../isArray.js';
 import isObject from '../isObject.js';
@@ -66,7 +66,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                         additionalPatches.push(function (node) {
 
-                            const newVNode = render(newVChildren[i]);
+                            const newVNode = filterVirtualElements(newVChildren[i]);
 
                             newVChildren[i] = newVNode;
 
@@ -90,7 +90,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                     additionalPatches.push(function (node) {
 
-                        const newVNode = render(newVChildren[i]);
+                        const newVNode = filterVirtualElements(newVChildren[i]);
 
                         newVChildren[i] = newVNode;
 

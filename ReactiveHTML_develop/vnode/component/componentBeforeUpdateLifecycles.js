@@ -8,7 +8,7 @@ export default function componentBeforeUpdateLifecycles(component, newVNode, sna
     
     } else {
 
-        component.onComponentWillUpdate(snapshot);
+        component.onComponentWillUpdate(component.ref.realDOM, snapshot);
 
     }
 

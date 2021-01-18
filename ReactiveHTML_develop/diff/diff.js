@@ -1,11 +1,11 @@
 import diffAttrs from './diffAttrs.js';
 import diffChildren from './diffChildren.js';
-import render from '../DOM/render.js';
+import filterVirtualElements from '../vnode/filterVirtualElements.js';
 import isObject from '../isObject.js';
 import updateComponent from '../update/updateComponent.js';
 import isComponent from '../isComponent.js';
 import createComponentInstance from '../vnode/component/createComponentInstance.js';
-import afterUpdateLifecycles from '../vnode/component/componentAfterUpdateLifecycles.js';
+import componentAfterUpdateLifecycles from '../vnode/component/componentAfterUpdateLifecycles.js';
 import mount from '../DOM/mount.js';
 
 /**
@@ -50,9 +50,10 @@ export default function diff(vOldNode, vNewNode) {
 
             return function (node) {
 
-                [vOldNode.vnode, node] = updateComponent(vOldNode, vNewNode)(node);
+                const [patch, snapshot] = updateComponent(vOldNode, vNewNode);
+                [vOldNode.vnode, node] = patch(node);
 
-                afterUpdateLifecycles(vOldNode);
+                componentAfterUpdateLifecycles(vOldNode, snapshot);
 
                 return [vOldNode, node];
 
@@ -165,7 +166,7 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
-            const newVirtualNode = render(vNewNode);
+            const newVirtualNode = filterVirtualElements(vNewNode);
             const newRealNode = mount(newVirtualNode, node, 'replaceWith');
 
             return [newVirtualNode, newRealNode];
@@ -182,7 +183,7 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
-            const newVirtualNode = render(vNewNode);
+            const newVirtualNode = filterVirtualElements(vNewNode);
 
             const newRealNode = mount(newVirtualNode, node, 'replaceWith');
 

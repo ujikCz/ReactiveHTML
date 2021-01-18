@@ -1,6 +1,4 @@
-import isArray from "./isArray.js";
 import isFunction from "./isFunction.js";
-import isObject from "./isObject.js";
 
 
 export default function isComponent(type) {

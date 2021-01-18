@@ -41,7 +41,7 @@ export default function updateComponent(oldComponent, newComponent, nextStates) 
 
     componentBeforeUpdateLifecycles(oldComponent, newVNode, snapshot);
 
-    return diff(oldComponent.vnode, newVNode);
+    return [diff(oldComponent.vnode, newVNode), snapshot];
 
 }
 

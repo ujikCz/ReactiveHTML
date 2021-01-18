@@ -1,9 +1,9 @@
 import updateComponent from '../../update/updateComponent.js';
 import isFunction from '../../isFunction.js';
 import isObject from '../../isObject.js';
-import afterUpdateLifecycles from './componentAfterUpdateLifecycles.js';
+import componentAfterUpdateLifecycles from './componentAfterUpdateLifecycles.js';
 import assignNewPropsAndStates from './assignNewPropsAndStates.js';
-import createDOMfromRenderedVirtualNode from '../../DOM/createDOMfromRenderedVirtualNode.js';
+import render from '../../DOM/render.js';
 
 /**
  *  Component class
@@ -32,9 +32,10 @@ Component.prototype.setState = function(setter) {
 
         if (_this.ref.realDOM) {
 
-            [_this.vnode, _this.ref.realDOM] = updateComponent(_this, _this, nextStates)(_this.ref.realDOM);
+            const [patch, snapshot] = updateComponent(_this, _this, nextStates);
+            [_this.vnode, _this.ref.realDOM] = patch(_this.ref.realDOM);
 
-            afterUpdateLifecycles(_this);
+            componentAfterUpdateLifecycles(_this, snapshot);
 
         } else if(_this.ref.parent) {
 
@@ -43,7 +44,7 @@ Component.prototype.setState = function(setter) {
             _this.onComponentWillRender();
 
             const newVNode = _this.Element();
-            const newNode = createDOMfromRenderedVirtualNode(newVNode);
+            const newNode = render(newVNode);
 
             _this.vnode = newVNode;
             _this.ref.realDOM = newNode;

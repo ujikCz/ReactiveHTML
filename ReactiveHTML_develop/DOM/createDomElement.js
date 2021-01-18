@@ -1,7 +1,7 @@
 import isArray from "../isArray.js";
 import isObject from "../isObject.js";
 import mount from "./mount.js";
-import render from "./render.js";
+import filterVirtualElements from "../vnode/filterVirtualElements.js";
 
 
 export default function createDomElement(vnode) {
@@ -32,13 +32,13 @@ export default function createDomElement(vnode) {
 
         for (let i = 0, ch = vnode.children; i < ch.length; i++) {
 
-            const rendered = render(ch[i]);
+            const rendered = filterVirtualElements(ch[i]);
 
             if(isArray(rendered)) {
 
                 for(let j = 0; j < rendered.length; j++) {
 
-                    const renderedFromArray = render(rendered[j]);
+                    const renderedFromArray = filterVirtualElements(rendered[j]);
                     rendered[j] = renderedFromArray;
                     mount(renderedFromArray, el, 'appendChild');
 
