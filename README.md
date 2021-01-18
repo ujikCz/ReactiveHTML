@@ -5,7 +5,7 @@ Simple reactive Virtual DOM elements for building complex reactive UI
 ```
 npm i reactivehtml
 
-<script scr="https://cdn.jsdelivr.net/npm/reactivehtml@2.3.0/src/ReactiveHTML.min.js"></script>
+<script scr="https://cdn.jsdelivr.net/npm/reactivehtml@2.3.3/src/ReactiveHTML.min.js"></script>
 ```
 
 ## HTM.js cdn
@@ -20,7 +20,7 @@ bierner.lit-html
 ```
 
 ## Compatibility
-Only browsers that supports ES8 (classes, proxies, Object.entries, Object.values)
+All browsers that supports ES5 (IE 10 and higher, Chrome 23 and higher, Firefox 21 and higher)
 
 ## About
 This library allows you to write components with html elements in javascript, so you can create conditional rendering or
