@@ -1,4 +1,5 @@
 import isArray from "../isArray.js";
+import isObject from "../isObject.js";
 import mount from "./mount.js";
 import render from "./render.js";
 

@@ -9,6 +9,7 @@ import Component from './vnode/component/component.js';
 import memo from './memo.js';
 import mount from './DOM/mount.js';
 import isComponent from './isComponent.js';
+import render from './DOM/render.js';
 
 /**
  * whole library is in container funciton for use library in node.js, js, as modules, ...
@@ -30,6 +31,7 @@ import isComponent from './isComponent.js';
 
         render: function(virtualElement, container) {
 
+            virtualElement = render(virtualElement);
             mount(virtualElement, container, 'appendChild');
 
         },
