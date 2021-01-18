@@ -1,7 +1,7 @@
 import isObject from '../isObject.js';
 import isArray from '../isArray.js';
 import createComponentInstance from '../vnode/component/createComponentInstance.js';
-import isVirtualElement from '../isVirtualElement.js';
+import isComponent from '../isComponent.js';
 
 
 /**
@@ -14,15 +14,6 @@ import isVirtualElement from '../isVirtualElement.js';
 
 export default function render(virtualElement) {
 
-    if (isVirtualElement(virtualElement) || !isObject(virtualElement)) {
-        //element 
-        //OR
-        //text node
-
-        return virtualElement;
-
-    }
-
     if (isArray(virtualElement)) {
 
         //array
@@ -30,6 +21,14 @@ export default function render(virtualElement) {
 
     }
 
+    if (!isObject(virtualElement) || !isComponent(virtualElement.type)) {
+        //element 
+        //OR
+        //text node
+
+        return virtualElement;
+
+    }
     //component
 
     virtualElement = createComponentInstance(virtualElement);

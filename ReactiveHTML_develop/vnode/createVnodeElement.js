@@ -7,6 +7,8 @@
  * @param  { Array of vnodes } children 
  */
 
+import isComponent from "../isComponent.js";
+
 export default function createVnodeElement(type, props = null, ...children) {
 
     let _key = null;
@@ -21,7 +23,7 @@ export default function createVnodeElement(type, props = null, ...children) {
      * if element is component
      */
 
-    if(type.ReactiveHTMLComponent) {
+    if(isComponent(type)) {
         
         return {
             type,
@@ -40,8 +42,7 @@ export default function createVnodeElement(type, props = null, ...children) {
         type,
         attrs: props,
         children,
-        _key,
-        ref: {}
+        _key
     }
 
 }

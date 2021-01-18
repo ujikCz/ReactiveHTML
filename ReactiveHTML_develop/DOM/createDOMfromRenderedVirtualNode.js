@@ -1,18 +1,19 @@
+import isComponent from "../isComponent.js";
 import isObject from "../isObject.js";
-import isVirtualElement from "../isVirtualElement.js";
 import createDomElement from "./createDomElement.js";
 
 
 export default function createDOMfromRenderedVirtualNode(virtualNode) {
     
-    if(isVirtualElement(virtualNode)) {
+    if(!isObject(virtualNode)) {
 
-        //element
-        return createDomElement(virtualNode);
+        //text node
+        return document.createTextNode(virtualNode);
 
     }
 
-    if(isObject(virtualNode)) {
+    if(isComponent(virtualNode.type)) {
+
         virtualNode.ref.realDOM = createDOMfromRenderedVirtualNode(virtualNode.vnode);
 
         virtualNode.onComponentRender(virtualNode.ref.realDOM);
@@ -22,7 +23,6 @@ export default function createDOMfromRenderedVirtualNode(virtualNode) {
 
     }
 
-    //text node
-    return document.createTextNode(virtualNode);
+    return createDomElement(virtualNode);
 
 }

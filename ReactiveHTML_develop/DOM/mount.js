@@ -1,4 +1,5 @@
 import isComponent from "../isComponent.js";
+import isObject from "../isObject.js";
 import createDOMfromRenderedVirtualNode from "./createDOMfromRenderedVirtualNode.js";
 
 
@@ -6,7 +7,9 @@ export default function mount(instance, container, method, ...args) {
 
     const elementFromInstance = createDOMfromRenderedVirtualNode(instance);
 
-    if(isComponent(instance)) {
+    const isComponentCache = isObject(instance) && isComponent(instance.type);
+
+    if(isComponentCache) {
 
         instance.onComponentWillMount(elementFromInstance);
 
@@ -14,7 +17,7 @@ export default function mount(instance, container, method, ...args) {
 
     container[method](elementFromInstance, ...args);
 
-    if(isComponent(instance)) {
+    if(isComponentCache) {
 
         instance.onComponentMount(elementFromInstance);
 

@@ -3,10 +3,9 @@ import diffChildren from './diffChildren.js';
 import render from '../DOM/render.js';
 import isObject from '../isObject.js';
 import updateComponent from '../update/updateComponent.js';
-import isFunction from '../isFunction.js';
+import isComponent from '../isComponent.js';
 import createComponentInstance from '../vnode/component/createComponentInstance.js';
 import afterUpdateLifecycles from '../vnode/component/componentAfterUpdateLifecycles.js';
-import createDOMfromRenderedVirtualNode from '../DOM/createDOMfromRenderedVirtualNode.js';
 import mount from '../DOM/mount.js';
 
 /**
@@ -25,8 +24,8 @@ export default function diff(vOldNode, vNewNode) {
 
     const isVOldNodeObject = isObject(vOldNode);
     const isVNewNodeObject = isObject(vNewNode);
-    const isVOldNodeComponent = isVOldNodeObject ? isFunction(vOldNode.type) : false;
-    const isVNewNodeComponent = isVNewNodeObject ? isFunction(vNewNode.type) : false;
+    const isVOldNodeComponent = isVOldNodeObject ? isComponent(vOldNode.type) : false;
+    const isVNewNodeComponent = isVNewNodeObject ? isComponent(vNewNode.type) : false;
 
     /*
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
