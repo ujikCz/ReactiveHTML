@@ -5,7 +5,7 @@ Simple reactive Virtual DOM elements for building complex reactive UI
 ```
 npm i reactivehtml
 
-<script scr="https://cdn.jsdelivr.net/npm/reactivehtml@2.3.3/src/ReactiveHTML.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reactivehtml@2.3.3/src/ReactiveHTML.min.js"></script>
 ```
 
 ## HTM.js cdn
