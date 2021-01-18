@@ -31,7 +31,7 @@ export default function updateComponent(oldComponent, newComponent, nextStates) 
 
     if(oldComponent.getSnapshotBeforeUpdate) {
 
-        snapshot = oldComponent.getSnapshotBeforeUpdate({ ...oldComponent.props }, { ...oldComponent.states }) || null;
+        snapshot = oldComponent.getSnapshotBeforeUpdate(oldComponent.props, oldComponent.states) || null;
 
     }
 
