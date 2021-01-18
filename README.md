@@ -44,18 +44,6 @@ This library is also very lightweight, only 2Kb min+gzip
 Jáchym Janoušek https://github.com/jachymjanousek    
 Jan Turoň https://github.com/janturon    
 
-## defer script
-I highly recommend to create your scripts with ReactiveHTML with defer attribute, that script is parsed asynchronnaly with your html parsing and it is evaluated after html document is ready, but before DOMContentLoaded event, so you can manipulate with your elements and don't stop your main thread with html parsing.
-
-```
-<script src="ReactiveHTML.min.js"></script>
-<script defer>
-
-    //your script here....
-
-</script>
-```
-
 ## Hello world
 ```
 /* this example is create with htm.js */
