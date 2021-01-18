@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script type="module" src="../ReactiveHTML_develop/index.js"></script>
+
+
+
+    <title>test ReactiveHTML</title>
+
+</head>
+
+<body>
+
+    <div id="app"></div>
+
+    <script type="module">
+
+        let id = 0;
+        class Todo extends ReactiveHTML.Component {
+
+            constructor(props) {
+
+                super(props);
+
+                this.states = {
+                    todos: []
+                };  
+
+                this.inputValue;
+
+                this.handleInput = this.handleInput.bind(this);
+                this.handleAdd = this.handleAdd.bind(this);
+                this.handleRemove = this.handleRemove.bind(this);
+            }   
+
+            handleInput(e) {
+
+                this.inputValue = e.target.value;
+                e.target.value = '';
+
+            }
+
+            handleAdd(e) {
+
+                this.setState({
+                    todos: [...this.states.todos, { value: this.inputValue, id: id++ }]
+                });
+
+            }
+
+            handleRemove(item) {
+                
+                const todos = [...this.states.todos];
+                const index = todos.indexOf(item);
+
+                todos.splice(index, 1)
+
+                this.setState({
+                    todos
+                });
+
+            }
+
+            Element() {
+                
+                return ReactiveHTML.createElement('div', null, 
+
+                    ReactiveHTML.createElement('div', null, this.states.todos.map(m => {
+
+                        return ReactiveHTML.createElement('div', { _key: m.id }, 
+                            ReactiveHTML.createElement('div', { style: { display: 'inline' } }, m.value),
+                            ReactiveHTML.createElement('button', { onclick: (e) => this.handleRemove(m) }, 'remove')
+                        )
+
+                    })),
+
+                    ReactiveHTML.createElement('input', { onchange: this.handleInput, placeholder: 'value' }),
+
+                    ReactiveHTML.createElement('button', { onclick: this.handleAdd }, 'Add')
+
+                );
+
+            }
+
+        }
+
+        ReactiveHTML.render(ReactiveHTML.createElement(Todo), document.getElementById('app'));
+
+
+    </script>
+
+</body>
+
+</html>
