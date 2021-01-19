@@ -3,10 +3,24 @@ import isObject from "../isObject.js";
 import mount from "./mount.js";
 import filterVirtualElements from "../vnode/filterVirtualElements.js";
 
+/**
+ * creates DOM element from virtual element
+ * it create only pure HTMLElements, no text nodes or smth like that
+ * @param { Object } vnode 
+ * @param {*} parentComponent - experimental 
+ */
 
-export default function createDomElement(vnode) {
+export default function createDomElement(vnode, parentComponent) {
+
+    /**
+     * create element
+     */
 
     const el = document.createElement(vnode.type);
+
+    /**
+     * add attributes, but like element properties for easy manipulation
+     */
 
     for (const key in vnode.attrs) {
 
@@ -28,34 +42,42 @@ export default function createDomElement(vnode) {
 
     }
 
+    /**
+     * do everything again recursively for all children
+     */
+
     if (vnode.children.length) {
 
         for (let i = 0, ch = vnode.children; i < ch.length; i++) {
 
-            const rendered = filterVirtualElements(ch[i]);
+            const filtered = filterVirtualElements(ch[i]);
 
-            if(isArray(rendered)) {
+            if(isArray(filtered)) {
 
-                for(let j = 0; j < rendered.length; j++) {
+                for(let j = 0; j < filtered.length; j++) {
 
-                    const renderedFromArray = filterVirtualElements(rendered[j]);
-                    rendered[j] = renderedFromArray;
-                    mount(renderedFromArray, el, 'appendChild');
+                    const filteredFromArray = filterVirtualElements(filtered[j]);
+                    filtered[j] = filteredFromArray;
+                    mount(filteredFromArray, el, 'appendChild', parentComponent);
 
                 }
 
-                vnode.children[i] = rendered;
-
             } else {
 
-                vnode.children[i] = rendered;
-                mount(rendered, el, 'appendChild');
+                console.log(parentComponent)
+                mount(filtered, el, 'appendChild', parentComponent);
 
             }
+
+            vnode.children[i] = filtered;
 
         }
 
     }
+
+    /**
+     * return final element
+     */
 
     return el;
 

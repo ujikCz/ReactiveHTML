@@ -1,28 +1,28 @@
-import isComponent from "../isComponent.js";
-import isObject from "../isObject.js";
+
+
 import render from "./render.js";
 
+/**
+ * used to mount element to webpage
+ * @param { Object } instance 
+ * @param { Element } container 
+ * @param { String } method 
+ * @param {*} parentComponent - experimental
+ * @param  {...any} args 
+ */
 
-export default function mount(instance, container, method, ...args) {
+export default function mount(instance, container, method, parentComponent, ...args) {
 
-    const elementFromInstance = render(instance);
+    if(instance === undefined) return;
 
-    const isComponentCache = isObject(instance) && isComponent(instance.type);
+    const rendered = render(instance, container);
+    
+    if(rendered.ref.realDOM !== undefined) { //if rendered return no undef value
 
-    if(isComponentCache) {
-
-        instance.onComponentWillMount(elementFromInstance);
+        container[method](rendered.ref.realDOM, ...args);
 
     }
 
-    container[method](elementFromInstance, ...args);
-
-    if(isComponentCache) {
-
-        instance.onComponentMount(elementFromInstance);
-
-    }
-
-    return elementFromInstance;
+    return rendered;
 
 }

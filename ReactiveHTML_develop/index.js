@@ -32,7 +32,11 @@ import filterVirtualElements from './vnode/filterVirtualElements.js';
         render: function(virtualElement, container) {
 
             virtualElement = filterVirtualElements(virtualElement);
-            mount(virtualElement, container, 'appendChild');
+            if(virtualElement !== undefined) {
+
+                mount(virtualElement, container, 'appendChild');
+
+            }
 
         },
 

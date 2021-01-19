@@ -13,11 +13,24 @@ import mount from '../DOM/mount.js';
  * @param { Array } newVChildren - new virtual node children
  */
 
+function filterUndef(array) {
+
+    return array.filter(undefFilter => {
+
+        return undefFilter !== undefined;
+
+    });
+
+}
+
 export default function diffChildren(oldVChildren, newVChildren) {
 
-
+    [oldVChildren, newVChildren] = [filterUndef(oldVChildren), filterUndef(newVChildren)];
+    
     const childPatches = [];
     const additionalPatches = [];
+
+    console.log(oldVChildren._key, newVChildren[0], 111);
 
     for (let i = 0, l = oldVChildren.length; i < l; i++) {
 
@@ -72,7 +85,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                             if (i === (newVChildren.length - 1)) {
 
-                                mount(newVNode, node, 'appendChild'); 
+                                mount(newVNode, node, 'appendChild');
                                 return [newVNode, node];
 
                             }

@@ -12,30 +12,34 @@ import isComponent from '../isComponent.js';
  */
 
 
-export default function filterVirtualElements(virtualElement) {
+export default function filterVirtualElements(virtualElement, parentComponent) {
 
     if (isArray(virtualElement)) {
 
         //array
-        return virtualElement.map(virtualNode => filterVirtualElements(virtualNode));
+        return virtualElement.map(virtualNode => filterVirtualElements(virtualNode, parentComponent));
 
     }
 
-    if (!isObject(virtualElement) || !isComponent(virtualElement.type)) {
-        //element 
-        //OR
-        //text node
+    if (!isObject(virtualElement)) {
 
+         //text node
+        return virtualElement;
+
+    }
+    
+    if(!isComponent(virtualElement.type)) {
+
+        //element 
         return virtualElement;
 
     }
     //component
 
     virtualElement = createComponentInstance(virtualElement);
-
-    virtualElement.vnode = filterVirtualElements(virtualElement.vnode);
-
-    virtualElement.onComponentWillRender();
+    virtualElement.ref.parentComponent = parentComponent;
+    
+    virtualElement.virtual = filterVirtualElements(virtualElement.virtual, virtualElement);
 
     return virtualElement;
 

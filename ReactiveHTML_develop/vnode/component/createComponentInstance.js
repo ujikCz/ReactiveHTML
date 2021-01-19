@@ -1,7 +1,7 @@
 
 
 /**
- * creates virtual node tree from component
+ * creates instance of component
  * @param { Object } component 
  */
 
@@ -10,11 +10,13 @@ export default function createComponentInstance(component) {
     
     const instance = new component.type(component.props);
 
-    instance.vnode = instance.Element();
+    const newVNode = instance.Element();
 
-    instance.type = component.type;
+    instance.virtual = newVNode;
 
     instance._key = component._key;
+
+    instance.type = component.type;
 
     return instance;
 

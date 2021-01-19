@@ -58,7 +58,6 @@ export default function diffAttrs(oldAttrs, newAttrs) {
                 attrsPatches.push(function (node) {
 
                     node.removeEventListener(k.replace('on', ''), oldAttrs[k]);
-                    console.log(node)
                     return node;
 
                 });

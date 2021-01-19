@@ -1,9 +1,6 @@
 import updateComponent from '../../update/updateComponent.js';
 import isFunction from '../../isFunction.js';
 import isObject from '../../isObject.js';
-import componentAfterUpdateLifecycles from './componentAfterUpdateLifecycles.js';
-import assignNewPropsAndStates from './assignNewPropsAndStates.js';
-import render from '../../DOM/render.js';
 
 /**
  *  Component class
@@ -13,11 +10,22 @@ export default function Component (props) {
 
     this.props = props || {};
 
-    this.ref = {};
+    this.updater = {
+        isMounted: false
+    };
+
+    this.ref = {
+        realDOM: undefined,
+        container: undefined
+    };
 
     return this;
 
 }
+
+/**
+ * Element method is the only one method that is required to be in component
+ */
 
 Component.prototype.Element = function() {
 
@@ -25,45 +33,13 @@ Component.prototype.Element = function() {
 
 }
 
+/**
+ * setState method for set new states of component and update it
+ * real dom will react on state changes
+ * @param { Object || Function } setter - set the new states of component
+ */
 
 Component.prototype.setState = function(setter) {
-
-    function initUpdate(_this, nextStates) {
-
-        if (_this.ref.realDOM) {
-
-            const [patch, snapshot] = updateComponent(_this, _this, nextStates);
-            [_this.vnode, _this.ref.realDOM] = patch(_this.ref.realDOM);
-
-            componentAfterUpdateLifecycles(_this, snapshot);
-
-        } else if(_this.ref.parent) {
-
-            assignNewPropsAndStates(_this, _this, nextStates);
-
-            _this.onComponentWillRender();
-
-            const newVNode = _this.Element();
-            const newNode = render(newVNode);
-
-            _this.vnode = newVNode;
-            _this.ref.realDOM = newNode;
-
-            _this.onComponentRender(newNode);
-
-            _this.onComponentWillMount(newNode);
-
-            _this.ref.parent.appendChild(newNode);
-
-            _this.onComponentMount(newNode);
-
-            _this.ref.parent = undefined;
-
-        }
-
-        return _this;
-
-    }
 
     if (isFunction(setter)) {
 
@@ -83,20 +59,29 @@ Component.prototype.setState = function(setter) {
 
 }
 
-Component.prototype.onComponentUpdate = 
-Component.prototype.onComponentWillUpdate = 
+/**
+ * shouldComponentUpdate is used when component is going to udpate, this method is for better optimalization
+ */
 
-Component.prototype.onComponentRender =
-Component.prototype.onComponentWillRender =
+Component.prototype.shouldComponentUpdate = function() { return true; };
 
-Component.prototype.onComponentMount =
-Component.prototype.onComponentWillMount = 
-
-Component.prototype.onComponentUnMount =
-Component.prototype.onComponentWillUnMount = 
-        
-Component.prototype.onComponentCancelUpdate = function() {}
-
-Component.prototype.shouldComponentUpdate = function() { return true; }
+/**
+ * for recognize ReactiveHTML component
+ */
 
 Component.prototype.isReactiveHTMLComponent = true;
+
+/**
+ * this function will trigger the update of component
+ */
+
+function initUpdate(_this, nextStates) {
+    
+    const patch = updateComponent(_this, _this, nextStates);
+    const patched = patch(_this.ref.container);
+    _this.ref.container = patched[1];
+    _this.virtual = patched[0][0];
+
+    return _this;
+
+}
