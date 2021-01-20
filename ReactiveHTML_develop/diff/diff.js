@@ -2,11 +2,10 @@ import diffAttrs from './diffAttrs.js';
 import diffChildren from './diffChildren.js';
 import filterVirtualElements from '../vnode/filterVirtualElements.js';
 import isObject from '../isObject.js';
-import updateComponent from '../update/updateComponent.js';
 import isComponent from '../isComponent.js';
 import createComponentInstance from '../vnode/component/createComponentInstance.js';
 import mount from '../DOM/mount.js';
-import render from '../DOM/render.js';
+import willUnMount from '../vnode/component/lifecycles/willUnMountLifecycle.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -22,8 +21,6 @@ export default function diff(vOldNode, vNewNode) {
      * cache all statements
      */
 
-    console.log(vOldNode, vNewNode)
-
     const isVOldNodeObject = isObject(vOldNode);
     const isVNewNodeObject = isObject(vNewNode);
     const isVOldNodeComponent = isVOldNodeObject && isComponent(vOldNode.type);
@@ -33,13 +30,15 @@ export default function diff(vOldNode, vNewNode) {
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
      */
 
-    if (vNewNode === undefined) {
+    if (vNewNode === null) {
 
         return function (node) {
 
+            willUnMount(vOldNode);
+
             node.remove();
 
-            return [undefined, undefined];
+            return [null, null];
 
         };
 
@@ -51,12 +50,9 @@ export default function diff(vOldNode, vNewNode) {
 
             return function (node) {
 
-                const patch = updateComponent(vOldNode, vNewNode, undefined);
-                const patched = patch(vOldNode.ref.container);
-                vOldNode.ref.container = patched[1];
-                vOldNode.virtual = patched[0][0];
-                
-                return [vOldNode, node];
+                vOldNode = vOldNode.setState({});
+
+                return [vOldNode, vOldNode.ref.realDOM];
 
             } 
 

@@ -13,11 +13,11 @@ import mount from '../DOM/mount.js';
  * @param { Array } newVChildren - new virtual node children
  */
 
-function filterUndef(array) {
+function filterNull(array) {
 
     return array.filter(undefFilter => {
 
-        return undefFilter !== undefined;
+        return undefFilter !== null;
 
     });
 
@@ -25,12 +25,18 @@ function filterUndef(array) {
 
 export default function diffChildren(oldVChildren, newVChildren) {
 
-    [oldVChildren, newVChildren] = [filterUndef(oldVChildren), filterUndef(newVChildren)];
+    /**
+     * filterNull filter every null elements in array and remove it, so we can easily recognize which array is smaller or bigger
+     */
+
+    [oldVChildren, newVChildren] = [filterNull(oldVChildren), filterNull(newVChildren)];
     
     const childPatches = [];
     const additionalPatches = [];
 
-    console.log(oldVChildren._key, newVChildren[0], 111);
+    /**
+     * loop throught all oldVChildren and diff matched elements
+     */
 
     for (let i = 0, l = oldVChildren.length; i < l; i++) {
 
@@ -47,7 +53,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
                     const findedByKey = newVChildren.find(f => f._key === oldVChildren[i]._key);
                     const indexInNewVChildren = newVChildren.indexOf(findedByKey);
 
-                    [newVChildren[indexInNewVChildren], node] = diff(oldVChildren[i], findedByKey)(node);
+                    [newVChildren[indexInNewVChildren], node] = diff(oldVChildren[i], findedByKey || null)(node);
                     return [newVChildren[indexInNewVChildren], node];
 
                 });
@@ -56,7 +62,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                 childPatches.push(function (node) {
 
-                    [newVChildren[i], node] = diff(oldVChildren[i], newVChildren[i])(node);
+                    [newVChildren[i], node] = diff(oldVChildren[i], newVChildren[i] || null)(node);
                     return [newVChildren[i], node];
 
                 });
@@ -66,6 +72,12 @@ export default function diffChildren(oldVChildren, newVChildren) {
         }
 
     }
+
+    /**
+     * get additional children if newVChildren array is bigger than old one
+     * if elements in new array has keys insert it on specific position
+     * else append it as last element of parent
+     */
 
     if (newVChildren.length > oldVChildren.length) {
 
@@ -77,7 +89,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                     if (!oldVChildren.some(f => f._key === newVChildren[i]._key)) {
 
-                        additionalPatches.push(function (node) {
+                        additionalPatches.push(function (parent) {
 
                             const newVNode = filterVirtualElements(newVChildren[i]);
 
@@ -85,13 +97,13 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                             if (i === (newVChildren.length - 1)) {
 
-                                mount(newVNode, node, 'appendChild');
-                                return [newVNode, node];
+                                mount(newVNode, parent, 'appendChild');
+                                return [newVNode, parent];
 
                             }
 
-                            mount(newVNode, node, 'insertBefore', node.childNodes[i]);
-                            return [newVNode, node];
+                            mount(newVNode, parent, 'insertBefore', node.childNodes[i]);
+                            return [newVNode, parent];
 
                         });
 
@@ -101,15 +113,15 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                     i = oldVChildren.length;
 
-                    additionalPatches.push(function (node) {
+                    additionalPatches.push(function (parent) {
 
                         const newVNode = filterVirtualElements(newVChildren[i]);
 
                         newVChildren[i] = newVNode;
 
-                        mount(newVNode, node, 'appendChild');
+                        mount(newVNode, parent, 'appendChild');
 
-                        return [newVNode, node];
+                        return [newVNode, parent];
 
                     });
 
@@ -134,6 +146,10 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
         });
 
+        /**
+         * apply additional changes right to the parent
+         */
+
         for (let i = 0; i < additionalPatches.length; i++) {
 
             additionalPatches[i](parent);
@@ -142,4 +158,5 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
         return [newVChildren, parent];
     };
-};
+
+}

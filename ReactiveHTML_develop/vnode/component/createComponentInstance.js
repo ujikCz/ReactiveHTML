@@ -5,14 +5,19 @@
  * @param { Object } component 
  */
 
+import filterVirtualElements from "../filterVirtualElements.js";
+import checkVirtual from "./checkVirtualOfComponent.js";
+
 
 export default function createComponentInstance(component) {
     
     const instance = new component.type(component.props);
 
-    const newVNode = instance.Element();
+    const newVNode = checkVirtual(
+        instance.Element()
+    );
 
-    instance.virtual = newVNode;
+    instance.ref.virtual = filterVirtualElements(newVNode);
 
     instance._key = component._key;
 

@@ -1,6 +1,8 @@
 import isArray from "../isArray.js";
 import isComponent from "../isComponent.js";
 import isObject from "../isObject.js";
+import renderLifecycle from "../vnode/component/lifecycles/renderLifecycle.js";
+import willRenderLifecycle from "../vnode/component/lifecycles/willRenderLifecycle.js";
 import createDomElement from "./createDomElement.js";
 
 /**
@@ -15,11 +17,11 @@ export default function render(virtualNode, container) {
      * if virtual dom is undefined return no dom object
      */
 
-    if(virtualNode === undefined) {
+    if(virtualNode === null) {
 
         return {
             ref: {
-                realDOM: undefined
+                realDOM: null
             },
             virtual: virtualNode
         };
@@ -59,15 +61,15 @@ export default function render(virtualNode, container) {
     if(isComponent(virtualNode.type)) {
 
         //component
-        virtualNode.ref.realDOM = render(virtualNode.virtual, virtualNode).ref.realDOM;
+        willRenderLifecycle(virtualNode);
+
+        virtualNode.ref.realDOM = render(virtualNode.ref.virtual, virtualNode).ref.realDOM;
+
+        renderLifecycle(virtualNode);
+
         virtualNode.ref.container = container;
 
-        return {
-            ref: {
-                realDOM: virtualNode.ref.realDOM
-            },
-            virtual: virtualNode
-        };
+        return virtualNode;
 
     }
 

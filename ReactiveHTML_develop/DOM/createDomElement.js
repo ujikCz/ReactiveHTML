@@ -10,7 +10,7 @@ import filterVirtualElements from "../vnode/filterVirtualElements.js";
  * @param {*} parentComponent - experimental 
  */
 
-export default function createDomElement(vnode, parentComponent) {
+export default function createDomElement(vnode) {
 
     /**
      * create element
@@ -48,26 +48,11 @@ export default function createDomElement(vnode, parentComponent) {
 
     if (vnode.children.length) {
 
-        for (let i = 0, ch = vnode.children; i < ch.length; i++) {
+        for (let i = 0, children = vnode.children; i < children.length; i++) {
 
-            const filtered = filterVirtualElements(ch[i]);
+            const filtered = filterVirtualElements(children[i]);
 
-            if(isArray(filtered)) {
-
-                for(let j = 0; j < filtered.length; j++) {
-
-                    const filteredFromArray = filterVirtualElements(filtered[j]);
-                    filtered[j] = filteredFromArray;
-                    mount(filteredFromArray, el, 'appendChild', parentComponent);
-
-                }
-
-            } else {
-
-                console.log(parentComponent)
-                mount(filtered, el, 'appendChild', parentComponent);
-
-            }
+            mount(filtered, el, 'appendChild');
 
             vnode.children[i] = filtered;
 

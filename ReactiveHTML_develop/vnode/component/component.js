@@ -1,12 +1,13 @@
 import updateComponent from '../../update/updateComponent.js';
 import isFunction from '../../isFunction.js';
 import isObject from '../../isObject.js';
+import updateLIfecycle from './lifecycles/updateLifecycle.js';
 
 /**
  *  Component class
  */
 
-export default function Component (props) {
+export default function Component(props) {
 
     this.props = props || {};
 
@@ -15,8 +16,9 @@ export default function Component (props) {
     };
 
     this.ref = {
-        realDOM: undefined,
-        container: undefined
+        realDOM: null,
+        container: null,
+        virtual: null
     };
 
     return this;
@@ -27,7 +29,7 @@ export default function Component (props) {
  * Element method is the only one method that is required to be in component
  */
 
-Component.prototype.Element = function() {
+Component.prototype.Element = function () {
 
     throw Error(`You have to specify Element method in your Component, if you want to return any element, return ${ undefined }`);
 
@@ -39,19 +41,21 @@ Component.prototype.Element = function() {
  * @param { Object || Function } setter - set the new states of component
  */
 
-Component.prototype.setState = function(setter) {
+Component.prototype.setState = function (setter) {
 
     if (isFunction(setter)) {
 
         const nextStates = setter.bind(this)();
 
-        return initUpdate(this, nextStates);
+        this.ref.virtual = initUpdate(this, nextStates);
+        return this;
 
     }
 
-    if(isObject(setter)) {
+    if (isObject(setter)) {
 
-        return initUpdate(this, setter);
+        this.ref.virtual = initUpdate(this, setter);
+        return this;
 
     }
 
@@ -59,11 +63,27 @@ Component.prototype.setState = function(setter) {
 
 }
 
+Component.prototype.onComponentWillRender =
+Component.prototype.onComponentRender =
+
+Component.prototype.onComponentWillUpdate =
+Component.prototype.onComponentUpdate =
+
+Component.prototype.onComponentWillMount =
+Component.prototype.onComponentMount =
+
+Component.prototype.getSnapshotBeforeUpdate =
+
+Component.prototype.onComponentWillUnMount =
+Component.prototype.onComponentUnMount = function () {};
+
 /**
  * shouldComponentUpdate is used when component is going to udpate, this method is for better optimalization
  */
 
-Component.prototype.shouldComponentUpdate = function() { return true; };
+Component.prototype.shouldComponentUpdate = function () {
+    return true;
+};
 
 /**
  * for recognize ReactiveHTML component
@@ -76,12 +96,15 @@ Component.prototype.isReactiveHTMLComponent = true;
  */
 
 function initUpdate(_this, nextStates) {
-    
-    const patch = updateComponent(_this, _this, nextStates);
-    const patched = patch(_this.ref.container);
-    _this.ref.container = patched[1];
-    _this.virtual = patched[0][0];
 
-    return _this;
+    const [patch, snapshot] = updateComponent(_this, _this, nextStates);
+    const patched = patch(_this.ref.container);
+
+    _this.ref.container = patched[1];
+    _this.ref.virtual = patched[0][0] || null;
+
+    updateLIfecycle(_this, snapshot);
+
+    return _this.ref.virtual;
 
 }
