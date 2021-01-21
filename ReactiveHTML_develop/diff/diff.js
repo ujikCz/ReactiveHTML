@@ -3,9 +3,9 @@ import diffChildren from './diffChildren.js';
 import filterVirtualElements from '../vnode/filterVirtualElements.js';
 import isObject from '../isObject.js';
 import isComponent from '../isComponent.js';
-import createComponentInstance from '../vnode/component/createComponentInstance.js';
 import mount from '../DOM/mount.js';
-import willUnMount from '../vnode/component/lifecycles/willUnMountLifecycle.js';
+import diffComponents from './diffComponents.js';
+import render from '../DOM/render.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -30,11 +30,15 @@ export default function diff(vOldNode, vNewNode) {
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
      */
 
+    if(isVOldNodeComponent || isVNewNodeComponent) {
+
+        return diffComponents(vOldNode, vNewNode, isVOldNodeComponent, isVNewNodeComponent);
+
+    }
+
     if (vNewNode === null) {
 
-        return function (node) {
-
-            willUnMount(vOldNode);
+        return function (node, parentNode) {
 
             node.remove();
 
@@ -44,67 +48,18 @@ export default function diff(vOldNode, vNewNode) {
 
     }
 
-    if(isVOldNodeComponent && isVNewNodeComponent) {
+    if (vOldNode === null) {
 
-        if(vOldNode.type === vNewNode.type) {
+        return function (node, parentNode) {
 
-            return function (node) {
+            vNewNode = filterVirtualElements(vNewNode);
+            const newNode = render(vNewNode, parentNode);
 
-                vOldNode = vOldNode.setState({});
-
-                return [vOldNode, vOldNode.ref.realDOM];
-
-            } 
-
-        }
-
-        return function (node) {
-            
-            const vNewNodeInstance = createComponentInstance(vNewNode);
-
-            [vNewNodeInstance.vnode, node] = diff(vOldNode.vnode, vNewNodeInstance.vnode)(node);
-
-            vNewNodeInstance.ref.realDOM = node;
-
-            vOldNode.ref.realDOM = undefined;
-            
-            return [vNewNodeInstance, node];
-
-        } 
-
-    }
-
-    if(isVOldNodeComponent && !isVNewNodeComponent) {
-
-        return function (node) {
-
-            const patch = diff(vOldNode.vnode, vNewNode);
-            
-            [vNewNode, node] = patch(node);
-
-            vOldNode.ref.realDOM = undefined;
+            node = mount(vNewNode, newNode, parentNode, 'appendChild');
 
             return [vNewNode, node];
 
-        }
-
-    }
-
-    if(!isVOldNodeComponent && isVNewNodeComponent) {
-
-        return function (node) {
-
-            const vNewNodeInstance = createComponentInstance(vNewNode);
-
-            const patch = diff(vOldNode, vNewNodeInstance.vnode);
-
-            [vNewNode, node] = patch(node);
-
-            vNewNodeInstance.ref.realDOM = node;
-
-            return [vNewNode, node];
-
-        }
+        };
 
     }
 
@@ -117,7 +72,7 @@ export default function diff(vOldNode, vNewNode) {
 
         if (vOldNode !== vNewNode) {
 
-            return function (node) {
+            return function (node, parentNode) {
 
                 node.nodeValue = vNewNode;
                 return [vNewNode, node];
@@ -138,7 +93,7 @@ export default function diff(vOldNode, vNewNode) {
 
     if ((!isVOldNodeObject && isVNewNodeObject) || (isVOldNodeObject && !isVNewNodeObject)) {
 
-        return function (node) {
+        return function (node, parentNode) {
 
             const newVirtualNode = filterVirtualElements(vNewNode);
             const newRealNode = mount(newVirtualNode, node, 'replaceWith');
@@ -155,7 +110,7 @@ export default function diff(vOldNode, vNewNode) {
 
     if (vOldNode.type !== vNewNode.type) {
 
-        return function (node) {
+        return function (node, parentNode) {
 
             const newVirtualNode = filterVirtualElements(vNewNode);
 
@@ -164,10 +119,10 @@ export default function diff(vOldNode, vNewNode) {
             return [newVirtualNode, newRealNode];
 
         };
-        
+
     }
 
-    return function (node) {
+    return function (node, parentNode) {
 
         if (vOldNode._memo) {
 

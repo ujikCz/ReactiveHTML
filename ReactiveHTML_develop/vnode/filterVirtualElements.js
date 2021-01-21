@@ -12,12 +12,12 @@ import isComponent from '../isComponent.js';
  */
 
 
-export default function filterVirtualElements(virtualElement, parentComponent) {
+export default function filterVirtualElements(virtualElement) {
 
     if (isArray(virtualElement)) {
 
         //array
-        return virtualElement.map(virtualNode => filterVirtualElements(virtualNode, parentComponent));
+        return virtualElement.map(virtualNode => filterVirtualElements(virtualNode));
 
     }
 
@@ -37,9 +37,8 @@ export default function filterVirtualElements(virtualElement, parentComponent) {
     //component
 
     virtualElement = createComponentInstance(virtualElement);
-    virtualElement.ref.parentComponent = parentComponent;
     
-    virtualElement.virtual = filterVirtualElements(virtualElement.virtual, virtualElement);
+    virtualElement.virtual = filterVirtualElements(virtualElement.virtual);
 
     return virtualElement;
 

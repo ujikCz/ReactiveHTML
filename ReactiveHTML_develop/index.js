@@ -10,6 +10,7 @@ import memo from './memo.js';
 import mount from './DOM/mount.js';
 import isComponent from './isComponent.js';
 import filterVirtualElements from './vnode/filterVirtualElements.js';
+import render from './DOM/render.js';
 
 /**
  * whole library is in container funciton for use library in node.js, js, as modules, ...
@@ -32,9 +33,12 @@ import filterVirtualElements from './vnode/filterVirtualElements.js';
         render: function(virtualElement, container) {
 
             virtualElement = filterVirtualElements(virtualElement);
-            if(virtualElement !== undefined) {
 
-                mount(virtualElement, container, 'appendChild');
+            const rendered = render(virtualElement, container);
+
+            if(virtualElement !== null) {
+
+                mount(virtualElement, rendered, container, 'appendChild');
 
             }
 

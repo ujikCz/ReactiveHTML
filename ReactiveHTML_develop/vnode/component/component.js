@@ -7,12 +7,25 @@ import updateLIfecycle from './lifecycles/updateLifecycle.js';
  *  Component class
  */
 
+function initUpdate(nextComponent, nextStates, node, parentNode) {
+
+    const [patch, snapshot] = updateComponent(this, nextComponent ? nextComponent.props : null, nextStates, parentNode);
+    const patched = patch(node);
+
+    this.ref.realDOM = node = patched[1];
+
+    this.ref.virtual = patched[0] || null;
+
+    return [this.ref.virtual, node];
+
+}
+
 export default function Component(props) {
 
     this.props = props || {};
 
     this.updater = {
-        isMounted: false
+        __update: initUpdate.bind(this),
     };
 
     this.ref = {
@@ -47,14 +60,13 @@ Component.prototype.setState = function (setter) {
 
         const nextStates = setter.bind(this)();
 
-        this.ref.virtual = initUpdate(this, nextStates);
-        return this;
 
     }
 
     if (isObject(setter)) {
 
-        this.ref.virtual = initUpdate(this, setter);
+        const [patch, snapshot] = updateComponent(this, null, setter);
+        [this.ref.virtual, this.ref.realDOM] = patch(this.ref.realDOM, this.ref.container);
         return this;
 
     }
@@ -95,16 +107,3 @@ Component.prototype.isReactiveHTMLComponent = true;
  * this function will trigger the update of component
  */
 
-function initUpdate(_this, nextStates) {
-
-    const [patch, snapshot] = updateComponent(_this, _this, nextStates);
-    const patched = patch(_this.ref.container);
-
-    _this.ref.container = patched[1];
-    _this.ref.virtual = patched[0][0] || null;
-
-    updateLIfecycle(_this, snapshot);
-
-    return _this.ref.virtual;
-
-}

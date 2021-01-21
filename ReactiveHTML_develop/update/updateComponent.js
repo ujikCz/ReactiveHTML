@@ -1,5 +1,5 @@
 import diff from '../diff/diff.js';
-import diffChildren from '../diff/diffChildren.js';
+
 import assignNewPropsAndStates from '../vnode/component/assignNewPropsAndStates.js';
 import checkVirtual from '../vnode/component/checkVirtualOfComponent.js';
 import getSnapshotBeforeUpdateLIfecycle from '../vnode/component/lifecycles/getSnapshotBeforeUpdate.js';
@@ -12,14 +12,12 @@ import willUpdateLIfecycle from '../vnode/component/lifecycles/willUpdateLifecyc
  * @param { Object } nextStates - next state of states
  */
 
-export default function updateComponent(oldComponent, newComponent, nextStates) {
+export default function updateComponent(oldComponent, nextProps, nextStates) {
 
     /**
      * newComponent is plain javascript object { type, props, _key }
      * we use the new props that we can get updated from parent component
      */
-
-    const nextProps = newComponent.props;
 
     /**
      * should component update, if return false, component will be never updated
@@ -58,8 +56,7 @@ export default function updateComponent(oldComponent, newComponent, nextStates) 
      * using diffChildren we can manipulate with appendChild and insertBefore
      */
 
-
-    return [diffChildren([oldComponent.ref.virtual], [newVNode]), snapshot];
+    return [diff(oldComponent.ref.virtual, newVNode), snapshot];
 
 }
 

@@ -15,37 +15,36 @@ import render from "./render.js";
  * @param  {...any} args 
  */
 
-export default function mount(instance, container, method, ...args) {
+export default function mount(virtual, element, container, method, ...args) {
 
-    if(instance === null) return;
+    if(virtual === null) return;
 
-    if(isArray(instance)) {
+    if(isArray(virtual)) {
 
-        return instance.map(singleInstance => mount(filterVirtualElements(singleInstance), container, method, ...args));
+        return element.map((singleElement, i) => mount(virtual[i], singleElement, container, method, ...args));
 
     }
 
-    const rendered = render(instance, container);
-    const isComponentCache = isComponent(instance.type);
+    const isComponentCache = isComponent(virtual.type);
     
-    if(rendered.ref.realDOM !== null) { //if rendered return no undef value
+    if(element.ref.realDOM !== null) { //if rendered return no undef value
 
         if(isComponentCache) {
 
-            willMountLifecycle(instance);
+            willMountLifecycle(virtual);
 
         }
 
-        container[method](rendered.ref.realDOM, ...args);
+        container[method](element.ref.realDOM, ...args);
 
         if(isComponentCache) {
 
-            mountLifecycle(instance);
+            mountLifecycle(virtual);
 
         }
 
     }
 
-    return rendered;
+    return element;
 
 }

@@ -4,6 +4,7 @@ import diff from './diff.js';
 import isArray from '../isArray.js';
 import isObject from '../isObject.js';
 import mount from '../DOM/mount.js';
+import render from '../DOM/render.js';
 
 
 /**
@@ -42,27 +43,32 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
         if (isArray(oldVChildren[i])) {
 
-            additionalPatches.push(diffChildren(oldVChildren[i], newVChildren[i]));
+            additionalPatches.push(function(parent) {
+
+                [newVChildren[i], parent] = diffChildren(oldVChildren[i], newVChildren[i])(parent);
+                return [newVChildren[i], parent];
+
+            });
 
         } else {
 
             if (isObject(oldVChildren[i]) && oldVChildren[i]._key !== null) {
 
-                childPatches.push(function (node) {
+                childPatches.push(function (node, parentNode) {
 
                     const findedByKey = newVChildren.find(f => f._key === oldVChildren[i]._key);
                     const indexInNewVChildren = newVChildren.indexOf(findedByKey);
 
-                    [newVChildren[indexInNewVChildren], node] = diff(oldVChildren[i], findedByKey || null)(node);
+                    [newVChildren[indexInNewVChildren], node] = diff(oldVChildren[i], findedByKey)(node, parentNode);
                     return [newVChildren[indexInNewVChildren], node];
 
                 });
 
             } else {
 
-                childPatches.push(function (node) {
+                childPatches.push(function (node, parentNode) {
 
-                    [newVChildren[i], node] = diff(oldVChildren[i], newVChildren[i] || null)(node);
+                    [newVChildren[i], node] = diff(oldVChildren[i], newVChildren[i])(node, parentNode);
                     return [newVChildren[i], node];
 
                 });
@@ -95,14 +101,16 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                             newVChildren[i] = newVNode;
 
+                            const newNode = render(newVChildren[i], parent);
+
                             if (i === (newVChildren.length - 1)) {
 
-                                mount(newVNode, parent, 'appendChild');
+                                mount(newVNode, newNode, parent, 'appendChild');
                                 return [newVNode, parent];
 
                             }
 
-                            mount(newVNode, parent, 'insertBefore', node.childNodes[i]);
+                            mount(newVNode, newNode, parent, 'insertBefore', parent.childNodes[i]);
                             return [newVNode, parent];
 
                         });
@@ -111,17 +119,16 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                 } else {
 
-                    i = oldVChildren.length;
+                    i = i + oldVChildren.length;
 
                     additionalPatches.push(function (parent) {
 
-                        const newVNode = filterVirtualElements(newVChildren[i]);
+                        newVChildren[i] = filterVirtualElements(newVChildren[i]);
+                        const newNode = render(newVChildren[i], parent);
 
-                        newVChildren[i] = newVNode;
+                        mount(newVChildren[i], newNode, parent, 'appendChild');
 
-                        mount(newVNode, parent, 'appendChild');
-
-                        return [newVNode, parent];
+                        return [newVChildren, parent];
 
                     });
 
@@ -139,6 +146,8 @@ export default function diffChildren(oldVChildren, newVChildren) {
      */
 
     return function (parent) {
+        
+        parent = parent.ref ? parent.ref.realDOM : parent
 
         zip(childPatches, parent.childNodes).forEach(([patch, child]) => {
 

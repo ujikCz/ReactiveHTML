@@ -15,7 +15,7 @@ export default function render(virtualNode, container) {
     
     /**
      * if virtual dom is undefined return no dom object
-     */
+     */    
 
     if(virtualNode === null) {
 
@@ -63,7 +63,9 @@ export default function render(virtualNode, container) {
         //component
         willRenderLifecycle(virtualNode);
 
-        virtualNode.ref.realDOM = render(virtualNode.ref.virtual, virtualNode).ref.realDOM;
+        const rendered = render(virtualNode.ref.virtual, virtualNode);
+
+        virtualNode.ref.realDOM = rendered.ref.realDOM;
 
         renderLifecycle(virtualNode);
 
