@@ -56,11 +56,13 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
             const vNewNodeInstance = createComponentInstance(newComponent);
 
-            [vNewNodeInstance.vnode, node] = diff(oldComponent.vnode, vNewNodeInstance.vnode)(node);
+            [vNewNodeInstance.ref.virtual, node] = diff(oldComponent.ref.virtual, vNewNodeInstance.ref.virtual)(node, parentNode);
 
             vNewNodeInstance.ref.realDOM = node;
+            vNewNodeInstance.ref.container = parentNode;
 
             oldComponent.ref.realDOM = null;
+            oldComponent.ref.container = null;
 
             return [vNewNodeInstance, node];
 
@@ -72,11 +74,12 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         return function (node, parentNode) {
 
-            const patch = diff(oldComponent.vnode, newComponent);
+            const patch = diff(oldComponent.ref.virtual, newComponent);
 
-            [newComponent, node] = patch(node);
+            [newComponent, node] = patch(node, parentNode);
 
             oldComponent.ref.realDOM = null;
+            oldComponent.ref.container = null;
 
             return [newComponent, node];
 
@@ -84,19 +87,21 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
     }
 
+
     if (!isVOldNodeComponent && isVNewNodeComponent) {
 
         return function (node, parentNode) {
 
             const vNewNodeInstance = createComponentInstance(newComponent);
 
-            const patch = diff(oldComponent, vNewNodeInstance.vnode);
+            const patch = diff(oldComponent, vNewNodeInstance.ref.virtual);
 
-            [newComponent, node] = patch(node);
+            [vNewNodeInstance.ref.virtual, node] = patch(node, parentNode);
 
             vNewNodeInstance.ref.realDOM = node;
+            vNewNodeInstance.ref.container = parentNode;
 
-            return [newComponent, node];
+            return [vNewNodeInstance, node];
 
         }
 

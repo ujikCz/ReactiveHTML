@@ -53,7 +53,7 @@ export default function createDomElement(vnode) {
 
             const filtered = filterVirtualElements(children[i]);
             const rendered = render(filtered, el);
-            console.log(rendered)
+
             mount(filtered, rendered, el, 'appendChild');
 
             vnode.children[i] = filtered;

@@ -36,6 +36,12 @@ export default function diff(vOldNode, vNewNode) {
 
     }
 
+    if(vOldNode === vNewNode === null) {
+
+        return () => [null, null];
+
+    }
+
     if (vNewNode === null) {
 
         return function (node, parentNode) {
@@ -81,7 +87,7 @@ export default function diff(vOldNode, vNewNode) {
 
         } else {
 
-            return (node) => [vOldNode, node];
+            return (node, parentNode) => [vOldNode, node];
 
         }
 
@@ -96,7 +102,10 @@ export default function diff(vOldNode, vNewNode) {
         return function (node, parentNode) {
 
             const newVirtualNode = filterVirtualElements(vNewNode);
-            const newRealNode = mount(newVirtualNode, node, 'replaceWith');
+
+            const rendered = render(newVirtualNode, parentNode);
+
+            const newRealNode = mount(newVirtualNode, rendered, node, 'replaceWith');
 
             return [newVirtualNode, newRealNode];
 
@@ -114,7 +123,9 @@ export default function diff(vOldNode, vNewNode) {
 
             const newVirtualNode = filterVirtualElements(vNewNode);
 
-            const newRealNode = mount(newVirtualNode, node, 'replaceWith');
+            const rendered = render(newVirtualNode, parentNode);
+
+            const newRealNode = mount(newVirtualNode, rendered, node, 'replaceWith');
 
             return [newVirtualNode, newRealNode];
 

@@ -7,26 +7,10 @@ import updateLIfecycle from './lifecycles/updateLifecycle.js';
  *  Component class
  */
 
-function initUpdate(nextComponent, nextStates, node, parentNode) {
-
-    const [patch, snapshot] = updateComponent(this, nextComponent ? nextComponent.props : null, nextStates, parentNode);
-    const patched = patch(node);
-
-    this.ref.realDOM = node = patched[1];
-
-    this.ref.virtual = patched[0] || null;
-
-    return [this.ref.virtual, node];
-
-}
-
 export default function Component(props) {
 
     this.props = props || {};
-
-    this.updater = {
-        __update: initUpdate.bind(this),
-    };
+    this.states = {};
 
     this.ref = {
         realDOM: null,
@@ -56,16 +40,13 @@ Component.prototype.Element = function () {
 
 Component.prototype.setState = function (setter) {
 
-    if (isFunction(setter)) {
+    if (isObject(setter) || isFunction(setter)) {
+        console.log(this.ref.realDOM)
 
-        const nextStates = setter.bind(this)();
-
-
-    }
-
-    if (isObject(setter)) {
+        setter = isFunction(setter) ? setter.bind(this)(this.props, this.states) : setter;
 
         const [patch, snapshot] = updateComponent(this, null, setter);
+
         [this.ref.virtual, this.ref.realDOM] = patch(this.ref.realDOM, this.ref.container);
         return this;
 

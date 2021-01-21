@@ -19,7 +19,7 @@ export default function mount(virtual, element, container, method, ...args) {
 
     if(virtual === null) return;
 
-    if(isArray(virtual)) {
+    if(isArray(element)) {
 
         return element.map((singleElement, i) => mount(virtual[i], singleElement, container, method, ...args));
 
@@ -27,7 +27,7 @@ export default function mount(virtual, element, container, method, ...args) {
 
     const isComponentCache = isComponent(virtual.type);
     
-    if(element.ref.realDOM !== null) { //if rendered return no undef value
+    if(element.ref.realDOM !== null) { //if rendered return no null value
 
         if(isComponentCache) {
 
@@ -45,6 +45,6 @@ export default function mount(virtual, element, container, method, ...args) {
 
     }
 
-    return element;
+    return element.ref.realDOM;
 
 }

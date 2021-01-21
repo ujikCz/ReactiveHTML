@@ -147,8 +147,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
     return function (parent) {
         
-        parent = parent.ref ? parent.ref.realDOM : parent
-
         zip(childPatches, parent.childNodes).forEach(([patch, child]) => {
 
             patch(child);
