@@ -1,6 +1,6 @@
 
 
-export default function getSnapshotBeforeUpdateLIfecycle(component) {
+export default function getSnapshotBeforeUpdateLifecycle(component) {
 
     return component.getSnapshotBeforeUpdate() || null;
 

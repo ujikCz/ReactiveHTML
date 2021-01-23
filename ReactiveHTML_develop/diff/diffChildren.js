@@ -1,10 +1,10 @@
 import zip from './zip.js';
-import filterVirtualElements from '../vnode/filterVirtualElements.js';
 import diff from './diff.js';
 import isArray from '../isArray.js';
 import isObject from '../isObject.js';
 import mount from '../DOM/mount.js';
 import render from '../DOM/render.js';
+import warn from '../warn.js';
 
 
 /**
@@ -14,23 +14,11 @@ import render from '../DOM/render.js';
  * @param { Array } newVChildren - new virtual node children
  */
 
-function filterNull(array) {
-
-    return array.filter(undefFilter => {
-
-        return undefFilter !== null;
-
-    });
-
-}
-
 export default function diffChildren(oldVChildren, newVChildren) {
 
     /**
      * filterNull filter every null elements in array and remove it, so we can easily recognize which array is smaller or bigger
      */
-
-    [oldVChildren, newVChildren] = [filterNull(oldVChildren), filterNull(newVChildren)];
     
     const childPatches = [];
     const additionalPatches = [];
@@ -43,32 +31,28 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
         if (isArray(oldVChildren[i])) {
 
-            additionalPatches.push(function(parent) {
-
-                [newVChildren[i], parent] = diffChildren(oldVChildren[i], newVChildren[i])(parent);
-                return [newVChildren[i], parent];
-
-            });
+            additionalPatches.push(diffChildren(oldVChildren[i], newVChildren[i]));
 
         } else {
 
             if (isObject(oldVChildren[i]) && oldVChildren[i]._key !== null) {
 
-                childPatches.push(function (node, parentNode) {
+                childPatches.push(function (node) {
 
                     const findedByKey = newVChildren.find(f => f._key === oldVChildren[i]._key);
                     const indexInNewVChildren = newVChildren.indexOf(findedByKey);
 
-                    [newVChildren[indexInNewVChildren], node] = diff(oldVChildren[i], findedByKey)(node, parentNode);
+                    [newVChildren[indexInNewVChildren], node] = diff(oldVChildren[i], findedByKey)(node);
                     return [newVChildren[indexInNewVChildren], node];
 
                 });
 
             } else {
 
-                childPatches.push(function (node, parentNode) {
+                childPatches.push(function (node) {
 
-                    [newVChildren[i], node] = diff(oldVChildren[i], newVChildren[i])(node, parentNode);
+                    [newVChildren[i], node] = diff(oldVChildren[i], newVChildren[i])(node);
+
                     return [newVChildren[i], node];
 
                 });
@@ -85,68 +69,83 @@ export default function diffChildren(oldVChildren, newVChildren) {
      * else append it as last element of parent
      */
 
-    if (newVChildren.length > oldVChildren.length) {
+    function diffAditionalChildren(newVChildren, oldVChildren) {
 
-        for (let i = 0, l = newVChildren.length; i < l; i++) {
+        if (newVChildren.length > oldVChildren.length) {
 
-            if (!isArray(newVChildren[i])) {
-
-                if (newVChildren[i]._key !== null) {
-
-                    if (!oldVChildren.some(f => f._key === newVChildren[i]._key)) {
+            for (let i = 0, l = newVChildren.length; i < l; i++) {
+    
+                if (!isArray(newVChildren[i])) {
+        
+                    if (newVChildren[i]._key !== null) {
+    
+                        if (!oldVChildren.some(f => f._key === newVChildren[i]._key)) {
+    
+                            additionalPatches.push(function (parent) {
+    
+                                const vNewNode = render(newVChildren[i]);
+    
+                                newVChildren[i] = vNewNode.virtual;
+    
+                                if (i === (newVChildren.length - 1)) {
+    
+                                    mount(vNewNode, parent, 'appendChild');
+                                    return [newVChildren, parent];
+    
+                                }
+    
+                                mount(vNewNode, parent, 'insertBefore', parent.childNodes[i]);
+                                return [newVChildren, parent];
+    
+                            });
+    
+                        }
+    
+                    } else {
+                        
+                        i = i + oldVChildren.length; //push index to the end of oldVChildren array so there are not already mounted children
 
                         additionalPatches.push(function (parent) {
+    
+                            const vNewNode = render(newVChildren[i]);
 
-                            const newVNode = filterVirtualElements(newVChildren[i]);
 
-                            newVChildren[i] = newVNode;
+                            newVChildren[i] = vNewNode.virtual;
 
-                            const newNode = render(newVChildren[i], parent);
+                            mount(vNewNode, parent, 'appendChild');
 
-                            if (i === (newVChildren.length - 1)) {
-
-                                mount(newVNode, newNode, parent, 'appendChild');
-                                return [newVNode, parent];
-
-                            }
-
-                            mount(newVNode, newNode, parent, 'insertBefore', parent.childNodes[i]);
-                            return [newVNode, parent];
-
+                            return [newVChildren, parent];
+    
                         });
-
+    
                     }
-
+    
                 } else {
 
-                    i = i + oldVChildren.length;
-
-                    additionalPatches.push(function (parent) {
-
-                        newVChildren[i] = filterVirtualElements(newVChildren[i]);
-                        const newNode = render(newVChildren[i], parent);
-
-                        mount(newVChildren[i], newNode, parent, 'appendChild');
-
-                        return [newVChildren, parent];
-
-                    });
+                    diffAditionalChildren(newVChildren[i], oldVChildren[i] || []);
 
                 }
-
+    
             }
-
+    
         }
 
     }
 
+    diffAditionalChildren(newVChildren, oldVChildren);
+
+    
+
 
     /*
      *   apply all childNodes changes to parent realNode
+     *   it is parent cause in diff it is realDOM and we diffChildren of parent, so recursively this is parent in function argument
      */
 
     return function (parent) {
         
+        //zipping method is algorithm that sort patch and child to create a pair for patch the exact child
+
         zip(childPatches, parent.childNodes).forEach(([patch, child]) => {
 
             patch(child);

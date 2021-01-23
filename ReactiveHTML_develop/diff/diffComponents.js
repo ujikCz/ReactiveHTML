@@ -1,50 +1,49 @@
-import mount from "../DOM/mount.js";
-import render from "../DOM/render.js";
 import updateComponent from "../update/updateComponent.js";
 import createComponentInstance from "../vnode/component/createComponentInstance.js";
-import filterVirtualElements from "../vnode/filterVirtualElements.js";
+import mountLifecycle from "../vnode/component/lifecycles/mountLifecycle.js";
+import renderLifecycle from "../vnode/component/lifecycles/renderLifecycle.js";
+import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle.js";
+import willUnMount from "../vnode/component/lifecycles/willUnMountLifecycle.js";
 import diff from "./diff.js";
 
 export default function diffComponents(oldComponent, newComponent, isVOldNodeComponent, isVNewNodeComponent) {
 
-    if(oldComponent === null) {
+    /**
+     * new component is undefined
+     */
 
-        return function (node, parentNode) {
+    if (newComponent === undefined) {
 
-            newComponent = filterVirtualElements(newComponent);
-
-            const rendered = render(newComponent, parentNode);
-
-            node = mount(newComponent, rendered, parentNode, 'appendChild');
-
-            return [newComponent, node];
-
-        }
-
-    }
-
-    if (newComponent === null) {
-
-        return function (node, parentNode) {
+        return function (node) {
 
             willUnMount(oldComponent);
 
             node.remove();
 
-            return [null, null];
+            return [undefined, undefined];
 
         };
 
     }
 
+    /**
+     * both new and old virutal nodes are components
+     */
+
     if (isVOldNodeComponent && isVNewNodeComponent) {
+
+        /**
+         * if new and old components has the same type, update the old component
+         */
 
         if (oldComponent.type === newComponent.type) {
 
-            return function (node, parentNode) {
+            return function (node) {
 
-                const [patch, snapshot] = updateComponent(oldComponent, newComponent.props, null);
-                [oldComponent.ref.virtual, oldComponent.ref.realDOM] = patch(oldComponent.ref.realDOM, oldComponent.ref.container);
+                const [patch, snapshot] = updateComponent(oldComponent, newComponent.props, oldComponent.states);
+                [oldComponent.ref.virtual, oldComponent.ref.realDOM] = patch(node);
+
+                oldComponent.onComponentUpdate(snapshot);
 
                 return [oldComponent, node];
 
@@ -52,17 +51,25 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         }
 
-        return function (node, parentNode) {
+        /**
+         * if new component has another type than old component unmount old component and create new component
+         */
+
+        return function (node) {
 
             const vNewNodeInstance = createComponentInstance(newComponent);
 
-            [vNewNodeInstance.ref.virtual, node] = diff(oldComponent.ref.virtual, vNewNodeInstance.ref.virtual)(node, parentNode);
+            willUnMount(oldComponent);
 
-            vNewNodeInstance.ref.realDOM = node;
-            vNewNodeInstance.ref.container = parentNode;
+            vNewNodeInstance.onComponentWillRender();
 
-            oldComponent.ref.realDOM = null;
-            oldComponent.ref.container = null;
+            [vNewNodeInstance.ref.virtual, vNewNodeInstance.ref.realDOM] = diff(oldComponent.ref.virtual, vNewNodeInstance.ref.virtual)(node);
+
+            renderLifecycle(vNewNodeInstance);
+
+            willMountLifecycle(vNewNodeInstance, node.parentNode);
+
+            mountLifecycle(vNewNodeInstance, node.parentNode);
 
             return [vNewNodeInstance, node];
 
@@ -70,16 +77,19 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
     }
 
+    /**
+     * if old is component and new is not, unmount old component and return only virtual node (not component)
+     */
+
     if (isVOldNodeComponent && !isVNewNodeComponent) {
 
-        return function (node, parentNode) {
+        return function (node) {
 
             const patch = diff(oldComponent.ref.virtual, newComponent);
 
-            [newComponent, node] = patch(node, parentNode);
+            [newComponent, node] = patch(node);
 
-            oldComponent.ref.realDOM = null;
-            oldComponent.ref.container = null;
+            willUnMount(oldComponent);
 
             return [newComponent, node];
 
@@ -87,23 +97,25 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
     }
 
+    /**
+     * if old virtual node is not component and new is, create instance of new component and replace it with the virtual node
+     */
 
-    if (!isVOldNodeComponent && isVNewNodeComponent) {
+    return function (node) {
 
-        return function (node, parentNode) {
+        const vNewNodeInstance = createComponentInstance(newComponent);
 
-            const vNewNodeInstance = createComponentInstance(newComponent);
+        vNewNodeInstance.onComponentWillRender();
 
-            const patch = diff(oldComponent, vNewNodeInstance.ref.virtual);
+        [vNewNodeInstance.ref.virtual, vNewNodeInstance.ref.realDOM] = diff(oldComponent, vNewNodeInstance.ref.virtual)(node);
 
-            [vNewNodeInstance.ref.virtual, node] = patch(node, parentNode);
+        renderLifecycle(vNewNodeInstance);
 
-            vNewNodeInstance.ref.realDOM = node;
-            vNewNodeInstance.ref.container = parentNode;
+        willMountLifecycle(vNewNodeInstance, node.parentNode);
 
-            return [vNewNodeInstance, node];
+        mountLifecycle(vNewNodeInstance, node.parentNode);
 
-        }
+        return [vNewNodeInstance, node];
 
     }
 

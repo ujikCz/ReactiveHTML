@@ -4,8 +4,6 @@ import isArray from "../isArray.js";
 import isComponent from "../isComponent.js";
 import mountLifecycle from "../vnode/component/lifecycles/mountLifecycle.js";
 import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle.js";
-import filterVirtualElements from "../vnode/filterVirtualElements.js";
-import render from "./render.js";
 
 /**
  * used to mount element to webpage
@@ -15,36 +13,36 @@ import render from "./render.js";
  * @param  {...any} args 
  */
 
-export default function mount(virtual, element, container, method, ...args) {
+export default function mount(virtual, container, method, ...args) {
 
-    if(virtual === null) return;
+    if(virtual === undefined) return;
 
-    if(isArray(element)) {
+    if(isArray(virtual)) {
 
-        return element.map((singleElement, i) => mount(virtual[i], singleElement, container, method, ...args));
+        return virtual.map(singleVirtual => mount(singleVirtual, container, method, ...args));
 
     }
 
     const isComponentCache = isComponent(virtual.type);
     
-    if(element.ref.realDOM !== null) { //if rendered return no null value
+    if(virtual.ref.realDOM !== undefined) { //if rendered return no null value
 
         if(isComponentCache) {
 
-            willMountLifecycle(virtual);
+            willMountLifecycle(virtual, container);
 
         }
 
-        container[method](element.ref.realDOM, ...args);
+        container[method](virtual.ref.realDOM, ...args);
 
         if(isComponentCache) {
 
-            mountLifecycle(virtual);
+            mountLifecycle(virtual, container);
 
         }
 
     }
 
-    return element.ref.realDOM;
+    return virtual.ref.realDOM;
 
 }

@@ -1,8 +1,8 @@
 import isArray from "../isArray.js";
 import isComponent from "../isComponent.js";
 import isObject from "../isObject.js";
+import createComponentInstance from "../vnode/component/createComponentInstance.js";
 import renderLifecycle from "../vnode/component/lifecycles/renderLifecycle.js";
-import willRenderLifecycle from "../vnode/component/lifecycles/willRenderLifecycle.js";
 import createDomElement from "./createDomElement.js";
 
 /**
@@ -11,20 +11,15 @@ import createDomElement from "./createDomElement.js";
  * @param { Element } container - it is only for ref: { container } use
  */
 
-export default function render(virtualNode, container) {
+export default function render(virtualNode) {
     
     /**
      * if virtual dom is undefined return no dom object
      */    
 
-    if(virtualNode === null) {
+    if(virtualNode === undefined) {
 
-        return {
-            ref: {
-                realDOM: null
-            },
-            virtual: virtualNode
-        };
+        return;
 
     }
 
@@ -34,7 +29,7 @@ export default function render(virtualNode, container) {
 
     if(isArray(virtualNode)) {
 
-        return virtualNode.map(singleVirtualNode => render(singleVirtualNode, container));
+        return virtualNode.map(singleVirtualNode => render(singleVirtualNode));
 
     }
 
@@ -60,18 +55,23 @@ export default function render(virtualNode, container) {
 
     if(isComponent(virtualNode.type)) {
 
+        virtualNode = createComponentInstance(virtualNode);
         //component
-        willRenderLifecycle(virtualNode);
 
-        const rendered = render(virtualNode.ref.virtual, virtualNode);
+        virtualNode.onComponentWillRender();
+
+        const rendered = render(virtualNode.ref.virtual);
 
         virtualNode.ref.realDOM = rendered.ref.realDOM;
 
         renderLifecycle(virtualNode);
 
-        virtualNode.ref.container = container;
-
-        return virtualNode;
+        return {
+            ref: {
+                realDOM: virtualNode.ref.realDOM
+            },
+            virtual: virtualNode
+        };
 
     }
 
@@ -82,7 +82,7 @@ export default function render(virtualNode, container) {
     //virtualNode
     return {
         ref: {
-            realDOM: createDomElement(virtualNode, container)
+            realDOM: createDomElement(virtualNode)
         },
         virtual: virtualNode
     };

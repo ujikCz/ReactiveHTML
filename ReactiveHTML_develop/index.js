@@ -9,7 +9,6 @@ import Component from './vnode/component/component.js';
 import memo from './memo.js';
 import mount from './DOM/mount.js';
 import isComponent from './isComponent.js';
-import filterVirtualElements from './vnode/filterVirtualElements.js';
 import render from './DOM/render.js';
 
 /**
@@ -32,13 +31,11 @@ import render from './DOM/render.js';
 
         render: function(virtualElement, container) {
 
-            virtualElement = filterVirtualElements(virtualElement);
+            virtualElement = render(virtualElement);
 
-            const rendered = render(virtualElement, container);
+            if(virtualElement !== undefined) {
 
-            if(virtualElement !== null) {
-
-                mount(virtualElement, rendered, container, 'appendChild');
+                mount(virtualElement, container, 'appendChild');
 
             }
 

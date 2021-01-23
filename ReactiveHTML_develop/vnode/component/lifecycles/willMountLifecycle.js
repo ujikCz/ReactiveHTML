@@ -1,7 +1,7 @@
 
 
-export default function willMountLifecycle(component) {
+export default function willMountLifecycle(component, container) {
 
-    component.onComponentWillMount(component.realDOM, component.container);
+    component.onComponentWillMount(component.ref.realDOM, container);
 
 }

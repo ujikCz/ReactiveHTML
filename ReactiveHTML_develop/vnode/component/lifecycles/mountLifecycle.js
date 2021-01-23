@@ -1,7 +1,7 @@
 
 
-export default function mountLifecycle(component) {
+export default function mountLifecycle(component, container) {
 
-    component.onComponentMount(component.realDOM, component.container);
+    component.onComponentMount(component.ref.realDOM, container);
 
 }

@@ -1,7 +1,7 @@
 import updateComponent from '../../update/updateComponent.js';
 import isFunction from '../../isFunction.js';
 import isObject from '../../isObject.js';
-import updateLIfecycle from './lifecycles/updateLifecycle.js';
+import warn from '../../warn.js';
 
 /**
  *  Component class
@@ -14,7 +14,6 @@ export default function Component(props) {
 
     this.ref = {
         realDOM: null,
-        container: null,
         virtual: null
     };
 
@@ -28,7 +27,8 @@ export default function Component(props) {
 
 Component.prototype.Element = function () {
 
-    throw Error(`You have to specify Element method in your Component, if you want to return any element, return ${ undefined }`);
+    //not overrided Element method throws error cause Element must be defined in component
+    throw Error(`You have to specify Element method in your Component, if you want to return any element, return ${ null }`);
 
 }
 
@@ -40,14 +40,29 @@ Component.prototype.Element = function () {
 
 Component.prototype.setState = function (setter) {
 
+    //setter can be object or function that returns object
+
     if (isObject(setter) || isFunction(setter)) {
-        console.log(this.ref.realDOM)
 
         setter = isFunction(setter) ? setter.bind(this)(this.props, this.states) : setter;
+        //get the new states and save them in setter variable
 
-        const [patch, snapshot] = updateComponent(this, null, setter);
+        warn(
+            !isObject(setter) || Object.keys(setter).length === 0,
+            `setState should be Object or Function that returns Object, if Object is empty or doesn't return nothing, update can be redundant`,
+            'emptySetterInSetState'
+        );
 
-        [this.ref.virtual, this.ref.realDOM] = patch(this.ref.realDOM, this.ref.container);
+        const [patch, snapshot] = updateComponent(this, null, setter); 
+        //update component return patch which is function and snapshot that is given from getSnapshotBeforeUpdate
+
+        [this.ref.virtual, this.ref.realDOM] = patch(this.ref.realDOM);
+        //patch the virtual dom and the real dom connected to component
+
+        this.onComponentUpdate(snapshot);
+
+        //call update lifecycle in the component
+
         return this;
 
     }
@@ -67,8 +82,7 @@ Component.prototype.onComponentMount =
 
 Component.prototype.getSnapshotBeforeUpdate =
 
-Component.prototype.onComponentWillUnMount =
-Component.prototype.onComponentUnMount = function () {};
+Component.prototype.onComponentWillUnMount = function () {};
 
 /**
  * shouldComponentUpdate is used when component is going to udpate, this method is for better optimalization

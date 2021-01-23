@@ -1,11 +1,11 @@
 import diffAttrs from './diffAttrs.js';
 import diffChildren from './diffChildren.js';
-import filterVirtualElements from '../vnode/filterVirtualElements.js';
 import isObject from '../isObject.js';
 import isComponent from '../isComponent.js';
 import mount from '../DOM/mount.js';
 import diffComponents from './diffComponents.js';
 import render from '../DOM/render.js';
+import willUnMount from '../vnode/component/lifecycles/willUnMountLifecycle.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -36,39 +36,19 @@ export default function diff(vOldNode, vNewNode) {
 
     }
 
-    if(vOldNode === vNewNode === null) {
+    if (vNewNode === undefined) {
 
-        return () => [null, null];
+        return function (node) {
 
-    }
-
-    if (vNewNode === null) {
-
-        return function (node, parentNode) {
+            willUnMount(vOldNode);
 
             node.remove();
 
-            return [null, null];
+            return [undefined, undefined];
 
         };
 
     }
-
-    if (vOldNode === null) {
-
-        return function (node, parentNode) {
-
-            vNewNode = filterVirtualElements(vNewNode);
-            const newNode = render(vNewNode, parentNode);
-
-            node = mount(vNewNode, newNode, parentNode, 'appendChild');
-
-            return [vNewNode, node];
-
-        };
-
-    }
-
 
     /*
      *   if both are not a virtual node, it is text node, so replace its value 
@@ -78,7 +58,7 @@ export default function diff(vOldNode, vNewNode) {
 
         if (vOldNode !== vNewNode) {
 
-            return function (node, parentNode) {
+            return function (node) {
 
                 node.nodeValue = vNewNode;
                 return [vNewNode, node];
@@ -87,7 +67,7 @@ export default function diff(vOldNode, vNewNode) {
 
         } else {
 
-            return (node, parentNode) => [vOldNode, node];
+            return (node) => [vOldNode, node];
 
         }
 
@@ -99,15 +79,13 @@ export default function diff(vOldNode, vNewNode) {
 
     if ((!isVOldNodeObject && isVNewNodeObject) || (isVOldNodeObject && !isVNewNodeObject)) {
 
-        return function (node, parentNode) {
+        return function (node) {
 
-            const newVirtualNode = filterVirtualElements(vNewNode);
+            const rendered = render(vNewNode);
 
-            const rendered = render(newVirtualNode, parentNode);
+            const newRealNode = mount(rendered, node, 'replaceWith');
 
-            const newRealNode = mount(newVirtualNode, rendered, node, 'replaceWith');
-
-            return [newVirtualNode, newRealNode];
+            return [rendered.virtual, newRealNode];
 
         };
 
@@ -119,27 +97,19 @@ export default function diff(vOldNode, vNewNode) {
 
     if (vOldNode.type !== vNewNode.type) {
 
-        return function (node, parentNode) {
+        return function (node) {
 
-            const newVirtualNode = filterVirtualElements(vNewNode);
+            const rendered = render(vNewNode);
 
-            const rendered = render(newVirtualNode, parentNode);
+            const newRealNode = mount(rendered, node, 'replaceWith');
 
-            const newRealNode = mount(newVirtualNode, rendered, node, 'replaceWith');
-
-            return [newVirtualNode, newRealNode];
+            return [rendered.virtual, newRealNode];
 
         };
 
     }
 
-    return function (node, parentNode) {
-
-        if (vOldNode._memo) {
-
-            return [vOldNode, node];
-
-        }
+    return function (node) {
 
         if (isObject(vOldNode.attrs) || isObject(vNewNode.attrs)) {
 

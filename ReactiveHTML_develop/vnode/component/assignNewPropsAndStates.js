@@ -11,29 +11,14 @@ export default function assignNewPropsAndStates(oldComponent, nextProps, nextSta
 
     if(isObject(nextProps)) {
 
-        if(oldComponent.props) {
-
-            Object.assign(oldComponent.props, nextProps);
-
-        } else {
-
-            oldComponent.props = nextProps;
-
-        }
+        Object.assign(oldComponent.props, nextProps);
 
     }
 
     if(isObject(nextStates)) {
 
-        if(oldComponent.states) {
 
-            Object.assign(oldComponent.states, nextStates);
-
-        } else {
-
-            oldComponent.states = nextStates;
-
-        }
+        Object.assign(oldComponent.states, nextStates);
 
     }
 
