@@ -9,24 +9,6 @@ import diff from "./diff.js";
 export default function diffComponents(oldComponent, newComponent, isVOldNodeComponent, isVNewNodeComponent) {
 
     /**
-     * new component is undefined
-     */
-
-    if (newComponent === undefined) {
-
-        return function (node) {
-
-            willUnMount(oldComponent);
-
-            node.remove();
-
-            return [undefined, undefined];
-
-        };
-
-    }
-
-    /**
      * both new and old virutal nodes are components
      */
 

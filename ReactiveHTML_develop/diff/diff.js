@@ -6,6 +6,7 @@ import mount from '../DOM/mount.js';
 import diffComponents from './diffComponents.js';
 import render from '../DOM/render.js';
 import willUnMount from '../vnode/component/lifecycles/willUnMountLifecycle.js';
+import diffNonObjects from './diffNonObjects.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -30,12 +31,6 @@ export default function diff(vOldNode, vNewNode) {
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
      */
 
-    if(isVOldNodeComponent || isVNewNodeComponent) {
-
-        return diffComponents(vOldNode, vNewNode, isVOldNodeComponent, isVNewNodeComponent);
-
-    }
-
     if (vNewNode === undefined) {
 
         return function (node) {
@@ -50,44 +45,15 @@ export default function diff(vOldNode, vNewNode) {
 
     }
 
-    /*
-     *   if both are not a virtual node, it is text node, so replace its value 
-     */
+    if(isVOldNodeComponent || isVNewNodeComponent) {
 
-    if (!isVOldNodeObject && !isVNewNodeObject) {
-
-        if (vOldNode !== vNewNode) {
-
-            return function (node) {
-
-                node.nodeValue = vNewNode;
-                return [vNewNode, node];
-
-            }
-
-        } else {
-
-            return (node) => [vOldNode, node];
-
-        }
+        return diffComponents(vOldNode, vNewNode, isVOldNodeComponent, isVNewNodeComponent);
 
     }
 
-    /*
-     *   if one of virtualNodes is not virtualNode (means Number or String) replace it as textNode
-     */
+    if(!isVOldNodeObject || !isVNewNodeObject) {
 
-    if ((!isVOldNodeObject && isVNewNodeObject) || (isVOldNodeObject && !isVNewNodeObject)) {
-
-        return function (node) {
-
-            const rendered = render(vNewNode);
-
-            const newRealNode = mount(rendered, node, 'replaceWith');
-
-            return [rendered.virtual, newRealNode];
-
-        };
+        return diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isVNewNodeObject);
 
     }
 

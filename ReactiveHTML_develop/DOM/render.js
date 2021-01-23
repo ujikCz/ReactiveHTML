@@ -62,7 +62,13 @@ export default function render(virtualNode) {
 
         const rendered = render(virtualNode.ref.virtual);
 
-        virtualNode.ref.realDOM = rendered.ref.realDOM;
+        virtualNode.ref.realDOM = rendered.ref.realDOM; //assign final realDOM
+        virtualNode.ref.virtual = rendered.virtual; //assign created instance of virtual inside Element of component
+
+        /**
+         * means if virtual is not element but component, it become Class.Component from {type, props, _key}
+         * we must overwrite the virtal beacause of this
+         */
 
         renderLifecycle(virtualNode);
 

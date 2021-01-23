@@ -1,5 +1,6 @@
-import isArray from "../isArray.js";
+
 import isObject from "../isObject.js";
+import requestIdle from "../requestIdle.js";
 import mount from "./mount.js";
 import render from "./render.js";
 
@@ -7,7 +8,6 @@ import render from "./render.js";
  * creates DOM element from virtual element
  * it create only pure HTMLElements, no text nodes or smth like that
  * @param { Object } vnode 
- * @param {*} parentComponent - experimental 
  */
 
 export default function createDomElement(vnode) {
@@ -52,7 +52,7 @@ export default function createDomElement(vnode) {
 
             const vNewNode = render(children[i]);
 
-            mount(vNewNode, el, 'appendChild');
+            requestIdle(() => mount(vNewNode, el, 'appendChild'));
 
             if(vNewNode.virtual) {
 
