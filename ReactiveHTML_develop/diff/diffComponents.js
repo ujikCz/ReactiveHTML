@@ -1,4 +1,4 @@
-import updateComponent from "../update/updateComponent.js";
+
 import createComponentInstance from "../vnode/component/createComponentInstance.js";
 import mountLifecycle from "../vnode/component/lifecycles/mountLifecycle.js";
 import renderLifecycle from "../vnode/component/lifecycles/renderLifecycle.js";
@@ -22,10 +22,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
             return function (node) {
 
-                const [patch, snapshot] = updateComponent(oldComponent, newComponent.props, oldComponent.states);
-                [oldComponent.ref.virtual, oldComponent.ref.realDOM] = patch(node);
-
-                oldComponent.onComponentUpdate(snapshot);
+                oldComponent.componentWillReceiveProps(newComponent.props);
 
                 return [oldComponent, node];
 

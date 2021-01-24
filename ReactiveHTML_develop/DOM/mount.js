@@ -23,21 +23,21 @@ export default function mount(virtual, container, method, ...args) {
 
     }
 
-    const isComponentCache = isComponent(virtual.type);
+    const isComponentCache = isComponent(virtual.virtual.type);
     
     if(virtual.ref.realDOM !== undefined) { //if rendered return no null value
 
         if(isComponentCache) {
 
-            willMountLifecycle(virtual, container);
+            willMountLifecycle(virtual.virtual, container);
 
         }
 
         container[method](virtual.ref.realDOM, ...args);
-
+            
         if(isComponentCache) {
-
-            mountLifecycle(virtual, container);
+            
+            mountLifecycle(virtual.virtual, container);
 
         }
 

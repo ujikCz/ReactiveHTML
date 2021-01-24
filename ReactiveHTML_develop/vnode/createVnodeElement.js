@@ -8,6 +8,7 @@
  */
 
 import isComponent from "../isComponent.js";
+import isFunction from "../isFunction.js";
 
 export default function createVnodeElement(type, props = null, ...children) {
 
@@ -22,6 +23,8 @@ export default function createVnodeElement(type, props = null, ...children) {
         Reflect.deleteProperty(props, '_key');
 
     }
+
+    props = props || {};
     
     /**
      * if element is component
@@ -35,14 +38,26 @@ export default function createVnodeElement(type, props = null, ...children) {
          * in this example our children prop is (5)
          */
 
-        return {
-            type,
-            props: {
+        if(children.length) {
+
+            props = {
                 children,
                 ...props
-            },
+            }
+
+        }
+
+        return {
+            type,
+            props,
             _key
         }
+
+    }
+
+    if(isFunction(type) || !(typeof type === 'string' || type instanceof String)) {
+
+        throw TypeError(`createElement(...) type can be only Component or String as tag of Element`);
 
     }
 

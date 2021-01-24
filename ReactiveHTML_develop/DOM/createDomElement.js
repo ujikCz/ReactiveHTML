@@ -1,6 +1,6 @@
 
+import isArray from "../isArray.js";
 import isObject from "../isObject.js";
-import requestIdle from "../requestIdle.js";
 import mount from "./mount.js";
 import render from "./render.js";
 
@@ -52,11 +52,11 @@ export default function createDomElement(vnode) {
 
             const vNewNode = render(children[i]);
 
-            requestIdle(() => mount(vNewNode, el, 'appendChild'));
+            mount(vNewNode, el, 'appendChild');
 
-            if(vNewNode.virtual) {
+            if(vNewNode) {
 
-                children[i] = vNewNode.virtual;
+                children[i] = applyToVirtualNode(vNewNode);
 
             }
 
@@ -69,5 +69,19 @@ export default function createDomElement(vnode) {
      */
 
     return el;
+
+}
+
+function applyToVirtualNode(vNewNode) {
+
+    if(isArray(vNewNode)) {
+
+        return vNewNode.map(sigleVNewNode => sigleVNewNode.virtual);
+
+    } else {
+
+        return vNewNode.virtual;
+
+    }
 
 }

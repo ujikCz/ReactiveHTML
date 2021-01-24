@@ -31,8 +31,6 @@ export default function willUnMount(component) {
         
                 }
 
-                return;
-
             };
 
             willUnMount(component.ref.virtual);

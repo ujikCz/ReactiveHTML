@@ -17,11 +17,7 @@ export default function render(virtualNode) {
      * if virtual dom is undefined return no dom object
      */    
 
-    if(virtualNode === undefined) {
-
-        return;
-
-    }
+    if(virtualNode === undefined) return;
 
     /**
      * return mapped array of dom object created from virtual elements
@@ -57,8 +53,6 @@ export default function render(virtualNode) {
 
         virtualNode = createComponentInstance(virtualNode);
         //component
-
-        virtualNode.onComponentWillRender();
 
         const rendered = render(virtualNode.ref.virtual);
 

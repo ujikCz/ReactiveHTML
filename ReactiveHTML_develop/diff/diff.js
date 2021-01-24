@@ -77,6 +77,12 @@ export default function diff(vOldNode, vNewNode) {
 
     return function (node) {
 
+        if(vOldNode._memo) {
+
+            return [vOldNode, node];
+
+        }   
+
         if (isObject(vOldNode.attrs) || isObject(vNewNode.attrs)) {
 
             [vNewNode.attrs, node] = diffAttrs(vOldNode.attrs || {}, vNewNode.attrs || {})(node);
