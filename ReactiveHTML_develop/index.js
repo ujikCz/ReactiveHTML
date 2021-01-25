@@ -51,9 +51,9 @@ import render from './DOM/render.js';
 
             }
 
-            return function(props = {}) {
+            return function(props = {}, ...children) {
 
-                return createElement(component, props);
+                return createElement(component, props, ...children);
 
             }
 

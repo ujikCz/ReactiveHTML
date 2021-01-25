@@ -62,8 +62,7 @@ Component.prototype.onComponentRender =
  * shouldComponentUpdate is used when component is going to udpate, this method is for better optimalization
  */
 
-Component.prototype.shouldComponentUpdate = 
-Component.prototype.shouldComponentReceiveProps = function () {
+Component.prototype.shouldComponentUpdate = function () {
     return true;
 };
 
