@@ -5,7 +5,7 @@ Simple reactive Virtual DOM elements for building complex reactive UI
 ```
 npm i reactivehtml
 
-<script src="https://cdn.jsdelivr.net/npm/reactivehtml@2.3.3/src/ReactiveHTML.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reactivehtml@2.3.4/src/ReactiveHTML.min.js"></script>
 ```
 
 ## HTM.js cdn
@@ -20,7 +20,7 @@ bierner.lit-html
 ```
 
 ## Compatibility
-All browsers that supports ES5 (IE 10 and higher, Chrome 23 and higher, Firefox 21 and higher)
+All browsers that supports ES5 (Chrome 23 and higher, Firefox 21 and higher)
 
 ## About
 This library allows you to write components with html elements in javascript, so you can create conditional rendering or
@@ -49,7 +49,7 @@ Jan Turoň https://github.com/janturon
 /* this example is create with htm.js */
 const html = htm.bind(ReactiveHTML.createElement);
 
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<div>Hello, world!</div>`, el));
+ReactiveHTML.render(html`<div>Hello, world!</div>`, document.getElementById('app'));
 ```
 
 note: every example are done with htm.js for clarity
@@ -74,7 +74,7 @@ ReactiveHTML.createElement('div', { id: "hello-world" }, 'Hello, world!');
 html`<div id="hello-world">Hello, world!</div>`
 ```
 
-This two virtual Elements are the same.
+These two virtual Elements are the same.
 
 To make html function you have to installed htm.js library and bind its function to ReactiveHTML.createElement
 
@@ -85,7 +85,7 @@ const html = htm.bind(ReactiveHTML.createElement);
 ## createFactory method
 This method creates fuction which can be called as component element.
 This method has one parameter that is the component class.
-On call factory function the first parameter is Object - props of component.
+Factory function expect one parameter as props of Component. In default it is empty Object.
 
 ```
 class myComponent extends ReactiveHTML.Component {
@@ -105,11 +105,9 @@ ReactiveHTML.render(myComponentFactory({ message: "Hello, world!" }), document.g
 ```
 
 ## memo method
-This method is for better performance in your app.
-If this used on any virtual node or component, this component or virtual node will never update its children and attributes, props and states.
+This method is optimalization method.
+If you have virtual element that is static or never be updated, skip the update process of his attributes and children.
 
-So if we have static virtual nodes or static components, this feature is very handy.
-Your app will be better optimized and faster.
 ```
 ReactiveHTML.memo(html`<div>Hello, world!</div>`);
 ```
@@ -118,9 +116,10 @@ ReactiveHTML.memo(html`<div>Hello, world!</div>`);
 
 ### Element method
 Element method is the only one method, that have to be defined else it will throw Error.
+You have to return virtual element in this method.
+Cannot be return null or undefined, else it throw error.
 
 ### Simple component
-
 this example with component has the same output as the Hello world example, but with component based elements
 
 ```
@@ -155,7 +154,9 @@ ReactiveHTML.render(html`<${ HelloWorldComponent } />`, document.getElementById(
 ```
 
 ### Component with props
-props is object that should be read-only, it is for add child components some data from parent components
+Props is object that should be read-only.
+Props are for pass data down from parent component to child component.
+It is something like function argument.
 
 ```
 class HelloWorldComponent extends ReactiveHTML.Component {
@@ -168,11 +169,29 @@ class HelloWorldComponent extends ReactiveHTML.Component {
 
 }
 
-ReactiveHTML.render(html`<${ List } />`, document.getElementById('app'));
+ReactiveHTML.render(html`<${ HelloWorldComponent } message=${ "Hello world" } />`, document.getElementById('app'));
 ```
 
-### Factory funciton with props
-if you are using factory function as your component, your first parameter are props
+### Children props
+Props can be also children of component, so you can create component with children inside.
+
+```
+class HelloWorldComponent extends ReactiveHTML.Component {
+
+    Element() {
+
+        return html`<div>${ this.props.children }</div>`
+
+    }
+
+}
+
+ReactiveHTML.render(html`<${ HelloWorldComponent }> Hello world </>`, document.getElementById('app'));
+```
+
+### Factory function with props
+If you are using factory function as your component, your first argument are props.
+Rest of arguments are children in props.
 ```
 const HelloWorldComponent = ReactiveHTML.createFactory(class extends ReactiveHTML.Component {
 
@@ -184,13 +203,14 @@ const HelloWorldComponent = ReactiveHTML.createFactory(class extends ReactiveHTM
 
 });
 
-ReactiveHTML.render(html`<${ List } />`, document.getElementById('app'));
+ReactiveHTML.render(html`<${ HelloWorldComponent } />`, document.getElementById('app'));
 ```
 
 ### Component with states
-States is simple object.
-States are internally only in component where they was created.
-You can create only one state object.
+States are internally and private in component where they was created.
+Initial states should be defined as object, not in setState method.
+setState is method that set new states and apply changes surgically to DOM.
+setState can be only called when component is rendered, will mount or/and is mounted.
 
 ```
 class Counter extends ReactiveHTML.Component {
@@ -216,22 +236,99 @@ class Counter extends ReactiveHTML.Component {
 ReactiveHTML.render(html`<${ Counter } />`, document.getElementById('app'));
 ```
 
+### componentWillReceiveProps
+This lifecycle hook is called on child component when mounted parent component change state and changed state is passed to child component.
+First parameter are nextProps object.
+Because states are defined only in constructor that is called before component is going to render, states are not updated on props change.
+This lifecycle is for setState that is specially overrided in this method, so setState don't call udpate again in component.
+
+```
+
+class Parent extends ReactiveHTML.Component {
+
+    constructor(props) {
+
+        super(props);
+
+        this.states = {
+            count: this.props.count
+        };
+
+    }
+
+    onComponentRender() {
+
+        setInterval(() => {
+            
+            this.setState({
+                count: ++this.states.count
+            });
+
+        }, 1000);
+
+    }
+
+    Element() {
+
+        return html`<${ Child } count=${ this.states.count } />`
+
+    }
+
+});
+
+class Child extends ReactiveHTML.Component {
+
+    constructor(props) {
+
+        super(props);
+
+        this.states = {
+            count: this.props.count
+        };
+
+    }
+
+    componentWillReceiveProps(nextProps) {
+
+        if(this.states.count !== nextProps.count) {
+            
+            this.setState({
+                count: nextProps.count
+            });
+
+        }
+
+    }
+
+    Element() {
+
+        return html`<div>${ this.states.count }</div>`
+
+    }
+
+});
+
+ReactiveHTML.render(html`<${ Parent } count=${ 5 }/>`, document.getElementById('app'));
+```
+
 ### Conditional rendering
 Conditional rendering is very easy in ReactiveHTML, you can simply do if statement, switch, ternary operator or whatever you want.
 You can add isSignedIn as state and your component will react on changes automatically. 
+Be careful to return every virtual nodes from Element method, else it cause error.
+
 ```
 class Welcome extends ReactiveHTML.Component {
 
-    Element(props, states) {
+    Element() {
 
-        if(props.isSignedIn) return html`<h5>Welcome back</h5>`;
+        if(this.props.isSignedIn) return html`<h5>Welcome back</h5>`;
         return html`<h3>You should sign in</h3>`;
 
     }
 
 }
 
-ReactiveHTML.render(html`<${ Welcome } />`, document.getElementById('app'));
+ReactiveHTML.render(html`<${ Welcome } isSignedIn=${ true }/>`, document.getElementById('app'));
 ```
 
 ### List rendering
@@ -241,6 +338,8 @@ If you want to create some simple list, you can use (map) method on array you wa
 Remember that you can return only one element, so you have to add list into some container.
 
 Every list element have to some identifier, you can add it by add :key attribute (in elements) or :key prop (in components), keys helps to recognize changes in elements. Every key has to be unique in list. It can be String, Number, but no Object, Function or Array.
+
+If _key is not used, it will cause warning message.
 
 ```
 class List extends ReactiveHTML.Component {
@@ -253,13 +352,15 @@ class List extends ReactiveHTML.Component {
             products: ["Milk", "Butter", "Chesse", "Water"]
         };
 
-        setTimeout(() => this.setState(() => this.states.products.push("Sugar")), 2500);
+        setTimeout(() => this.setState({
+            products: [...this.states.products, "Sugar"]
+        }), 2500);
 
     }
 
     Element() {
 
-        return html`<ul>${ this.states.products.map(product => html`<li :key=${ product }>${ product }</li>`) }</ul>`
+        return html`<ul>${ this.states.products.map(product => html`<li _key=${ product }>${ product }</li>`) }</ul>`
 
     }
 
@@ -268,44 +369,13 @@ class List extends ReactiveHTML.Component {
 ReactiveHTML.render(html`<${ List } />`, document.getElementById('app'));
 ```
 
-### List rendering with flatMap
-
-Every list of items have to have some element container or you can use flatMap to iterate over array in array.
-
-```
-class List extends ReactiveHTML.Component {
-
-    constructor(props) {
-        
-        super(props);
-
-        this.states = {
-            products: [["Milk", "Butter"], ["Chesse", "Water"]]
-        };
-
-        setTimeout(() => this.setState(() => this.states.products.push(["Lemon"])), 2500);
-
-    }
-
-    Element() {
-
-    return html`
-    <ul>
-        ${ this.states.products.flatMap(container => container.map(product => html`<li :key=${ product }>${ product }</li>`)) }
-    </ul>`
-
-    }
-
-}
-
-ReactiveHTML.elementReady('#app', el => ReactiveHTML.render(html`<${ List } />`, el));
-```
-
 ### Component inside another component
 
 Any component can be used as child of another component. 
 Components can share states by props, that means child component can manipulate with parent component as you can see in example. 
 
+How you can see in the example every additional method like "add" method should be bind to this context in constructor.
+If we use directly props in child component we don't have to use componentWillReceiveProps, because we don't have to update any state.
 ```
 class child extends ReactiveHTML.Component {
 
@@ -319,9 +389,10 @@ class child extends ReactiveHTML.Component {
 
 class parent extends ReactiveHTML.Component {
 
-    super(props);
 
     constructor(props) {
+
+        super(props);
 
         this.states = {
             count: 0
@@ -333,7 +404,9 @@ class parent extends ReactiveHTML.Component {
 
     add() {
 
-        this.setState(() => this.states.count++);
+        this.setState({
+            count: ++this.states.count
+        });
 
     }
 
@@ -349,14 +422,15 @@ ReactiveHTML.render(html`<${ parent } />`, document.getElementById('app'));
 ```
 
 ### Attributes
-Attributes has same syntax as in HTML but you don't have to specify quotes on single values (no space).
+Attributes has same syntax as DOM properties, that means class="test" is going to className="test" or 
+data-question="how are you?" is going to be dataset=${{ question: "how are you?" }}
 Dynamic attributes are same as static, but you have tu use template syntax.
 ```
 class AttributesTest extends ReactiveHTML.Component {
 
     Element() {
 
-        return html`<div id=test class="t e s t" data-rand=${ Math.random() }></div>`
+        return html`<div id=test className="t e s t" dataset=${{ rand: Math.random() }}></div>`
 
     }
 
@@ -369,6 +443,7 @@ ReactiveHTML.render(html`<${ AttributesTest } />`, document.getElementById('app'
 Events are attribute based.
 Event listener executes your function in event.
 Events can be custom, e.g. custom event "swipe" will be onswipe.
+Every events are added by simple addEventListener.
 ```
 class EventTest extends ReactiveHTML.Component {
 
@@ -385,6 +460,7 @@ ReactiveHTML.render(html`<${ EventTest } />`, document.getElementById('app'));
 
 ### Styles
 Styles are objects with camelCase syntax vs regular css hyp-hens. 
+Styles has same syntax as dataset - attribute with object inside.
 ```
 class StylesTest extends ReactiveHTML.Component {
 
@@ -412,11 +488,14 @@ There are 4 types of Lifecycles ```[manage lifecycles, callback lifecycles, futu
 4. Snapshot lifecycles are for handle old values of props and states of component
 
 #### Manage lifecycles
-componentShouldUpdate lifecycle is manage method for better performance.
-Return type is Boolean false means component will not update, true component will update.
-
+componentShouldUpdate lifecycle is manage method for optimize the component updates.
+Return type is Boolean true means component will update, everything other means component will not update.
+By default componentShouldUpdate return true.
 How you can see in example, on every states change, component will react, but update only every two seconds - only if a changed.
 This method is only for performance boost.
+
+Another manage lifecycle is componentWillReceiveProps.
+We talked about it above.
 
 ```
 class ManageLifecyclesTest extends ReactiveHTML.Component {
@@ -431,18 +510,23 @@ class ManageLifecyclesTest extends ReactiveHTML.Component {
 
         };
 
-
-        setInterval( () => {
-
-            this.setState(() => this.states.a++);
-
-        }, 1000);
-
     }
 
     shouldComponentUpdate() {
 
         return false;
+
+    }
+
+    onComponentRender() {
+
+        setInterval( () => {
+
+            this.setState({
+                a: ++this.states.a
+            });
+
+        }, 1000);
 
     }
 
@@ -495,15 +579,9 @@ class CallbackLifecyclesTest extends ReactiveHTML.Component {
 
     }  
 
-    onComponentMount(element) {
+    onComponentMount(element, container) {
 
-        console.log("mount", element); // called after component is mounted
-
-    }
-
-    onComponenUntMount() {
-
-        console.log("unmount"); // called after component is unmounted (removed from DOM tree)
+        console.log("mount", element, container); // called after component is mounted
 
     }
 
@@ -530,25 +608,20 @@ class FutureCallbackLifecyclesTest extends ReactiveHTML.Component {
 
     }   
 
-    onComponentWillRender() {
+    onComponentWillMount(element, container) {
 
-        console.log("will render"); // called once per component used. Called before component is rendered
-
-    }  
-
-    onComponentWillMount() {
-
-        console.log("will mount"); // called once per component used. Called before component is mounted to view
+        console.log("will mount", element, container); // called once per component used. Called before component is mounted to view
 
     }  
 
     onComponentWillUnMount() {
 
         console.log("will unmount"); // called before component will unmount (representing element will be removed from DOM tree)
+        //there you can stop all asynchronnous funcitons that call setState for no memory leak.
 
     }  
 
-    Element(props, states) {
+    Element() {
 
         return html`<div>Hello, world!</div>`
 
@@ -568,7 +641,16 @@ class SnapshotLifecyclesTest extends ReactiveHTML.Component {
 
         console.log("snapshot"); //this snapshot is given before component update, so you can manipulate your data exactly before update
 
+        return {
+            snapA: 1
+        };  
     } 
+
+    onComponentUpdate(snapshot) {
+
+        console.log(snapshot); //snapshot can be used here
+
+    }
 
     Element() {
 
@@ -585,7 +667,7 @@ ReactiveHTML.render(html`<${ SnapshotLifecyclesTest } />`, document.getElementBy
 Components have some methods that can manipulate with component.
 
 #### Component.setState
-This method expecting one parameter that is function.
+This method expecting one parameter that is Object or Function that returns object.
 In this function you can set your states, component will react on that changes.
 ```
 class reactiveTest extends ReactiveHTML.Component {
@@ -603,7 +685,7 @@ class reactiveTest extends ReactiveHTML.Component {
 
     Element() {
 
-        return html`<button onclick=${ (e) => this.setState(() => this.states.count++) }>${ this.states.count }</button>`
+        return html`<button onclick=${ (e) => this.setState({ count: ++this.states.count }) }>${ this.states.count }</button>`
 
     }
 
