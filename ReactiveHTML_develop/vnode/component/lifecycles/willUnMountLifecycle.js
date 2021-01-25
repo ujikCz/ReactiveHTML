@@ -27,7 +27,7 @@ export default function willUnMount(component) {
                 if(!alreadyThrowedError.includes(nameOfComponent)) {
                     
                     alreadyThrowedError.push(nameOfComponent);
-                    throw Error(`Remove all asynchronnous functions that causes set states of ${ nameOfComponent } in onComponentWillUnMount, else it causes memory leak.`);
+                    throw Error(`Remove all asynchronnous functions that causes setState(...) of ${ nameOfComponent } in onComponentWillUnMount, else it causes memory leak`);
         
                 }
 

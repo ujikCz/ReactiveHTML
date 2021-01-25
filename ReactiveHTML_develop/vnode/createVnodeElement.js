@@ -2,8 +2,8 @@
 
 /**
  * creates virtual node
- * @param { Component, tagName } type 
- * @param { props, attrs } attrs 
+ * @param { Component, String } type 
+ * @param { Object } props - attrs/props 
  * @param  { Array of vnodes } children 
  */
 

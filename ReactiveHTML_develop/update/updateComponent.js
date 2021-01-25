@@ -1,5 +1,4 @@
 import diff from '../diff/diff.js';
-
 import assignNewPropsAndStates from '../vnode/component/assignNewPropsAndStates.js';
 import checkVirtual from '../vnode/component/checkVirtualOfComponent.js';
 import getSnapshotBeforeUpdateLifecycle from '../vnode/component/lifecycles/getSnapshotBeforeUpdate.js';
@@ -21,13 +20,13 @@ export default function updateComponent(oldComponent, nextProps, nextStates) {
      * should component update, if return false, component will be never updated
      */
 
-    if(oldComponent.shouldComponentUpdate(nextProps, nextStates) === false) {
+    if(oldComponent.shouldComponentUpdate(nextProps, nextStates) !== true) {
 
         oldComponent = assignNewPropsAndStates(oldComponent, nextProps, nextStates);
 
         oldComponent.onComponentCancelUpdate();
 
-        return () => [[oldComponent.virtual], oldComponent.ref.container];
+        return false;
 
     }
 

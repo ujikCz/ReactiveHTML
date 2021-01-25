@@ -47,7 +47,7 @@ import render from './DOM/render.js';
 
             if(isComponent(component)) {
 
-                throw TypeError(`createFactory expecting first parameter as component Class, you give ${ typeof component }`);
+                throw TypeError(`createFactory(...) expecting first parameter as component Class, you give ${ typeof component }`);
 
             }
 

@@ -1,9 +1,10 @@
-
+import updateComponent from "../update/updateComponent.js";
 import createComponentInstance from "../vnode/component/createComponentInstance.js";
 import mountLifecycle from "../vnode/component/lifecycles/mountLifecycle.js";
 import renderLifecycle from "../vnode/component/lifecycles/renderLifecycle.js";
 import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle.js";
 import willUnMount from "../vnode/component/lifecycles/willUnMountLifecycle.js";
+import setState from "../vnode/component/setState.js";
 import diff from "./diff.js";
 
 export default function diffComponents(oldComponent, newComponent, isVOldNodeComponent, isVNewNodeComponent) {
@@ -22,7 +23,33 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
             return function (node) {
 
+                oldComponent.setState = function(setter) {
+
+                    return setState(this, setter, true); //setState don't rerender element in additional
+                
+                };                
+
                 oldComponent.componentWillReceiveProps(newComponent.props);
+
+                oldComponent.setState = function(setter) {
+
+                    return setState(this, setter, false); //all synchronnous setState will cause only one rerender on update
+                
+                };
+
+                /**
+                 * same as in component.js
+                 */
+
+                const update = updateComponent(oldComponent, newComponent.props, null);
+
+                if (update) {
+
+                    const [patch, snapshot] = update;
+                    [oldComponent.ref.virtual, oldComponent.ref.realDOM] = patch(node);
+                    oldComponent.onComponentUpdate(snapshot);
+
+                }  
 
                 return [oldComponent, node];
 
@@ -39,8 +66,6 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
             const vNewNodeInstance = createComponentInstance(newComponent);
 
             willUnMount(oldComponent);
-
-            vNewNodeInstance.onComponentWillRender();
 
             [vNewNodeInstance.ref.virtual, vNewNodeInstance.ref.realDOM] = diff(oldComponent.ref.virtual, vNewNodeInstance.ref.virtual)(node);
 
@@ -83,8 +108,6 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
     return function (node) {
 
         const vNewNodeInstance = createComponentInstance(newComponent);
-
-        vNewNodeInstance.onComponentWillRender();
 
         [vNewNodeInstance.ref.virtual, vNewNodeInstance.ref.realDOM] = diff(oldComponent, vNewNodeInstance.ref.virtual)(node);
 

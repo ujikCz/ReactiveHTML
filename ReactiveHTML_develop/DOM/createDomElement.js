@@ -27,12 +27,10 @@ export default function createDomElement(vnode) {
         if (key.startsWith('on')) {
 
             el.addEventListener(key.replace('on', ''), vnode.attrs[key]);
-            continue;
 
         } else if (isObject(vnode.attrs[key])) {
 
             Object.assign(el[key], vnode.attrs[key]);
-            continue;
 
         } else {
 
@@ -48,11 +46,13 @@ export default function createDomElement(vnode) {
 
     if (vnode.children.length) {
 
+        const childrenFrag = document.createDocumentFragment();
+
         for (let i = 0, children = vnode.children; i < children.length; i++) {
 
             const vNewNode = render(children[i]);
-
-            mount(vNewNode, el, 'appendChild');
+            
+            mount(vNewNode, childrenFrag, 'appendChild');
 
             if(vNewNode) {
 
@@ -61,6 +61,8 @@ export default function createDomElement(vnode) {
             }
 
         }
+
+        el.appendChild(childrenFrag);
 
     }
 
