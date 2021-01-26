@@ -2,6 +2,7 @@
 
 import isArray from "../isArray.js";
 import isComponent from "../isComponent.js";
+import isNullOrUndef from "../isNullOrUndef.js";
 import mountLifecycle from "../vnode/component/lifecycles/mountLifecycle.js";
 import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle.js";
 
@@ -15,7 +16,7 @@ import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle
 
 export default function mount(virtual, container, method, ...args) {
 
-    if(virtual === undefined) return;
+    if(isNullOrUndef(virtual)) return;
 
     if(isArray(virtual)) {
 

@@ -1,5 +1,6 @@
 import isArray from "../isArray.js";
 import isComponent from "../isComponent.js";
+import isNullOrUndef from "../isNullOrUndef.js";
 import isObject from "../isObject.js";
 import createComponentInstance from "../vnode/component/createComponentInstance.js";
 import renderLifecycle from "../vnode/component/lifecycles/renderLifecycle.js";
@@ -17,7 +18,7 @@ export default function render(virtualNode) {
      * if virtual dom is undefined return no dom object
      */    
 
-    if(virtualNode === undefined) return;
+    if(isNullOrUndef(virtualNode)) return;
 
     /**
      * return mapped array of dom object created from virtual elements

@@ -16,6 +16,12 @@ export default function createVnodeElement(type, props = null, ...children) {
      * get the _key that is originally in props/attributes of virtual element
      */
 
+    if(!type) {
+
+        throw TypeError(`createElement(...) type must be defined, it can be String that represent DOM tagName or Class/Funciton that represent Component`);
+
+    }
+
     let _key = null;
     if(props !== null && props._key !== undefined) {
 

@@ -5,6 +5,7 @@
  * @param { Object } newAttrs - new virtual node attributes
  */
 
+import isNullOrUndef from '../isNullOrUndef.js';
 import isObject from '../isObject.js';
 
 export default function diffAttrs(oldAttrs, newAttrs) {
@@ -30,6 +31,12 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
             attrsPatches.push(function (node) {
 
+                if(key === 'classList') {
+
+                    return diffClassList(oldAttrs[key], newAttrs[key])(node);
+
+                }
+
                 Object.assign(node[key], newAttrs[key]);
                 return node;
 
@@ -39,7 +46,16 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
             attrsPatches.push(function (node) {
 
-                node[key] = newAttrs[key];
+                if(isNullOrUndef(newAttrs[key])) {
+
+                    node.removeAttribute(key);
+
+                } else {
+
+                    node[key] = newAttrs[key];
+
+                }
+
                 return node;
 
             });
@@ -88,5 +104,63 @@ export default function diffAttrs(oldAttrs, newAttrs) {
         return [newAttrs, node];
 
     };
+
+}
+
+
+function diffClassList(oldClassList, newClassList) {
+
+    const classListPatches = [];
+
+    for(let i = 0; i < newClassList.length; i++) {
+
+        if(!(oldClassList.includes(newClassList[i]))) {
+
+            classListPatches.push(function(node) {
+
+                if(isNullOrUndef(newClassList[i])) {
+
+                    node.classList.remove(oldClassList[i]);
+
+                } else {
+
+                    node.classList.add(newClassList[i]);
+
+                }
+
+                return node;
+
+            });
+
+        }
+
+    }
+
+    for(let i = 0; i < oldClassList.length; i++) {
+
+        if(!(newClassList.includes(oldClassList[i]))) {
+
+            classListPatches.push(function(node) {
+
+                node.classList.remove(oldClassList[i]);
+                return node;
+
+            });
+
+        }
+
+    }
+
+    return function(node) {
+
+        for(let i = 0; i < classListPatches.length; i++) {
+
+            node = classListPatches[i](node);
+
+        }
+
+        return node;
+
+    }
 
 }

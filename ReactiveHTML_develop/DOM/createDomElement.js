@@ -1,5 +1,6 @@
 
 import isArray from "../isArray.js";
+import isNullOrUndef from "../isNullOrUndef.js";
 import isObject from "../isObject.js";
 import mount from "./mount.js";
 import render from "./render.js";
@@ -30,11 +31,23 @@ export default function createDomElement(vnode) {
 
         } else if (isObject(vnode.attrs[key])) {
 
-            Object.assign(el[key], vnode.attrs[key]);
+            if(key === 'classList') {
+
+                el[key].add(...vnode.attrs[key]);
+
+            } else {
+
+                Object.assign(el[key], vnode.attrs[key]);
+
+            }
 
         } else {
 
-            el[key] = vnode.attrs[key];
+            if(!isNullOrUndef(vnode.attrs[key])) {
+
+                el[key] = vnode.attrs[key];
+
+            }
 
         }
 

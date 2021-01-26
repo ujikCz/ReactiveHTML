@@ -20,7 +20,7 @@ export default function updateComponent(oldComponent, nextProps, nextStates) {
      * should component update, if return false, component will be never updated
      */
 
-    if(oldComponent.shouldComponentUpdate(nextProps, nextStates) !== true) {
+    if(oldComponent.shouldComponentUpdate(nextProps, nextStates)) {
 
         oldComponent = assignNewPropsAndStates(oldComponent, nextProps, nextStates);
 
