@@ -51,11 +51,14 @@ export default function diffChildren(oldVChildren, newVChildren, shouldBeKeyed) 
 
             } else {
 
-                warn(
-                    shouldBeKeyed,
-                    `Children inside array should be keyed by _key attribute/prop, if you don't key your elements, it can cause redundant rerender or bad rerender`,
-                    KEY_CHILDREN_WARN
-                );
+                if(shouldBeKeyed) {
+
+                    warn(
+                        `Children inside array should be keyed by _key attribute/prop, if you don't key your elements, it can cause redundant rerender or bad rerender`,
+                        KEY_CHILDREN_WARN
+                    );
+
+                }
 
                 childPatches.push(function (node) {
 

@@ -4,11 +4,13 @@
  * @param { Object } virtual 
  */
 
+import isNullOrUndef from "../../isNullOrUndef.js";
+
 export default function checkVirtual(virtual) {
 
-    if(virtual === undefined || virtual === null) {
+    if(isNullOrUndef(virtual)) {
 
-        throw TypeError(`Element cannot return nothing or null`);
+        throw Error(`Element cannot return undefined or null`);
 
     }
 

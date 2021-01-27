@@ -31,14 +31,21 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
             attrsPatches.push(function (node) {
 
-                if(key === 'classList') {
+                switch(key) {
 
-                    return diffClassList(oldAttrs[key], newAttrs[key])(node);
+                    case 'classList': {
 
+                        return diffClassList(oldAttrs[key], newAttrs[key])(node);
+
+                    }
+
+                    default: {
+
+                        Object.assign(node[key], newAttrs[key]);
+                        return node;
+
+                    }
                 }
-
-                Object.assign(node[key], newAttrs[key]);
-                return node;
 
             });
 
@@ -112,26 +119,36 @@ function diffClassList(oldClassList, newClassList) {
 
     const classListPatches = [];
 
-    for(let i = 0; i < newClassList.length; i++) {
+    if(newClassList.length > oldClassList.length) {
 
-        if(!(oldClassList.includes(newClassList[i]))) {
+        for(let i = 0; i < newClassList.length; i++) {
 
-            classListPatches.push(function(node) {
+            if(!(oldClassList.includes(newClassList[i]))) {
+    
+                classListPatches.push(function(node) {
+    
+                    if(isNullOrUndef(newClassList[i])) {
+    
+                        node.classList.remove(oldClassList[i]);
 
-                if(isNullOrUndef(newClassList[i])) {
+                        if(!node.classList.length) {
 
-                    node.classList.remove(oldClassList[i]);
-
-                } else {
-
-                    node.classList.add(newClassList[i]);
-
-                }
-
-                return node;
-
-            });
-
+                            node.removeAttribute('class');
+        
+                        }
+    
+                    } else {
+    
+                        node.classList.add(newClassList[i]);
+    
+                    }
+    
+                    return node;
+    
+                });
+    
+            }
+    
         }
 
     }
@@ -143,6 +160,13 @@ function diffClassList(oldClassList, newClassList) {
             classListPatches.push(function(node) {
 
                 node.classList.remove(oldClassList[i]);
+
+                if(!node.classList.length) {
+
+                    node.removeAttribute('class');
+
+                }
+
                 return node;
 
             });

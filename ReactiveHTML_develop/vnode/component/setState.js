@@ -21,11 +21,14 @@ export default function setState(component, setter, setStateSyncPropsUpdate) {
         setter = isFunction(setter) ? setter.bind(component)(component.props, component.states) : setter;
         //get the new states and save them in setter variable
 
-        warn(
-            !isObject(setter) || Object.keys(setter).length === 0,
-            `setState(...) should be Object or Function that returns Object, if Object is empty or doesn't return nothing, update can be redundant`,
-            NON_OBJECT_RETURNED_FROM_SET_STATE
-        );
+        if(!isObject(setter) || Object.keys(setter).length === 0) {
+
+            warn(
+                `setState(...) should be Object or Function that returns Object, if Object is empty or doesn't return nothing, update can be redundant`,
+                NON_OBJECT_RETURNED_FROM_SET_STATE
+            );
+
+        }
         
         if(!setStateSyncPropsUpdate) {
 

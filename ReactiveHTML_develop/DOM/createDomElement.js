@@ -31,14 +31,27 @@ export default function createDomElement(vnode) {
 
         } else if (isObject(vnode.attrs[key])) {
 
-            if(key === 'classList') {
+            switch(key) {
 
-                el[key].add(...vnode.attrs[key]);
+                case 'classList': {
 
-            } else {
+                    vnode.attrs[key] = vnode.attrs[key].filter(item => !isNullOrUndef(item));
 
-                Object.assign(el[key], vnode.attrs[key]);
+                    if(vnode.attrs[key].length) {
 
+                        el[key].add(...vnode.attrs[key]);
+
+                    }
+
+                    break;
+                }
+
+                default: {
+
+                    Object.assign(el[key], vnode.attrs[key]);
+
+                    break;
+                }
             }
 
         } else {
