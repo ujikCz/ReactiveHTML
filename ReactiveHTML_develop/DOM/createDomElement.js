@@ -48,7 +48,15 @@ export default function createDomElement(vnode) {
 
                 default: {
 
-                    Object.assign(el[key], vnode.attrs[key]);
+                    for(const attrKey in vnode.attrs[key]) {
+
+                        if(!isNullOrUndef(vnode.attrs[key][attrKey])) {
+
+                            el[key][attrKey] = vnode.attrs[key][attrKey];
+
+                        }
+
+                    }
 
                     break;
                 }

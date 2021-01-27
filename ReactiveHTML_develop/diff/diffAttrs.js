@@ -7,6 +7,7 @@
 
 import isNullOrUndef from '../isNullOrUndef.js';
 import isObject from '../isObject.js';
+import diffClassList from './diffClassList.js';
 
 export default function diffAttrs(oldAttrs, newAttrs) {
 
@@ -41,10 +42,10 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
                     default: {
 
-                        Object.assign(node[key], newAttrs[key]);
-                        return node;
+                        return diffObjectProperties(node, newAttrs[key], key);                        
 
                     }
+
                 }
 
             });
@@ -115,76 +116,39 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 }
 
 
-function diffClassList(oldClassList, newClassList) {
 
-    const classListPatches = [];
 
-    if(newClassList.length > oldClassList.length) {
+function diffObjectProperties(node, newAttr, key) {
 
-        for(let i = 0; i < newClassList.length; i++) {
+    for(const attrKey in newAttr) {
 
-            if(!(oldClassList.includes(newClassList[i]))) {
-    
-                classListPatches.push(function(node) {
-    
-                    if(isNullOrUndef(newClassList[i])) {
-    
-                        node.classList.remove(oldClassList[i]);
+        if(isNullOrUndef(newAttr[attrKey])) {
 
-                        if(!node.classList.length) {
+            node[key][attrKey] = null;
+            delete newAttr[attrKey];
 
-                            node.removeAttribute('class');
-        
-                        }
-    
-                    } else {
-    
-                        node.classList.add(newClassList[i]);
-    
-                    }
-    
-                    return node;
-    
-                });
-    
-            }
-    
-        }
+            if(key === 'dataset') {
 
-    }
+                node.removeAttribute(`data-${ attrKey }`);
 
-    for(let i = 0; i < oldClassList.length; i++) {
+            } else {
 
-        if(!(newClassList.includes(oldClassList[i]))) {
+                if(!Object.keys(newAttr).length) {
 
-            classListPatches.push(function(node) {
-
-                node.classList.remove(oldClassList[i]);
-
-                if(!node.classList.length) {
-
-                    node.removeAttribute('class');
+                    node.removeAttribute(key);
 
                 }
 
-                return node;
+            }
+            
+        } else {
 
-            });
+            node[key][attrKey] = newAttr[attrKey];
 
         }
 
     }
 
-    return function(node) {
-
-        for(let i = 0; i < classListPatches.length; i++) {
-
-            node = classListPatches[i](node);
-
-        }
-
-        return node;
-
-    }
+    return node;
 
 }
