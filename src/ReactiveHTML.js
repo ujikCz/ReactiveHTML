@@ -50,6 +50,21 @@
     return arr2;
   }
 
+  function resolveRef(ref, newRealNode) {
+
+    if(isObject(ref)) {
+
+        return {
+            node: newRealNode,
+            resolved: true
+        };
+
+    }
+
+    throw Error('_ref can be only ReactiveHTML.ref() Object, use ref() function to create ref of virtual node');
+
+}
+
   function _iterableToArrayLimit(arr, i) {
     if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return;
     var _arr = [];
