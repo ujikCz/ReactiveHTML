@@ -65,11 +65,11 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
-            const rendered = render(vNewNode);
+            const newNodeDefinition = render(vNewNode);
 
-            const newRealNode = mount(rendered, node, 'replaceWith');
+            const newRealNode = mount(newNodeDefinition, node, 'replaceWith');
 
-            return [rendered.virtual, newRealNode];
+            return [newNodeDefinition.virtualNode, newRealNode];
 
         };
 

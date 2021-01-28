@@ -25,7 +25,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
                 oldComponent.setState = function(setter) {
 
-                    return setState(this, setter, true); //setState don't rerender element in additional
+                    return setState(oldComponent, setter, true); //setState don't rerender element in additional
                 
                 };                
 
@@ -33,7 +33,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
                 oldComponent.setState = function(setter) {
 
-                    return setState(this, setter, false); //all synchronnous setState will cause only one rerender on update
+                    return setState(oldComponent, setter, false); //all synchronnous setState will cause only one rerender on update
                 
                 };
 
@@ -46,7 +46,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
                 if (update) {
 
                     const [patch, snapshot] = update;
-                    [oldComponent.ref.virtual, oldComponent.ref.realDOM] = patch(node);
+                    [oldComponent._internals.virtual, oldComponent._internals.realDOM] = patch(node);
                     oldComponent.onComponentUpdate(snapshot);
 
                 }  
@@ -67,7 +67,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
             willUnMount(oldComponent);
 
-            [vNewNodeInstance.ref.virtual, vNewNodeInstance.ref.realDOM] = diff(oldComponent.ref.virtual, vNewNodeInstance.ref.virtual)(node);
+            [vNewNodeInstance._internals.virtual, vNewNodeInstance._internals.realDOM] = diff(oldComponent._internals.virtual, vNewNodeInstance._internals.virtual)(node);
 
             renderLifecycle(vNewNodeInstance);
 
@@ -89,7 +89,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         return function (node) {
 
-            const patch = diff(oldComponent.ref.virtual, newComponent);
+            const patch = diff(oldComponent._internals.virtual, newComponent);
 
             [newComponent, node] = patch(node);
 
@@ -109,7 +109,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         const vNewNodeInstance = createComponentInstance(newComponent);
 
-        [vNewNodeInstance.ref.virtual, vNewNodeInstance.ref.realDOM] = diff(oldComponent, vNewNodeInstance.ref.virtual)(node);
+        [vNewNodeInstance._internals.virtual, vNewNodeInstance._internals.realDOM] = diff(oldComponent, vNewNodeInstance._internals.virtual)(node);
 
         renderLifecycle(vNewNodeInstance);
 

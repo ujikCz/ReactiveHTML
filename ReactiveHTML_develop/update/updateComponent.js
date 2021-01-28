@@ -56,7 +56,7 @@ export default function updateComponent(oldComponent, nextProps, nextStates) {
      * using diffChildren we can manipulate with appendChild and insertBefore
      */
 
-     return [diff(oldComponent.ref.virtual, newVNode), snapshot];
+     return [diff(oldComponent._internals.virtual, newVNode), snapshot];
 
 }
 

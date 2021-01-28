@@ -27,48 +27,26 @@ export default function createDomElement(vnode) {
 
         if (key.startsWith('on')) {
 
-            el.addEventListener(key.replace('on', ''), vnode.attrs[key]);
+            const eventName = key.replace('on', '');
+            el.addEventListener(eventName, vnode.attrs[key]);
 
         } else if (isObject(vnode.attrs[key])) { //cannot be null or undef cause isObject!!!
 
-            
-
-            switch(key) {
-
-                case 'classList': {
-
-                    vnode.attrs[key] = vnode.attrs[key].filter(item => !isNullOrUndef(item));
-
-                    if(vnode.attrs[key].length) {
-
-                        el[key].add(...vnode.attrs[key]);
-
-                    }
-
-                    break;
-                }
-
-                default: {
-
-                    for(const attrKey in vnode.attrs[key]) {
-
-                        if(!isNullOrUndef(vnode.attrs[key][attrKey])) {
-
-                            el[key][attrKey] = vnode.attrs[key][attrKey];
-
-                        }
-
-                    }
-
-                    break;
-                }
-            }
+            Object.assign(el[key], vnode.attrs[key]);
 
         } else {
 
             if(!isNullOrUndef(vnode.attrs[key])) {
 
-                el[key] = vnode.attrs[key];
+                if(key in el) {
+
+                    el[key] = vnode.attrs[key];
+
+                } else {
+
+                    el.setAttribute(key, vnode.attrs[key]);
+
+                }
 
             }
 
@@ -110,15 +88,15 @@ export default function createDomElement(vnode) {
 
 }
 
-function applyToVirtualNode(vNewNode) {
+function applyToVirtualNode(newNodeDefinition) {
 
-    if(isArray(vNewNode)) {
+    if(isArray(newNodeDefinition)) {
 
-        return vNewNode.map(sigleVNewNode => sigleVNewNode.virtual);
+        return newNodeDefinition.map(siglenewNodeDefinition => siglenewNodeDefinition.virtualNode);
 
     } else {
 
-        return vNewNode.virtual;
+        return newNodeDefinition.virtualNode;
 
     }
 

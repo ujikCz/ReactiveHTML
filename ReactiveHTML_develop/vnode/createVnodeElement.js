@@ -79,7 +79,6 @@ export default function createVnodeElement(type, props = null, ...children) {
 
     }
 
-
     /**
      * if element is basic virtual node element
      */

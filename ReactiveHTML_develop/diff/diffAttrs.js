@@ -7,7 +7,6 @@
 
 import isNullOrUndef from '../isNullOrUndef.js';
 import isObject from '../isObject.js';
-import diffClassList from './diffClassList.js';
 
 export default function diffAttrs(oldAttrs, newAttrs) {
 
@@ -32,21 +31,9 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
             attrsPatches.push(function (node) {
 
-                switch(key) {
+                Object.assign(node[key], newAttrs[key]);
 
-                    case 'classList': {
-
-                        return diffClassList(oldAttrs[key], newAttrs[key])(node);
-
-                    }
-
-                    default: {
-
-                        return diffObjectProperties(node, newAttrs[key], key);                        
-
-                    }
-
-                }
+                return node;
 
             });
 
@@ -56,14 +43,19 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
                 if(isNullOrUndef(newAttrs[key])) {
 
-                    node.removeAttribute(key);
+                    node.removeAttribute(key === 'className' ? 'class' : key);
+                    return node;
 
-                } else {
+                } 
 
+                if(key in node) {
+                
                     node[key] = newAttrs[key];
+                    return node;
 
                 }
 
+                node.setAttribute(key, newAttrs[key]);
                 return node;
 
             });
@@ -112,43 +104,5 @@ export default function diffAttrs(oldAttrs, newAttrs) {
         return [newAttrs, node];
 
     };
-
-}
-
-
-
-
-function diffObjectProperties(node, newAttr, key) {
-
-    for(const attrKey in newAttr) {
-
-        if(isNullOrUndef(newAttr[attrKey])) {
-
-            node[key][attrKey] = null;
-            delete newAttr[attrKey];
-
-            if(key === 'dataset') {
-
-                node.removeAttribute(`data-${ attrKey }`);
-
-            } else {
-
-                if(!Object.keys(newAttr).length) {
-
-                    node.removeAttribute(key);
-
-                }
-
-            }
-            
-        } else {
-
-            node[key][attrKey] = newAttr[attrKey];
-
-        }
-
-    }
-
-    return node;
 
 }

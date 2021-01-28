@@ -14,36 +14,34 @@ import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle
  * @param  {...any} args 
  */
 
-export default function mount(virtual, container, method, ...args) {
+export default function mount(newNodeDefinition, container, method, ...args) {
 
-    if(isNullOrUndef(virtual)) return;
+    if(isArray(newNodeDefinition)) {
 
-    if(isArray(virtual)) {
-
-        return virtual.map(singleVirtual => mount(singleVirtual, container, method, ...args));
+        return newNodeDefinition.map(singleNewNodeDefinition => mount(singleNewNodeDefinition, container, method, ...args));
 
     }
 
-    const isComponentCache = isComponent(virtual.virtual.type);
-    
-    if(virtual.ref.realDOM !== undefined) { //if rendered return no null value
+    const isComponentCache = isComponent(newNodeDefinition.virtualNode.type);
+
+    if(newNodeDefinition.realDOM !== undefined) { //if rendered return no null value
 
         if(isComponentCache) {
 
-            willMountLifecycle(virtual.virtual, container);
+            willMountLifecycle(newNodeDefinition.virtualNode, container);
 
         }
 
-        container[method](virtual.ref.realDOM, ...args);
+        container[method](newNodeDefinition.realDOM, ...args);
             
         if(isComponentCache) {
             
-            mountLifecycle(virtual.virtual, container);
+            mountLifecycle(newNodeDefinition.virtualNode, container);
 
         }
 
     }
 
-    return virtual.ref.realDOM;
+    return newNodeDefinition.realDOM;
 
 }

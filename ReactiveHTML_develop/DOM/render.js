@@ -5,6 +5,7 @@ import isObject from "../isObject.js";
 import createComponentInstance from "../vnode/component/createComponentInstance.js";
 import renderLifecycle from "../vnode/component/lifecycles/renderLifecycle.js";
 import createDomElement from "./createDomElement.js";
+import resolveRef from "./resolveRef.js";
 
 /**
  * render function convert virtual dom to real dom
@@ -13,18 +14,22 @@ import createDomElement from "./createDomElement.js";
  */
 
 export default function render(virtualNode) {
-    
+
     /**
      * if virtual dom is undefined return no dom object
-     */    
+     */
 
-    if(isNullOrUndef(virtualNode)) return;
+    if (isNullOrUndef(virtualNode)) {
+
+        throw Error(`virtual node cannot be null or undefined`);
+
+    };
 
     /**
      * return mapped array of dom object created from virtual elements
      */
 
-    if(isArray(virtualNode)) {
+    if (isArray(virtualNode)) {
 
         return virtualNode.map(singleVirtualNode => render(singleVirtualNode));
 
@@ -34,14 +39,12 @@ export default function render(virtualNode) {
      * create text nodes 
      */
 
-    if(!isObject(virtualNode)) {
+    if (!isObject(virtualNode)) {
 
         //text node
         return {
-            ref: {
-                realDOM: document.createTextNode(virtualNode)
-            },
-            virtual: virtualNode
+            realDOM: document.createTextNode(virtualNode),
+            virtualNode
         };
 
     }
@@ -50,19 +53,19 @@ export default function render(virtualNode) {
      * create components and assign ref specifications
      */
 
-    if(isComponent(virtualNode.type)) {
+    if (isComponent(virtualNode.type)) {
 
         virtualNode = createComponentInstance(virtualNode);
         //component
 
-        const rendered = render(virtualNode.ref.virtual);
+        const newNodeDefinition = render(virtualNode._internals.virtual);
 
-        virtualNode.ref = {
-            realDOM: rendered.ref.realDOM, //assign final realDOM
-            virtual: rendered.virtual //assign created instance of virtual inside Element of component
+        virtualNode._internals = {
+            realDOM: newNodeDefinition.realDOM, //assign final realDOM
+            virtual: newNodeDefinition.virtualNode //assign created instance of virtual inside Element of component
         };
 
-        
+
         /**
          * means if virtual is not element but component, it become Class.Component from {type, props, _key}
          * we must overwrite the virtal beacause of this
@@ -71,10 +74,8 @@ export default function render(virtualNode) {
         renderLifecycle(virtualNode);
 
         return {
-            ref: {
-                realDOM: virtualNode.ref.realDOM
-            },
-            virtual: virtualNode
+            realDOM: newNodeDefinition.realDOM,
+            virtualNode
         };
 
     }
@@ -85,18 +86,17 @@ export default function render(virtualNode) {
 
     const newRealNode = createDomElement(virtualNode);
 
-    if(virtualNode._ref) {
+    if (virtualNode._ref) {
 
-        virtualNode._ref(newRealNode);
+        Object.assign(virtualNode._ref, resolveRef(virtualNode._ref, newRealNode));
+        virtualNode._ref._onresolve(virtualNode._ref);
 
     }
-    
+
     //virtualNode
     return {
-        ref: {
-            realDOM: newRealNode
-        },
-        virtual: virtualNode
+        realDOM: newRealNode,
+        virtualNode
     };
 
 }

@@ -16,7 +16,7 @@ export default function willUnMount(component) {
 
         if (isComponent(component.type)) {
 
-            component.onComponentWillUnMount(component.ref.realDOM);
+            component.onComponentWillUnMount(component._internals.realDOM);
 
             component.setState = function() {
 
@@ -33,7 +33,7 @@ export default function willUnMount(component) {
 
             };
 
-            willUnMount(component.ref.virtual);
+            willUnMount(component._internals.virtual);
 
         } else {
 

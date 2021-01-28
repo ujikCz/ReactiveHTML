@@ -2,6 +2,6 @@
 
 export default function renderLifecycle(component) {
 
-    component.onComponentRender(component.ref.realDOM);
+    component.onComponentRender(component._internals.realDOM);
 
 }

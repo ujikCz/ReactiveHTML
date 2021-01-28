@@ -10,9 +10,11 @@ export default function Component(props) {
     this.props = props;
     this.states = {};
 
-    this.ref = {
+    this._internals = {
+
         realDOM: null,
         virtual: null
+
     };
 
     return this;

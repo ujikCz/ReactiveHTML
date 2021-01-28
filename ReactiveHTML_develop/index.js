@@ -37,14 +37,10 @@ import render from './DOM/render.js';
 
             }
 
-            const newVNode = render(virtualElement);
-            virtualElement = newVNode.virtual;
+            const newNodeDefinition = render(virtualElement);
+            virtualElement = newNodeDefinition.virtualNode;
 
-            if(virtualElement !== undefined) {
-
-                mount(newVNode, container, 'appendChild');
-
-            }
+            mount(newNodeDefinition, container, 'appendChild');
 
         },
 
@@ -69,8 +65,14 @@ import render from './DOM/render.js';
         memo,
 
         ref: function(callback) {
+            
+            const refPayload = {
+                node: null,
+                resolved: false,
+                _onresolve: callback
+            };  
 
-            return callback;
+            return refPayload;
 
         }
 

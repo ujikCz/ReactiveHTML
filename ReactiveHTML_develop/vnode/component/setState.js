@@ -10,7 +10,7 @@ export default function setState(component, setter, setStateSyncPropsUpdate) {
 
     //setter can be object or function that returns object
 
-    if (!component.ref.realDOM) {
+    if (!component._internals.realDOM) {
 
         throw Error(`setState(...) can be called only if component is rendered, will be mounted or is mounted`);
 
@@ -38,7 +38,7 @@ export default function setState(component, setter, setStateSyncPropsUpdate) {
             if(update) {
 
                 const [patch, snapshot] = update;
-                [component.ref.virtual, component.ref.realDOM] = patch(component.ref.realDOM);
+                [component._internals.virtual, component._internals.realDOM] = patch(component._internals.realDOM);
                 //patch the virtual dom and the real dom connected to component
 
                 component.onComponentUpdate(snapshot);

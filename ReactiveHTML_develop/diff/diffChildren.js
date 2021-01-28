@@ -94,18 +94,18 @@ export default function diffChildren(oldVChildren, newVChildren, shouldBeKeyed) 
 
                             additionalPatches.push(function (parent) {
 
-                                const vNewNode = render(newVChildren[i]);
+                                const newNodeDefinition = render(newVChildren[i]);
 
-                                newVChildren[i] = vNewNode.virtual;
+                                newVChildren[i] = newNodeDefinition.virtualNode;
 
                                 if (i === (newVChildren.length - 1)) {
 
-                                    mount(vNewNode, parent, 'appendChild');
+                                    mount(newNodeDefinition, parent, 'appendChild');
                                     return [newVChildren, parent];
 
                                 }
 
-                                mount(vNewNode, parent, 'insertBefore', parent.childNodes[i]);
+                                mount(newNodeDefinition, parent, 'insertBefore', parent.childNodes[i]);
 
                                 return [newVChildren, parent];
 
@@ -119,11 +119,11 @@ export default function diffChildren(oldVChildren, newVChildren, shouldBeKeyed) 
 
                         additionalPatches.push(function (parent) {
 
-                            const vNewNode = render(newVChildren[i]);
+                            const newNodeDefinition = render(newVChildren[i]);
 
-                            newVChildren[i] = vNewNode.virtual;
+                            newVChildren[i] = newNodeDefinition.virtualNode;
 
-                            mount(vNewNode, parent, 'appendChild');
+                            mount(newNodeDefinition, parent, 'appendChild');
 
                             return [newVChildren, parent];
 
