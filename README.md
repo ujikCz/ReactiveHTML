@@ -5,7 +5,7 @@ Simple reactive Virtual DOM elements for building complex reactive UI
 ```
 npm i reactivehtml
 
-<script src="https://cdn.jsdelivr.net/npm/reactivehtml@2.3.4/src/ReactiveHTML.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reactivehtml@2.4.0/src/ReactiveHTML.min.js"></script>
 ```
 
 ## HTM.js cdn
@@ -20,7 +20,7 @@ bierner.lit-html
 ```
 
 ## Compatibility
-All browsers that supports ES5 (Chrome 23 and higher, Firefox 21 and higher)
+All browsers that supports ES5 (Chrome 23 and higher, Firefox 21 and higher) thanks babel
 
 ## About
 This library allows you to write components with html elements in javascript, so you can create conditional rendering or
@@ -110,6 +110,41 @@ If you have virtual element that is static or never be updated, skip the update 
 
 ```
 ReactiveHTML.memo(html`<div>Hello, world!</div>`);
+```
+
+## ref method
+This method is for some additional actions to the DOM that cannot be done in virual dom like focus() or click() or some third-party library where you have to use DOM.
+Ref match the element from virtual node and return it as real DOM that is displayed on web page.
+Match is done by _ref attribute, it cannot be in component, _ref attribute can only be at virtual element.
+Referencies should be private in each component, so I don't recommend to use refs among components.
+Note: don't overuse refs, if you can, just do it with native way of ReactiveHTML, because refs are anti-pattern of ReactiveHTML.
+
+You can use callback function inside ref(callback) that is fired exactly when the referenced element was rendered.
+```
+class Input extends ReactiveHTML.Component {
+
+    constructor(props) {
+
+        super(props);
+
+        this.refTest = ReactiveHTML.ref();
+
+    }
+
+    onComponentRender() {
+
+        console.log(this.refTest); //{ node: Element, resolved: true, _onresolve: function } - onresolve function should be called only by the library
+
+        this.refTest.node.click(); //log 'clicked'
+    }
+
+    Element() {
+
+        return html`<button type="text" _ref=${ this.refTest } onclick=${ () => console.log('clicked') }>click</button>`
+
+    }
+
+}
 ```
 
 ## Components
