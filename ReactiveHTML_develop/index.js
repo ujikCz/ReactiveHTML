@@ -10,6 +10,7 @@ import memo from './memo.js';
 import mount from './DOM/mount.js';
 import isComponent from './isComponent.js';
 import render from './DOM/render.js';
+import shedule from './shedule.js';
 
 /**
  * whole library is in container funciton for use library in node.js, js, as modules, ...
@@ -31,7 +32,7 @@ import render from './DOM/render.js';
 
         render: function(virtualElement, container) {
 
-            window.requestAnimationFrame(() => {
+            shedule(() => {
 
                 if(!container || container.nodeType !== Node.ELEMENT_NODE) {
 

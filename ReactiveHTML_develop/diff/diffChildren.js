@@ -6,6 +6,7 @@ import mount from '../DOM/mount.js';
 import render from '../DOM/render.js';
 import warn from '../warn.js';
 import { KEY_CHILDREN_WARN } from '../constants.js';
+import shedule from '../shedule.js';
 
 
 /**
@@ -166,7 +167,7 @@ export default function diffChildren(oldVChildren, newVChildren, shouldBeKeyed) 
 
         for (let i = 0; i < additionalPatches.length; i++) {
 
-            additionalPatches[i](parent);
+            shedule(() => additionalPatches[i](parent));
 
         }
 

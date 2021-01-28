@@ -7,6 +7,7 @@ import diffComponents from './diffComponents.js';
 import render from '../DOM/render.js';
 import willUnMount from '../vnode/component/lifecycles/willUnMountLifecycle.js';
 import diffNonObjects from './diffNonObjects.js';
+import shedule from '../shedule.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -37,7 +38,7 @@ export default function diff(vOldNode, vNewNode) {
 
             willUnMount(vOldNode);
 
-            node.remove();
+            shedule(() => node.remove());
 
             return [undefined, undefined];
 
@@ -67,9 +68,9 @@ export default function diff(vOldNode, vNewNode) {
 
             const newNodeDefinition = render(vNewNode);
 
-            const newRealNode = mount(newNodeDefinition, node, 'replaceWith');
+            shedule(() => mount(newNodeDefinition, node, 'replaceWith'));
 
-            return [newNodeDefinition.virtualNode, newRealNode];
+            return [newNodeDefinition.virtualNode, newNodeDefinition.realDOM];
 
         };
 

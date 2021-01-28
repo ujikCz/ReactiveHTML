@@ -1,5 +1,6 @@
 import mount from "../DOM/mount.js";
 import render from "../DOM/render.js";
+import shedule from "../shedule.js";
 
 
 export default function diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isVNewNodeObject) {
@@ -35,7 +36,7 @@ export default function diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isV
 
         const newNodeDefinition = render(vNewNode);
 
-        mount(newNodeDefinition, node, 'replaceWith');
+        shedule(() => mount(newNodeDefinition, node, 'replaceWith'));
 
         return [newNodeDefinition.virtualNode, newNodeDefinition.realDOM];
 
