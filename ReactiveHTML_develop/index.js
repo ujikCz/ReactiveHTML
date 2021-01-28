@@ -31,16 +31,20 @@ import render from './DOM/render.js';
 
         render: function(virtualElement, container) {
 
-            if(!container || container.nodeType !== Node.ELEMENT_NODE) {
+            window.requestAnimationFrame(() => {
 
-                throw TypeError(`render(...) container must be valid Element that is already rendered on page, try to use DOMContentLoaded event on window to wait for all Elements load`);
+                if(!container || container.nodeType !== Node.ELEMENT_NODE) {
 
-            }
+                    throw TypeError(`render(...) container must be valid Element that is already rendered on page, try to use DOMContentLoaded event on window to wait for all Elements load`);
+    
+                }
+    
+                const newNodeDefinition = render(virtualElement);
+                virtualElement = newNodeDefinition.virtualNode;
+                
+                mount(newNodeDefinition, container, 'appendChild');
 
-            const newNodeDefinition = render(virtualElement);
-            virtualElement = newNodeDefinition.virtualNode;
-
-            mount(newNodeDefinition, container, 'appendChild');
+            });
 
         },
 

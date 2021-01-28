@@ -89,7 +89,12 @@ export default function render(virtualNode) {
     if (virtualNode._ref) {
 
         Object.assign(virtualNode._ref, resolveRef(virtualNode._ref, newRealNode));
-        virtualNode._ref._onresolve(virtualNode._ref);
+
+        if(virtualNode._ref._onresolve) {
+
+            virtualNode._ref._onresolve(virtualNode._ref);
+
+        }
 
     }
 

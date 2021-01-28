@@ -18,7 +18,9 @@ export default function mount(newNodeDefinition, container, method, ...args) {
 
     if(isArray(newNodeDefinition)) {
 
-        return newNodeDefinition.map(singleNewNodeDefinition => mount(singleNewNodeDefinition, container, method, ...args));
+        const listFrag = document.createDocumentFragment();
+        newNodeDefinition = newNodeDefinition.map(singleNewNodeDefinition => mount(singleNewNodeDefinition, listFrag, method, ...args));
+        return container.appendChild(listFrag);
 
     }
 
