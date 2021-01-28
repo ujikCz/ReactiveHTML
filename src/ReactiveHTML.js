@@ -1,14 +1,13 @@
 
-
 /*
     (c) Ludvík Prokopec
     License: MIT
     !This version is not recomended for production use
 */
 (function (global, factory) {
+
   function _typeof(obj) {
     "@babel/helpers - typeof";
-
     if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
       _typeof = function _typeof(obj) {
         return typeof obj;
@@ -18,15 +17,13 @@
         return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
       };
     }
-
     return _typeof(obj);
   }
 
-  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory(_typeof) : typeof define === 'function' && define.amd ? define(function () {
-    return factory(_typeof);
-  }) : (global = global || self, global.ReactiveHTML = factory(_typeof));
+  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory(_typeof) : typeof define === 'function' && define.amd ? define(function(){ return factory(_typeof);}) : (global = global || self, global.ReactiveHTML = factory(_typeof));
 })(void 0, function (_typeof) {
   "use strict";
+
 
   function _slicedToArray(arr, i) {
     return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
@@ -47,11 +44,9 @@
 
   function _arrayLikeToArray(arr, len) {
     if (len == null || len > arr.length) len = arr.length;
-
     for (var i = 0, arr2 = new Array(len); i < len; i++) {
       arr2[i] = arr[i];
     }
-
     return arr2;
   }
 
@@ -61,11 +56,9 @@
     var _n = true;
     var _d = false;
     var _e = undefined;
-
     try {
       for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
         _arr.push(_s.value);
-
         if (i && _arr.length === i) break;
       }
     } catch (err) {
@@ -78,7 +71,6 @@
         if (_d) throw _e;
       }
     }
-
     return _arr;
   }
 
@@ -88,7 +80,6 @@
 
   function ownKeys(object, enumerableOnly) {
     var keys = Object.keys(object);
-
     if (Object.getOwnPropertySymbols) {
       var symbols = Object.getOwnPropertySymbols(object);
       if (enumerableOnly) symbols = symbols.filter(function (sym) {
@@ -96,14 +87,12 @@
       });
       keys.push.apply(keys, symbols);
     }
-
     return keys;
   }
 
   function _objectSpread(target) {
     for (var i = 1; i < arguments.length; i++) {
       var source = arguments[i] != null ? arguments[i] : {};
-
       if (i % 2) {
         ownKeys(Object(source), true).forEach(function (key) {
           _defineProperty(target, key, source[key]);
@@ -116,7 +105,6 @@
         });
       }
     }
-
     return target;
   }
 
@@ -131,16 +119,47 @@
     } else {
       obj[key] = value;
     }
-
     return obj;
   }
 
-  function isArray(array) {
-    return Array.isArray(array);
+
+  var alreadyWarned = [];
+
+  function warn(message, id) {
+    if (id !== undefined) {
+      // if id is specified
+      if (!alreadyWarned.includes(id)) {
+        // if id is not already in alreadyWarned array
+        alreadyWarned.push(id); //add id to alredyWarned array
+
+        console.warn(message); //warn
+      }
+    } else {
+      // if id is not specified warn every time function is called
+      console.warn(message);
+    }
+  }
+
+  function shedule(callback) {
+    return window.requestAnimationFrame(callback);
+  }
+
+  function memo(virtualNode) {
+    if (isComponent(virtualNode.type)) {
+      warn("Memoizing Component will not affect Component from rerender, Component has lifecycle hook shouldComponentUpdate(nextProps, nextStates), which is used to decide if Component will udpate or not");
+    } else {
+      virtualNode._memo = true;
+    }
+
+    return virtualNode;
   }
 
   function isObject(object) {
     return _typeof(object) === 'object' && object !== null;
+  }
+
+  function isNullOrUndef(value) {
+    return value === null || value === undefined;
   }
 
   function isFunction(func) {
@@ -152,45 +171,36 @@
     return false;
   }
 
+  function isArray(array) {
+    return Array.isArray(array);
+  }
+
   var KEY_CHILDREN_WARN = 0;
   var NON_OBJECT_RETURNED_FROM_SET_STATE = 1;
-  var alreadyWarned = [];
-
-  function warn(condition, message, id) {
-    if (condition) {
-      // if condition is done
-      if (id !== undefined) {
-        // if id is specified
-        if (!alreadyWarned.includes(id)) {
-          // if id is not already in alreadyWarned array
-          alreadyWarned.push(id); //add id to alredyWarned array
-
-          console.warn(message); //warn
-        }
-      } else {
-        // if id is not specified warn every time function is called
-        console.warn(message);
-      }
-    }
-  }
-
-  function memo(virtualNode) {
-    warn(isComponent(virtualNode.type), "Memoizing Component will not affect Component from rerender, Component has lifecycle shouldComponentUpdate(nextProps, nextStates), which is used to decide if Component will udpate or not");
-    virtualNode._memo = true;
-    return virtualNode;
-  }
 
   function createElement(type) {
     var props = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
     /**
      * get the _key that is originally in props/attributes of virtual element
      */
+    if (!type) {
+      throw TypeError("createElement(...) type must be defined, it can be String that represent DOM tagName or Class/Funciton that represent Component");
+    }
 
     var _key = null;
+    var _ref = null;
 
-    if (props !== null && props._key !== undefined) {
-      _key = props._key;
-      Reflect.deleteProperty(props, '_key');
+    if (props !== null) {
+      if (props._key !== undefined) {
+        _key = props._key;
+        delete props._key;
+      }
+
+      if (props._ref !== undefined) {
+        _ref = props._ref;
+        delete props._ref;
+      }
     }
 
     props = props || {};
@@ -233,14 +243,27 @@
       type: type,
       attrs: props,
       children: children,
-      _key: _key
+      _key: _key,
+      _ref: _ref
     };
+  }
+
+  function assignNewPropsAndStates(oldComponent, nextProps, nextStates) {
+    if (isObject(nextProps)) {
+      Object.assign(oldComponent.props, nextProps);
+    }
+
+    if (isObject(nextStates)) {
+      Object.assign(oldComponent.states, nextStates);
+    }
+
+    return oldComponent;
   }
 
   function Component(props) {
     this.props = props;
     this.states = {};
-    this.ref = {
+    this._internals = {
       realDOM: null,
       virtual: null
     };
@@ -285,32 +308,50 @@
    * this function will trigger the update of component
    */
 
+  function createComponentInstance(component) {
+    var instance = new component.type(component.props);
+    instance._internals.virtual = checkVirtual(instance.Element());
+    instance._key = component._key;
+    instance.type = component.type;
+    return instance;
+  }
+
+  function checkVirtual(virtual) {
+    if (isNullOrUndef(virtual)) {
+      throw Error("Element cannot return undefined or null");
+    }
+
+    return virtual;
+  }
+
   function setState(component, setter, setStateSyncPropsUpdate) {
     //setter can be object or function that returns object
-    if (!component.ref.realDOM) {
+    if (!component._internals.realDOM) {
       throw Error("setState(...) can be called only if component is rendered, will be mounted or is mounted");
     }
 
     if (isObject(setter) || isFunction(setter)) {
       setter = isFunction(setter) ? setter.bind(component)(component.props, component.states) : setter; //get the new states and save them in setter variable
 
-      warn(!isObject(setter) || Object.keys(setter).length === 0, "setState(...) should be Object or Function that returns Object, if Object is empty or doesn't return nothing, update can be redundant", NON_OBJECT_RETURNED_FROM_SET_STATE);
+      if (!isObject(setter) || Object.keys(setter).length === 0) {
+        warn("setState(...) should be Object or Function that returns Object, if Object is empty or doesn't return nothing, update can be redundant", NON_OBJECT_RETURNED_FROM_SET_STATE);
+      }
 
       if (!setStateSyncPropsUpdate) {
         var update = updateComponent(component, null, setter); //update component return patch which is function and snapshot that is given from getSnapshotBeforeUpdate
 
         if (update) {
           var _update = _slicedToArray(update, 2),
-              patch = _update[0],
-              snapshot = _update[1];
+            patch = _update[0],
+            snapshot = _update[1];
 
-          var _patch = patch(component.ref.realDOM);
+          var _patch = patch(component._internals.realDOM);
 
           var _patch2 = _slicedToArray(_patch, 2);
 
-          component.ref.virtual = _patch2[0];
-          component.ref.realDOM = _patch2[1]; //patch the virtual dom and the real dom connected to component
-
+          component._internals.virtual = _patch2[0];
+          component._internals.realDOM = _patch2[1];
+          //patch the virtual dom and the real dom connected to component
           component.onComponentUpdate(snapshot); //call update lifecycle in the component
         }
 
@@ -324,54 +365,28 @@
     throw TypeError("setState(...) expecting 1 parameter as Function or Object, you give ".concat(_typeof(setter)));
   }
 
-  function checkVirtual(virtual) {
-    if (virtual === undefined || virtual === null) {
-      throw TypeError("Element cannot return nothing or null");
-    }
-
-    return virtual;
-  }
-
-  function createComponentInstance(component) {
-    var instance = new component.type(component.props);
-    instance.ref.virtual = checkVirtual(instance.Element());
-    instance._key = component._key;
-    instance.type = component.type;
-    return instance;
-  }
-
-  function assignNewPropsAndStates(oldComponent, nextProps, nextStates) {
-    if (isObject(nextProps)) {
-      Object.assign(oldComponent.props, nextProps);
-    }
-
-    if (isObject(nextStates)) {
-      Object.assign(oldComponent.states, nextStates);
-    }
-
-    return oldComponent;
-  }
-
   function getSnapshotBeforeUpdateLifecycle(component) {
     return component.getSnapshotBeforeUpdate() || null;
   }
 
   function mountLifecycle(component, container) {
-    component.onComponentMount(component.ref.realDOM, container);
+    component.onComponentMount(component._internals.realDOM, container);
   }
 
   function renderLifecycle(component) {
-    component.onComponentRender(component.ref.realDOM);
+    component.onComponentRender(component._internals.realDOM);
   }
 
   function willMountLifecycle(component, container) {
-    component.onComponentWillMount(component.ref.realDOM, container);
+    component.onComponentWillMount(component._internals.realDOM, container);
   }
+
+  var alreadyThrowedError = [];
 
   function willUnMount(component) {
     if (isObject(component)) {
       if (isComponent(component.type)) {
-        component.onComponentWillUnMount(component.ref.realDOM);
+        component.onComponentWillUnMount(component._internals.realDOM);
 
         component.setState = function () {
           component.setState = function () {};
@@ -384,7 +399,7 @@
           }
         };
 
-        willUnMount(component.ref.virtual);
+        willUnMount(component._internals.virtual);
       } else {
         for (var i = 0; i < component.children.length; i++) {
           willUnMount(component.children[i]);
@@ -402,7 +417,7 @@
     /**
      * should component update, if return false, component will be never updated
      */
-    if (oldComponent.shouldComponentUpdate(nextProps, nextStates) !== true) {
+    if (!oldComponent.shouldComponentUpdate(nextProps, nextStates)) {
       oldComponent = assignNewPropsAndStates(oldComponent, nextProps, nextStates);
       oldComponent.onComponentCancelUpdate();
       return false;
@@ -428,7 +443,7 @@
      * using diffChildren we can manipulate with appendChild and insertBefore
      */
 
-    return [diff(oldComponent.ref.virtual, newVNode), snapshot];
+    return [diff(oldComponent._internals.virtual, newVNode), snapshot];
   }
 
   function createDomElement(vnode) {
@@ -442,11 +457,19 @@
 
     for (var key in vnode.attrs) {
       if (key.startsWith('on')) {
-        el.addEventListener(key.replace('on', ''), vnode.attrs[key]);
+        var eventName = key.replace('on', '');
+        el.addEventListener(eventName, vnode.attrs[key]);
       } else if (isObject(vnode.attrs[key])) {
+        //cannot be null or undef cause isObject!!!
         Object.assign(el[key], vnode.attrs[key]);
       } else {
-        el[key] = vnode.attrs[key];
+        if (!isNullOrUndef(vnode.attrs[key])) {
+          if (key in el) {
+            el[key] = vnode.attrs[key];
+          } else {
+            el.setAttribute(key, vnode.attrs[key]);
+          }
+        }
       }
     }
     /**
@@ -477,52 +500,56 @@
     return el;
   }
 
-  function applyToVirtualNode(vNewNode) {
-    if (isArray(vNewNode)) {
-      return vNewNode.map(function (sigleVNewNode) {
-        return sigleVNewNode.virtual;
+  function applyToVirtualNode(newNodeDefinition) {
+    if (isArray(newNodeDefinition)) {
+      return newNodeDefinition.map(function (siglenewNodeDefinition) {
+        return siglenewNodeDefinition.virtualNode;
       });
     } else {
-      return vNewNode.virtual;
+      return newNodeDefinition.virtualNode;
     }
   }
 
-  function mount(virtual, container, method) {
+  function mount(newNodeDefinition, container, method) {
     for (var _len2 = arguments.length, args = new Array(_len2 > 3 ? _len2 - 3 : 0), _key3 = 3; _key3 < _len2; _key3++) {
       args[_key3 - 3] = arguments[_key3];
     }
 
-    if (virtual === undefined) return;
-
-    if (isArray(virtual)) {
-      return virtual.map(function (singleVirtual) {
-        return mount.apply(void 0, [singleVirtual, container, method].concat(args));
+    if (isArray(newNodeDefinition)) {
+      var listFrag = document.createDocumentFragment();
+      newNodeDefinition = newNodeDefinition.map(function (singleNewNodeDefinition) {
+        return mount.apply(void 0, [singleNewNodeDefinition, listFrag, method].concat(args));
       });
+      return container.appendChild(listFrag);
     }
 
-    var isComponentCache = isComponent(virtual.virtual.type);
+    var isComponentCache = isComponent(newNodeDefinition.virtualNode.type);
 
-    if (virtual.ref.realDOM !== undefined) {
+    if (newNodeDefinition.realDOM !== undefined) {
       //if rendered return no null value
       if (isComponentCache) {
-        willMountLifecycle(virtual.virtual, container);
+        willMountLifecycle(newNodeDefinition.virtualNode, container);
       }
 
-      container[method].apply(container, [virtual.ref.realDOM].concat(args));
+      container[method].apply(container, [newNodeDefinition.realDOM].concat(args));
 
       if (isComponentCache) {
-        mountLifecycle(virtual.virtual, container);
+        mountLifecycle(newNodeDefinition.virtualNode, container);
       }
     }
 
-    return virtual.ref.realDOM;
+    return newNodeDefinition.realDOM;
   }
 
   function _render(virtualNode) {
     /**
      * if virtual dom is undefined return no dom object
      */
-    if (virtualNode === undefined) return;
+    if (isNullOrUndef(virtualNode)) {
+      throw Error("virtual node cannot be null or undefined");
+    }
+
+    ;
     /**
      * return mapped array of dom object created from virtual elements
      */
@@ -540,10 +567,8 @@
     if (!isObject(virtualNode)) {
       //text node
       return {
-        ref: {
-          realDOM: document.createTextNode(virtualNode)
-        },
-        virtual: virtualNode
+        realDOM: document.createTextNode(virtualNode),
+        virtualNode: virtualNode
       };
     }
     /**
@@ -554,12 +579,14 @@
     if (isComponent(virtualNode.type)) {
       virtualNode = createComponentInstance(virtualNode); //component
 
-      var rendered = _render(virtualNode.ref.virtual);
+      var newNodeDefinition = _render(virtualNode._internals.virtual);
 
-      virtualNode.ref.realDOM = rendered.ref.realDOM; //assign final realDOM
+      virtualNode._internals = {
+        realDOM: newNodeDefinition.realDOM,
+        //assign final realDOM
+        virtual: newNodeDefinition.virtualNode //assign created instance of virtual inside Element of component
 
-      virtualNode.ref.virtual = rendered.virtual; //assign created instance of virtual inside Element of component
-
+      };
       /**
        * means if virtual is not element but component, it become Class.Component from {type, props, _key}
        * we must overwrite the virtal beacause of this
@@ -567,23 +594,29 @@
 
       renderLifecycle(virtualNode);
       return {
-        ref: {
-          realDOM: virtualNode.ref.realDOM
-        },
-        virtual: virtualNode
+        realDOM: newNodeDefinition.realDOM,
+        virtualNode: virtualNode
       };
     }
     /**
      * creates basic elements
      */
-    //virtualNode
+
+
+    var newRealNode = createDomElement(virtualNode);
+
+    if (virtualNode._ref) {
+      Object.assign(virtualNode._ref, resolveRef(virtualNode._ref, newRealNode));
+
+      if (virtualNode._ref._onresolve) {
+        virtualNode._ref._onresolve(virtualNode._ref);
+      }
+    } //virtualNode
 
 
     return {
-      ref: {
-        realDOM: createDomElement(virtualNode)
-      },
-      virtual: virtualNode
+      realDOM: newRealNode,
+      virtualNode: virtualNode
     };
   }
 
@@ -602,7 +635,9 @@
     if (vNewNode === undefined) {
       return function (node) {
         willUnMount(vOldNode);
-        node.remove();
+        shedule(function () {
+          return node.remove();
+        });
         return [undefined, undefined];
       };
     }
@@ -621,10 +656,12 @@
 
     if (vOldNode.type !== vNewNode.type) {
       return function (node) {
-        var rendered = _render(vNewNode);
+        var newNodeDefinition = _render(vNewNode);
 
-        var newRealNode = mount(rendered, node, 'replaceWith');
-        return [rendered.virtual, newRealNode];
+        shedule(function () {
+          return mount(newNodeDefinition, node, 'replaceWith');
+        });
+        return [newNodeDefinition.virtualNode, newNodeDefinition.realDOM];
       };
     }
 
@@ -677,7 +714,17 @@
         });
       } else if (newAttrs[key] !== oldAttrs[key] || !(key in oldAttrs)) {
         attrsPatches.push(function (node) {
-          node[key] = newAttrs[key];
+          if (isNullOrUndef(newAttrs[key])) {
+            node.removeAttribute(key === 'className' ? 'class' : key);
+            return node;
+          }
+
+          if (key in node) {
+            node[key] = newAttrs[key];
+            return node;
+          }
+
+          node.setAttribute(key, newAttrs[key]);
           return node;
         });
       }
@@ -730,13 +777,13 @@
       if (oldComponent.type === newComponent.type) {
         return function (node) {
           oldComponent.setState = function (setter) {
-            return setState(this, setter, true); //setState don't rerender element in additional
+            return setState(oldComponent, setter, true); //setState don't rerender element in additional
           };
 
           oldComponent.componentWillReceiveProps(newComponent.props);
 
           oldComponent.setState = function (setter) {
-            return setState(this, setter, false); //all synchronnous setState will cause only one rerender on update
+            return setState(oldComponent, setter, false); //all synchronnous setState will cause only one rerender on update
           };
           /**
            * same as in component.js
@@ -747,15 +794,15 @@
 
           if (update) {
             var _update2 = _slicedToArray(update, 2),
-                patch = _update2[0],
-                snapshot = _update2[1];
+              patch = _update2[0],
+              snapshot = _update2[1];
 
             var _patch3 = patch(node);
 
             var _patch4 = _slicedToArray(_patch3, 2);
 
-            oldComponent.ref.virtual = _patch4[0];
-            oldComponent.ref.realDOM = _patch4[1];
+            oldComponent._internals.virtual = _patch4[0];
+            oldComponent._internals.realDOM = _patch4[1];
             oldComponent.onComponentUpdate(snapshot);
           }
 
@@ -771,12 +818,12 @@
         var vNewNodeInstance = createComponentInstance(newComponent);
         willUnMount(oldComponent);
 
-        var _diff = diff(oldComponent.ref.virtual, vNewNodeInstance.ref.virtual)(node);
+        var _diff = diff(oldComponent._internals.virtual, vNewNodeInstance._internals.virtual)(node);
 
         var _diff2 = _slicedToArray(_diff, 2);
 
-        vNewNodeInstance.ref.virtual = _diff2[0];
-        vNewNodeInstance.ref.realDOM = _diff2[1];
+        vNewNodeInstance._internals.virtual = _diff2[0];
+        vNewNodeInstance._internals.realDOM = _diff2[1];
         renderLifecycle(vNewNodeInstance);
         willMountLifecycle(vNewNodeInstance, node.parentNode);
         mountLifecycle(vNewNodeInstance, node.parentNode);
@@ -790,7 +837,7 @@
 
     if (isVOldNodeComponent && !isVNewNodeComponent) {
       return function (node) {
-        var patch = diff(oldComponent.ref.virtual, newComponent);
+        var patch = diff(oldComponent._internals.virtual, newComponent);
 
         var _patch5 = patch(node);
 
@@ -810,12 +857,12 @@
     return function (node) {
       var vNewNodeInstance = createComponentInstance(newComponent);
 
-      var _diff3 = diff(oldComponent, vNewNodeInstance.ref.virtual)(node);
+      var _diff3 = diff(oldComponent, vNewNodeInstance._internals.virtual)(node);
 
       var _diff4 = _slicedToArray(_diff3, 2);
 
-      vNewNodeInstance.ref.virtual = _diff4[0];
-      vNewNodeInstance.ref.realDOM = _diff4[1];
+      vNewNodeInstance._internals.virtual = _diff4[0];
+      vNewNodeInstance._internals.realDOM = _diff4[1];
       renderLifecycle(vNewNodeInstance);
       willMountLifecycle(vNewNodeInstance, node.parentNode);
       mountLifecycle(vNewNodeInstance, node.parentNode);
@@ -853,7 +900,10 @@
             return [newVChildren[indexInNewVChildren], node];
           });
         } else {
-          warn(shouldBeKeyed, "Children inside array should be keyed by _key attribute/prop, if you don't key your elements, it can cause redundant rerender or bad rerender", KEY_CHILDREN_WARN);
+          if (shouldBeKeyed) {
+            warn("Children inside array should be keyed by _key attribute/prop, if you don't key your elements, it can cause redundant rerender or bad rerender", KEY_CHILDREN_WARN);
+          }
+
           childPatches.push(function (node) {
             var _diff7 = diff(oldVChildren[i], newVChildren[i])(node);
 
@@ -883,20 +933,20 @@
           if (!isArray(newVChildren[_i3])) {
             if (newVChildren[_i3]._key !== null) {
               if (!oldVChildren.some(function (f) {
-                return f._key === newVChildren[_i3]._key;
-              })) {
+                  return f._key === newVChildren[_i3]._key;
+                })) {
                 additionalPatches.push(function (parent) {
-                  var vNewNode = _render(newVChildren[_i3]);
+                  var newNodeDefinition = _render(newVChildren[_i3]);
 
-                  newVChildren[_i3] = vNewNode.virtual;
+                  newVChildren[_i3] = newNodeDefinition.virtualNode;
 
                   if (_i3 === newVChildren.length - 1) {
-                    mount(vNewNode, parent, 'appendChild');
+                    mount(newNodeDefinition, parent, 'appendChild');
                     _i2 = _i3;
                     return [newVChildren, parent];
                   }
 
-                  mount(vNewNode, parent, 'insertBefore', parent.childNodes[_i3]);
+                  mount(newNodeDefinition, parent, 'insertBefore', parent.childNodes[_i3]);
                   _i2 = _i3;
                   return [newVChildren, parent];
                 });
@@ -905,10 +955,10 @@
               _i3 = _i3 + oldVChildren.length; //push index to the end of oldVChildren array so there are not already mounted children
 
               additionalPatches.push(function (parent) {
-                var vNewNode = _render(newVChildren[_i3]);
+                var newNodeDefinition = _render(newVChildren[_i3]);
 
-                newVChildren[_i3] = vNewNode.virtual;
-                mount(vNewNode, parent, 'appendChild');
+                newVChildren[_i3] = newNodeDefinition.virtualNode;
+                mount(newNodeDefinition, parent, 'appendChild');
                 _i2 = _i3;
                 return [newVChildren, parent];
               });
@@ -934,10 +984,10 @@
 
     return function (parent) {
       //zipping method is algorithm that sort patch and child to create a pair for patch the exact child
-      zip(childPatches, parent.childNodes).forEach(function (_ref) {
-        var _ref2 = _slicedToArray(_ref, 2),
-            patch = _ref2[0],
-            child = _ref2[1];
+      zip(childPatches, parent.childNodes).forEach(function (_ref2) {
+        var _ref3 = _slicedToArray(_ref2, 2),
+          patch = _ref3[0],
+          child = _ref3[1];
 
         patch(child);
       });
@@ -945,8 +995,14 @@
        * apply additional changes right to the parent
        */
 
+      var _loop5 = function _loop5(_i4) {
+        shedule(function () {
+          return additionalPatches[_i4](parent);
+        });
+      };
+
       for (var _i4 = 0; _i4 < additionalPatches.length; _i4++) {
-        additionalPatches[_i4](parent);
+        _loop5(_i4);
       }
 
       return [newVChildren, parent];
@@ -975,10 +1031,12 @@
 
 
     return function (node) {
-      var rendered = _render(vNewNode);
+      var newNodeDefinition = _render(vNewNode);
 
-      var newRealNode = mount(rendered, node, 'replaceWith');
-      return [rendered.virtual, newRealNode];
+      shedule(function () {
+        return mount(newNodeDefinition, node, 'replaceWith');
+      });
+      return [newNodeDefinition.virtualNode, newNodeDefinition.realDOM];
     };
   }
 
@@ -995,11 +1053,16 @@
   var ReactiveHTML = {
     Component: Component,
     render: function render(virtualElement, container) {
-      virtualElement = _render(virtualElement);
+      shedule(function () {
+        if (!container || container.nodeType !== Node.ELEMENT_NODE) {
+          throw TypeError("render(...) container must be valid Element that is already rendered on page, try to use DOMContentLoaded event on window to wait for all Elements load");
+        }
 
-      if (virtualElement !== undefined) {
-        mount(virtualElement, container, 'appendChild');
-      }
+        var newNodeDefinition = _render(virtualElement);
+
+        virtualElement = newNodeDefinition.virtualNode;
+        mount(newNodeDefinition, container, 'appendChild');
+      });
     },
     createElement: createElement,
     createFactory: function createFactory(component) {
@@ -1007,7 +1070,9 @@
         throw TypeError("createFactory(...) expecting first parameter as component Class, you give ".concat(_typeof(component)));
       }
 
-      return function (props) {
+      return function () {
+        var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
         for (var _len3 = arguments.length, children = new Array(_len3 > 1 ? _len3 - 1 : 0), _key4 = 1; _key4 < _len3; _key4++) {
           children[_key4 - 1] = arguments[_key4];
         }
@@ -1015,7 +1080,15 @@
         return createElement.apply(void 0, [component, props].concat(children));
       };
     },
-    memo: memo
+    memo: memo,
+    ref: function ref(callback) {
+      var refPayload = {
+        node: null,
+        resolved: false,
+        _onresolve: callback
+      };
+      return refPayload;
+    }
   };
   return ReactiveHTML;
 });
