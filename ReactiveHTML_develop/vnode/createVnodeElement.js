@@ -23,10 +23,22 @@ export default function createVnodeElement(type, props = null, ...children) {
     }
 
     let _key = null;
-    if(props !== null && props._key !== undefined) {
+    let _ref = null;
+    if(props !== null) {
 
-        _key = props._key;
-        Reflect.deleteProperty(props, '_key');
+        if(props._key !== undefined) {
+
+            _key = props._key;
+            delete props._key;
+    
+        }
+
+        if(props._ref !== undefined) {
+
+            _ref = props._ref;
+            delete props._ref;
+
+        }
 
     }
 
@@ -76,7 +88,8 @@ export default function createVnodeElement(type, props = null, ...children) {
         type,
         attrs: props,
         children,
-        _key
+        _key,
+        _ref
     }
 
 }

@@ -29,7 +29,9 @@ export default function createDomElement(vnode) {
 
             el.addEventListener(key.replace('on', ''), vnode.attrs[key]);
 
-        } else if (isObject(vnode.attrs[key])) {
+        } else if (isObject(vnode.attrs[key])) { //cannot be null or undef cause isObject!!!
+
+            
 
             switch(key) {
 

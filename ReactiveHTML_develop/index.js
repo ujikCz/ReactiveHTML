@@ -37,11 +37,12 @@ import render from './DOM/render.js';
 
             }
 
-            virtualElement = render(virtualElement);
+            const newVNode = render(virtualElement);
+            virtualElement = newVNode.virtual;
 
             if(virtualElement !== undefined) {
 
-                mount(virtualElement, container, 'appendChild');
+                mount(newVNode, container, 'appendChild');
 
             }
 
@@ -65,7 +66,13 @@ import render from './DOM/render.js';
 
         },
 
-        memo
+        memo,
+
+        ref: function(callback) {
+
+            return callback;
+
+        }
 
     };
 
