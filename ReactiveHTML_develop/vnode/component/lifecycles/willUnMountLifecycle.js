@@ -1,8 +1,6 @@
 import isComponent from "../../../isComponent.js";
 import isObject from "../../../isObject.js";
 
-const alreadyThrowedError = [];
-
 /**
  * give component last Goodbye, triggers when component is going to leave the page, 
  * this lifecycle is for turn off all asynchronnous setStates that can causes memory leak
@@ -11,6 +9,8 @@ const alreadyThrowedError = [];
  */
 
 export default function willUnMount(component) {
+
+    component = component.virtualNode;
 
     if (isObject(component)) {
 
@@ -23,23 +23,20 @@ export default function willUnMount(component) {
                 component.setState = function(){};
 
                 const nameOfComponent = component.constructor.name;
-
-                if(!alreadyThrowedError.includes(nameOfComponent)) {
                     
-                    alreadyThrowedError.push(nameOfComponent);
-                    throw Error(`Remove all asynchronnous functions that causes setState(...) of ${ nameOfComponent } in onComponentWillUnMount, else it causes memory leak`);
-        
-                }
+                throw Error(`Remove all asynchronnous functions that causes setState(...) of ${ nameOfComponent } in onComponentWillUnMount, else it causes memory leak`);
 
             };
 
-            willUnMount(component._internals.virtual);
+            willUnMount(component._internals.virtualNode);
 
         } else {
+            
+            const children = component.children;
 
-            for (let i = 0; i < component.children.length; i++) {
+            for (let i = 0; i < children.length; i++) {
 
-                willUnMount(component.children[i]);
+                willUnMount(children[i]);
     
             }
 

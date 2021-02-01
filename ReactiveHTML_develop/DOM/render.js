@@ -18,7 +18,6 @@ export default function render(virtualNode) {
     /**
      * if virtual dom is undefined return no dom object
      */
-
     if (isNullOrUndef(virtualNode)) {
 
         throw Error(`virtual node cannot be null or undefined`);
@@ -28,12 +27,7 @@ export default function render(virtualNode) {
     /**
      * return mapped array of dom object created from virtual elements
      */
-
-    if (isArray(virtualNode)) {
-
-        return virtualNode.map(singleVirtualNode => render(singleVirtualNode));
-
-    }
+    
 
     /**
      * create text nodes 
@@ -49,6 +43,12 @@ export default function render(virtualNode) {
 
     }
 
+    if (isArray(virtualNode)) {
+
+        return virtualNode.map(singleVirtualNode => render(singleVirtualNode));
+    
+    }
+
     /**
      * create components and assign ref specifications
      */
@@ -58,12 +58,8 @@ export default function render(virtualNode) {
         virtualNode = createComponentInstance(virtualNode);
         //component
 
-        const newNodeDefinition = render(virtualNode._internals.virtual);
-
-        virtualNode._internals = {
-            realDOM: newNodeDefinition.realDOM, //assign final realDOM
-            virtual: newNodeDefinition.virtualNode //assign created instance of virtual inside Element of component
-        };
+        const newNodeDefinition = render(virtualNode._internals.virtualNode);
+        virtualNode._internals = newNodeDefinition;
 
 
         /**

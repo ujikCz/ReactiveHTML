@@ -33,17 +33,17 @@ import shedule from './shedule.js';
         render: function(virtualElement, container) {
 
             shedule(() => {
-
+                console.time('renderSH');
                 if(!container || container.nodeType !== Node.ELEMENT_NODE) {
 
                     throw TypeError(`render(...) container must be valid Element that is already rendered on page, try to use DOMContentLoaded event on window to wait for all Elements load`);
     
                 }
     
-                const newNodeDefinition = render(virtualElement);
-                virtualElement = newNodeDefinition.virtualNode;
+                virtualElement = render(virtualElement);
                 
-                mount(newNodeDefinition, container, 'appendChild');
+                mount(virtualElement, container, 'appendChild');
+                console.timeEnd('renderSH');
 
             });
 

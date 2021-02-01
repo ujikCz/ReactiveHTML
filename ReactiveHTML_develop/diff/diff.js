@@ -7,7 +7,6 @@ import diffComponents from './diffComponents.js';
 import render from '../DOM/render.js';
 import willUnMount from '../vnode/component/lifecycles/willUnMountLifecycle.js';
 import diffNonObjects from './diffNonObjects.js';
-import shedule from '../shedule.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -19,44 +18,51 @@ import shedule from '../shedule.js';
 
 export default function diff(vOldNode, vNewNode) {
 
-    /**
-     * cache all statements
-     */
-
-    const isVOldNodeObject = isObject(vOldNode);
-    const isVNewNodeObject = isObject(vNewNode);
-    const isVOldNodeComponent = isVOldNodeObject && isComponent(vOldNode.type);
-    const isVNewNodeComponent = isVNewNodeObject && isComponent(vNewNode.type);
-
     /*
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
      */
 
+    let changes = false;
+
     if (vNewNode === undefined) {
 
-        return function (node) {
+        changes = true;
 
-            willUnMount(vOldNode);
+        return [function (node) {
 
-            shedule(() => node.remove());
+            willUnMount({
+                virtualNode: vOldNode
+            });
 
-            return [undefined, undefined];
+            node.remove();
 
-        };
+            return undefined;
+
+        }, changes];
 
     }
 
-    if(isVOldNodeComponent || isVNewNodeComponent) {
+    /**
+     * cache all statements
+     */
+
+    const isVOldNodeObject = isObject(vOldNode), isVNewNodeObject = isObject(vNewNode);
+
+    if (!isVOldNodeObject || !isVNewNodeObject) {
+
+        return diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isVNewNodeObject);
+
+    }
+
+    const isVOldNodeComponent = isComponent(vOldNode.type), isVNewNodeComponent = isComponent(vNewNode.type);
+
+    if (isVOldNodeComponent || isVNewNodeComponent) {
 
         return diffComponents(vOldNode, vNewNode, isVOldNodeComponent, isVNewNodeComponent);
 
     }
 
-    if(!isVOldNodeObject || !isVNewNodeObject) {
 
-        return diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isVNewNodeObject);
-
-    }
 
     /*
      *   if tagNames of virtualNodes doesn't match replace it with new rendered virtualNode 
@@ -64,39 +70,44 @@ export default function diff(vOldNode, vNewNode) {
 
     if (vOldNode.type !== vNewNode.type) {
 
-        return function (node) {
+        changes = true;
+
+        return [function (node) {
 
             const newNodeDefinition = render(vNewNode);
 
-            shedule(() => mount(newNodeDefinition, node, 'replaceWith'));
+            mount(newNodeDefinition, node, 'replaceWith');
 
-            return [newNodeDefinition.virtualNode, newNodeDefinition.realDOM];
+            return newNodeDefinition.virtualNode;
 
-        };
+        }, changes];
 
     }
 
-    return function (node) {
+    const attrPatches = diffAttrs(vOldNode.attrs || {}, vNewNode.attrs || {});
 
-        if(vOldNode._memo) {
+    const [childrenPatches, childrenChanges] = diffChildren(vOldNode.children, vNewNode.children);
 
-            return [vOldNode, node];
+    if(childrenChanges || attrPatches) {
 
-        }   
+        changes = true;
 
-        if (isObject(vOldNode.attrs) || isObject(vNewNode.attrs)) {
+    }
 
-            [vNewNode.attrs, node] = diffAttrs(vOldNode.attrs || {}, vNewNode.attrs || {})(node);
+    return [function (node) {
+
+        if (attrPatches) {
+            vOldNode.attrs = attrPatches(node);
+        }
+
+        if(childrenChanges) {
+
+            vOldNode.children = childrenPatches(node);
 
         }
 
-        if ((vOldNode.children.length + vNewNode.children.length) > 0) {
 
-            [vNewNode.children, node] = diffChildren(vOldNode.children, vNewNode.children)(node);
+        return vOldNode;
 
-        }
-
-        return [vNewNode, node];
-
-    };
+    }, changes];
 };

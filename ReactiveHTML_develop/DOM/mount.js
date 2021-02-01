@@ -3,6 +3,7 @@
 import isArray from "../isArray.js";
 import isComponent from "../isComponent.js";
 import isNullOrUndef from "../isNullOrUndef.js";
+import isObject from "../isObject.js";
 import mountLifecycle from "../vnode/component/lifecycles/mountLifecycle.js";
 import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle.js";
 
@@ -14,36 +15,42 @@ import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle
  * @param  {...any} args 
  */
 
-export default function mount(newNodeDefinition, container, method, ...args) {
+export default function mount(newNodedef, container, method, ...args) {
 
-    if(isArray(newNodeDefinition)) {
+    if(isArray(newNodedef)) {
 
-        const listFrag = document.createDocumentFragment();
-        newNodeDefinition = newNodeDefinition.map(singleNewNodeDefinition => mount(singleNewNodeDefinition, listFrag, method, ...args));
-        return container.appendChild(listFrag);
+        for(let i = 0; i < newNodedef.length; i++) {
 
-    }
-
-    const isComponentCache = isComponent(newNodeDefinition.virtualNode.type);
-
-    if(newNodeDefinition.realDOM !== undefined) { //if rendered return no null value
-
-        if(isComponentCache) {
-
-            willMountLifecycle(newNodeDefinition.virtualNode, container);
+            mount(newNodedef[i], container, 'appendChild');
 
         }
 
-        container[method](newNodeDefinition.realDOM, ...args);
+        return newNodedef;
+    }
+
+    const virtualNode = newNodedef.virtualNode;
+    const realDOM = newNodedef.realDOM;
+
+    const isComponentCache = isObject(virtualNode) && isComponent(virtualNode.type);
+
+    if(realDOM !== undefined) { //if rendered return no null value
+
+        if(isComponentCache) {
+
+            willMountLifecycle(virtualNode, container);
+
+        }
+
+        container[method](realDOM, ...args);
             
         if(isComponentCache) {
             
-            mountLifecycle(newNodeDefinition.virtualNode, container);
+            mountLifecycle(virtualNode, container);
 
         }
 
     }
 
-    return newNodeDefinition.realDOM;
+    return newNodedef;
 
 }

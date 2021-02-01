@@ -1,5 +1,3 @@
-
-import isArray from "../isArray.js";
 import isNullOrUndef from "../isNullOrUndef.js";
 import isObject from "../isObject.js";
 import mount from "./mount.js";
@@ -27,8 +25,7 @@ export default function createDomElement(vnode) {
 
         if (key.startsWith('on')) {
 
-            const eventName = key.replace('on', '');
-            el.addEventListener(eventName, vnode.attrs[key]);
+            el.addEventListener(key.replace('on', ''), vnode.attrs[key]);
 
         } else if (isObject(vnode.attrs[key])) { //cannot be null or undef cause isObject!!!
 
@@ -36,9 +33,9 @@ export default function createDomElement(vnode) {
 
         } else {
 
-            if(!isNullOrUndef(vnode.attrs[key])) {
+            if (!isNullOrUndef(vnode.attrs[key])) {
 
-                if(key in el) {
+                if (key in el) {
 
                     el[key] = vnode.attrs[key];
 
@@ -58,46 +55,23 @@ export default function createDomElement(vnode) {
      * do everything again recursively for all children
      */
 
-    if (vnode.children.length) {
+     if (vnode.children.length) {
 
-        const childrenFrag = document.createDocumentFragment();
+        const children = vnode.children;
 
-        for (let i = 0, children = vnode.children; i < children.length; i++) {
+        for(let i = 0; i < children.length; i++) {
 
-            const vNewNode = render(children[i]);
-            
-            mount(vNewNode, childrenFrag, 'appendChild');
-
-            if(vNewNode) {
-
-                children[i] = applyToVirtualNode(vNewNode);
-
-            }
+            children[i] = mount(render(children[i]), el, 'appendChild');
 
         }
 
-        el.appendChild(childrenFrag);
-
     }
+
 
     /**
      * return final element
      */
 
     return el;
-
-}
-
-function applyToVirtualNode(newNodeDefinition) {
-
-    if(isArray(newNodeDefinition)) {
-
-        return newNodeDefinition.map(siglenewNodeDefinition => siglenewNodeDefinition.virtualNode);
-
-    } else {
-
-        return newNodeDefinition.virtualNode;
-
-    }
 
 }

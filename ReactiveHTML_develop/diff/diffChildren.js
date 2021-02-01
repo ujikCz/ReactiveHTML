@@ -1,12 +1,8 @@
-import zip from './zip.js';
 import diff from './diff.js';
 import isArray from '../isArray.js';
-import isObject from '../isObject.js';
 import mount from '../DOM/mount.js';
 import render from '../DOM/render.js';
-import warn from '../warn.js';
-import { KEY_CHILDREN_WARN } from '../constants.js';
-import shedule from '../shedule.js';
+import keyToIndex from './keyToIndex.js';
 
 
 /**
@@ -16,162 +12,146 @@ import shedule from '../shedule.js';
  * @param { Array } newVChildren - new virtual node children
  */
 
-export default function diffChildren(oldVChildren, newVChildren, shouldBeKeyed) {
-
-    /**
-     * filterNull filter every null elements in array and remove it, so we can easily recognize which array is smaller or bigger
-     */
-
+export default function diffChildren(oldVChildren, newVChildren) {
 
     const childPatches = [];
     const additionalPatches = [];
 
-    /**
-     * loop throught all oldVChildren and diff matched elements
-     */
+    const [ keyedOld, freeOld ] = keyToIndex(oldVChildren, 'virtualNode', '_key');
+    const [ keyedNew, freeNew ] = keyToIndex(newVChildren, '_key');
 
-    for (let i = 0, l = oldVChildren.length; i < l; i++) {
+    for(const key in keyedNew) {    
 
-        if (isArray(oldVChildren[i])) {
+        const newIndex = keyedNew[key];
 
-            additionalPatches.push(diffChildren(oldVChildren[i], newVChildren[i], true));
+        if(key in keyedOld) {
 
+            const oldIndex = keyedOld[key];
+            delete keyedOld[key];
+
+            const [diffPatch, diffChanges] = diff(oldVChildren[oldIndex].virtualNode, newVChildren[newIndex]);
+
+            if(diffChanges) {
+
+                childPatches.push(function(node) {
+
+                    newVChildren[newIndex] = {
+                        virtualNode: diffPatch(node),
+                        realDOM: node
+                    };
+    
+                });
+
+            }
+            
         } else {
 
-            if (isObject(oldVChildren[i]) && oldVChildren[i]._key !== null) {
+            newVChildren[newIndex] = render(newVChildren[newIndex]);
 
-                childPatches.push(function (node) {
+            additionalPatches.push(function(parent) {
 
-                    const findedByKey = newVChildren.find(f => f._key === oldVChildren[i]._key);
-                    const indexInNewVChildren = newVChildren.indexOf(findedByKey);
+                const parentChildNodes = parent.childNodes;
 
-                    [newVChildren[indexInNewVChildren], node] = diff(oldVChildren[i], findedByKey)(node);
-                    return [newVChildren[indexInNewVChildren], node];
-
-                });
-
-            } else {
-
-                if(shouldBeKeyed) {
-
-                    warn(
-                        `Children inside array should be keyed by _key attribute/prop, if you don't key your elements, it can cause redundant rerender or bad rerender`,
-                        KEY_CHILDREN_WARN
-                    );
-
-                }
-
-                childPatches.push(function (node) {
-
-                    [newVChildren[i], node] = diff(oldVChildren[i], newVChildren[i])(node);
-
-                    return [newVChildren[i], node];
-
-                });
-
-            }
-
+                mount(newVChildren[newIndex], parent, 'insertBefore', parentChildNodes[newIndex]);
+                
+            });
+            //add
         }
 
     }
 
-    /**
-     * get additional children if newVChildren array is bigger than old one
-     * if elements in new array has keys insert it on specific position
-     * else append it as last element of parent
-     */
+    for(const key in keyedOld) {
 
-    function diffAditionalChildren(newVChildren, oldVChildren) {
+        const oldIndex = keyedOld[key];
 
-        if (newVChildren.length > oldVChildren.length) {
+        childPatches.push(function(node) {
 
-            for (let i = 0, l = newVChildren.length; i < l; i++) {
-
-                if (!isArray(newVChildren[i])) {
-
-                    if (newVChildren[i]._key !== null) {
-
-                        if (!oldVChildren.some(f => f._key === newVChildren[i]._key)) {
-
-                            additionalPatches.push(function (parent) {
-
-                                const newNodeDefinition = render(newVChildren[i]);
-
-                                newVChildren[i] = newNodeDefinition.virtualNode;
-
-                                if (i === (newVChildren.length - 1)) {
-
-                                    mount(newNodeDefinition, parent, 'appendChild');
-                                    return [newVChildren, parent];
-
-                                }
-
-                                mount(newNodeDefinition, parent, 'insertBefore', parent.childNodes[i]);
-
-                                return [newVChildren, parent];
-
-                            });
-
-                        }
-
-                    } else {
-
-                        i = i + oldVChildren.length; //push index to the end of oldVChildren array so there are not already mounted children
-
-                        additionalPatches.push(function (parent) {
-
-                            const newNodeDefinition = render(newVChildren[i]);
-
-                            newVChildren[i] = newNodeDefinition.virtualNode;
-
-                            mount(newNodeDefinition, parent, 'appendChild');
-
-                            return [newVChildren, parent];
-
-                        });
-
-                    }
-
-                } else {
-
-                    diffAditionalChildren(newVChildren[i], oldVChildren[i] || []);
-
-                }
-
-            }
-
-        }
-
-    }
-
-    diffAditionalChildren(newVChildren, oldVChildren);
-
-    /*
-     *   apply all childNodes changes to parent realNode
-     *   it is parent cause in diff it is realDOM and we diffChildren of parent, so recursively this is parent in function argument
-     */
-
-    return function (parent) {
-
-        //zipping method is algorithm that sort patch and child to create a pair for patch the exact child
-
-        zip(childPatches, parent.childNodes).forEach(([patch, child]) => {
-
-            patch(child);
+            diff(oldVChildren[oldIndex].virtualNode, undefined)[0](node);
 
         });
 
-        /**
-         * apply additional changes right to the parent
-         */
+    }
 
-        for (let i = 0; i < additionalPatches.length; i++) {
+    const freeZipLen = Math.max(freeNew.length, freeOld.length);
 
-            shedule(() => additionalPatches[i](parent));
+    for(let i = 0; i < freeZipLen; i++) {
+
+        const index = freeNew[i];
+
+        if(i in freeOld) {
+            //update
+            const oldItem = oldVChildren[index];
+
+            if(isArray(oldItem)) {
+
+                const [recursionPatch, recursionChanges] = diffChildren(oldItem, newVChildren[index])
+
+                if(recursionChanges) {
+
+                    additionalPatches.push(recursionPatch);
+
+                }
+
+            } else {
+
+                const [patch, changes] = diff(oldItem.virtualNode, newVChildren[index]);
+
+                if(changes) {
+                    
+                    childPatches.push(function(node) {
+
+                        newVChildren[index] = {
+                            virtualNode: patch(node),
+                            realDOM: node
+                        };
+    
+                    });
+
+                } else {
+
+                    newVChildren[index] = oldVChildren[index];
+
+                }
+
+
+            }
+
+        } else {
+            //add
+            newVChildren[index] = render(newVChildren[index]);
+
+            additionalPatches.push(function(parent) {
+
+                mount(newVChildren[index], parent, 'appendChild');
+
+            });
 
         }
 
-        return [newVChildren, parent];
-    };
+    }
+
+    return [function (parent) {
+
+        //zipping method is algorithm that sort patch and child to create a pair for patch the exact child
+
+        const zipLen = Math.min(oldVChildren.length, childPatches.length);
+
+        for(let i = 0; i < zipLen; i++) {
+
+            childPatches[i](oldVChildren[i].realDOM);
+            
+        }
+
+        for(let i = 0; i < additionalPatches.length; i++) {
+
+            additionalPatches[i](parent);
+
+        }
+ 
+        return newVChildren;
+        
+    }, additionalPatches.length + childPatches.length];
 
 }
+
+

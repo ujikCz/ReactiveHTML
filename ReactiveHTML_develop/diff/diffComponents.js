@@ -13,6 +13,8 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
      * both new and old virutal nodes are components
      */
 
+    console.log(oldComponent, newComponent, isVOldNodeComponent, isVNewNodeComponent);
+
     if (isVOldNodeComponent && isVNewNodeComponent) {
 
         /**
@@ -21,8 +23,8 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         if (oldComponent.type === newComponent.type) {
 
-            return function (node) {
-
+            return [function (node) {   
+                
                 oldComponent.setState = function(setter) {
 
                     return setState(oldComponent, setter, true); //setState don't rerender element in additional
@@ -45,29 +47,46 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
                 if (update) {
 
-                    const [patch, snapshot] = update;
-                    [oldComponent._internals.virtual, oldComponent._internals.realDOM] = patch(node);
+                    const [[patch, changes], snapshot] = update;
+                    if(changes) {
+
+                        oldComponent._internals.virtualNode = patch(node);
+
+                    }
+
                     oldComponent.onComponentUpdate(snapshot);
 
                 }  
 
-                return [oldComponent, node];
+                return oldComponent;
 
-            }
+            }, true];
 
         }
 
         /**
          * if new component has another type than old component unmount old component and create new component
-         */
+         */ 
 
-        return function (node) {
 
+        return [function () {
+
+            const node = oldComponent._internals.realDOM;
             const vNewNodeInstance = createComponentInstance(newComponent);
 
-            willUnMount(oldComponent);
+            const [diffPatch, diffChanges] = diff(oldComponent._internals.virtualNode, vNewNodeInstance._internals.virtualNode);
 
-            [vNewNodeInstance._internals.virtual, vNewNodeInstance._internals.realDOM] = diff(oldComponent._internals.virtual, vNewNodeInstance._internals.virtual)(node);
+            if(diffChanges) {
+
+                vNewNodeInstance._internals.virtualNode = diffPatch(node);
+
+            } else {
+
+                vNewNodeInstance._internals.virtualNode = oldComponent._internals.virtualNode;
+
+            }
+
+            willUnMount(oldComponent);
 
             renderLifecycle(vNewNodeInstance);
 
@@ -75,9 +94,9 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
             mountLifecycle(vNewNodeInstance, node.parentNode);
 
-            return [vNewNodeInstance, node];
+            return vNewNodeInstance;
 
-        }
+        }, true];
 
     }
 
@@ -87,17 +106,24 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
     if (isVOldNodeComponent && !isVNewNodeComponent) {
 
-        return function (node) {
+        return [function () {
 
-            const patch = diff(oldComponent._internals.virtual, newComponent);
+            const node = oldComponent._internals.realDOM;
+            const [diffPatch, diffChanges] = diff(oldComponent._internals.virtualNode, newComponent);
+            
+            if(diffChanges) {
+                
+                newComponent.virtualNode = diffPatch(node);
 
-            [newComponent, node] = patch(node);
+            } 
+
+            newComponent.realDOM = node;
 
             willUnMount(oldComponent);
 
-            return [newComponent, node];
+            return newComponent;
 
-        }
+        }, true];
 
     }
 
@@ -105,11 +131,16 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
      * if old virtual node is not component and new is, create instance of new component and replace it with the virtual node
      */
 
-    return function (node) {
+    return [function (node) {
 
         const vNewNodeInstance = createComponentInstance(newComponent);
 
-        [vNewNodeInstance._internals.virtual, vNewNodeInstance._internals.realDOM] = diff(oldComponent, vNewNodeInstance._internals.virtual)(node);
+        const [diffPatch, diffChanges] = diff(oldComponent, vNewNodeInstance._internals.virtualNode);
+
+        vNewNodeInstance._internals = {
+            virtualNode: diffChanges ? diffPatch(node) : oldComponent,
+            realDOM: node
+        };
 
         renderLifecycle(vNewNodeInstance);
 
@@ -117,8 +148,8 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         mountLifecycle(vNewNodeInstance, node.parentNode);
 
-        return [vNewNodeInstance, node];
+        return vNewNodeInstance;
 
-    }
+    }, true];
 
 }

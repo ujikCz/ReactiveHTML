@@ -21,7 +21,6 @@ export default function diffAttrs(oldAttrs, newAttrs) {
                 attrsPatches.push(function (node) {
 
                     node.addEventListener(key.replace('on', ''), newAttrs[key]);
-                    return node;
 
                 });
 
@@ -33,32 +32,35 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
                 Object.assign(node[key], newAttrs[key]);
 
-                return node;
-
             });
 
         } else if (newAttrs[key] !== oldAttrs[key] || !(key in oldAttrs)) {
 
-            attrsPatches.push(function (node) {
+            if(isNullOrUndef(newAttrs[key])) {
 
-                if(isNullOrUndef(newAttrs[key])) {
+                attrsPatches.push(function (node) {
 
                     node.removeAttribute(key === 'className' ? 'class' : key);
-                    return node;
 
-                } 
+                });
 
-                if(key in node) {
-                
+            } else if(key in node) {
+
+                attrsPatches.push(function (node) {
+
                     node[key] = newAttrs[key];
-                    return node;
 
-                }
+                });
 
-                node.setAttribute(key, newAttrs[key]);
-                return node;
+            } else {
 
-            });
+                attrsPatches.push(function (node) {
+
+                    node.setAttribute(key, newAttrs[key]);
+
+                });
+
+            }
 
         }
 
@@ -93,15 +95,17 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
     }
 
+    if(!attrsPatches.length) return null;
+
     return function (node) {
 
         for (let i = 0; i < attrsPatches.length; i++) {
 
-            node = attrsPatches[i](node);
+            attrsPatches[i](node);
 
         }
 
-        return [newAttrs, node];
+        return newAttrs;
 
     };
 

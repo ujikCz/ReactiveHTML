@@ -1,9 +1,6 @@
-
 import updateComponent from '../../update/updateComponent.js';
 import isFunction from '../../isFunction.js';
 import isObject from '../../isObject.js';
-import warn from '../../warn.js';
-import { NON_OBJECT_RETURNED_FROM_SET_STATE } from '../../constants.js';
 import assignNewPropsAndStates from './assignNewPropsAndStates.js';
 
 export default function setState(component, setter, setStateSyncPropsUpdate) {
@@ -21,24 +18,27 @@ export default function setState(component, setter, setStateSyncPropsUpdate) {
         setter = isFunction(setter) ? setter.bind(component)(component.props, component.states) : setter;
         //get the new states and save them in setter variable
 
-        if(!isObject(setter) || Object.keys(setter).length === 0) {
+        if (!isObject(setter) || Object.keys(setter).length === 0) {
 
-            warn(
-                `setState(...) should be Object or Function that returns Object, if Object is empty or doesn't return nothing, update can be redundant`,
-                NON_OBJECT_RETURNED_FROM_SET_STATE
-            );
+            throw Error(`setState(...) must be Object or Function that returns Object, if Object is empty or doesn't return nothing, update can be redundant`);
 
         }
-        
-        if(!setStateSyncPropsUpdate) {
+
+        if (!setStateSyncPropsUpdate) {
 
             const update = updateComponent(component, null, setter);
             //update component return patch which is function and snapshot that is given from getSnapshotBeforeUpdate
 
-            if(update) {
+            if (update) {
+                
+                const [[patch, changes], snapshot] = update;
 
-                const [patch, snapshot] = update;
-                [component._internals.virtual, component._internals.realDOM] = patch(component._internals.realDOM);
+                if(changes) {
+
+                    component._internals.virtualNode = patch(component._internals.realDOM);
+
+                }
+
                 //patch the virtual dom and the real dom connected to component
 
                 component.onComponentUpdate(snapshot);

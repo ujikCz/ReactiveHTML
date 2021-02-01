@@ -12,7 +12,7 @@ export default function createComponentInstance(component) {
     
     const instance = new component.type(component.props);
 
-    instance._internals.virtual = checkVirtual(
+    instance._internals.virtualNode = checkVirtual(
         instance.Element()
     );
 
