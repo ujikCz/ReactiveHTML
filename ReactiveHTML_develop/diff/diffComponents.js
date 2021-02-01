@@ -23,7 +23,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         if (oldComponent.type === newComponent.type) {
 
-            return [function (node) {   
+            return function (node) {   
                 
                 oldComponent.setState = function(setter) {
 
@@ -60,7 +60,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
                 return oldComponent;
 
-            }, true];
+            };
 
         }
 
@@ -69,7 +69,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
          */ 
 
 
-        return [function () {
+        return function () {
 
             const node = oldComponent._internals.realDOM;
             const vNewNodeInstance = createComponentInstance(newComponent);
@@ -96,7 +96,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
             return vNewNodeInstance;
 
-        }, true];
+        }
 
     }
 
@@ -106,7 +106,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
     if (isVOldNodeComponent && !isVNewNodeComponent) {
 
-        return [function () {
+        return function () {
 
             const node = oldComponent._internals.realDOM;
             const [diffPatch, diffChanges] = diff(oldComponent._internals.virtualNode, newComponent);
@@ -123,7 +123,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
             return newComponent;
 
-        }, true];
+        }
 
     }
 
@@ -131,7 +131,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
      * if old virtual node is not component and new is, create instance of new component and replace it with the virtual node
      */
 
-    return [function (node) {
+    return function (node) {
 
         const vNewNodeInstance = createComponentInstance(newComponent);
 
@@ -150,6 +150,6 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         return vNewNodeInstance;
 
-    }, true];
+    }
 
 }

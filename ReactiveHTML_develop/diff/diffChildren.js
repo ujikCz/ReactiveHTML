@@ -29,14 +29,14 @@ export default function diffChildren(oldVChildren, newVChildren) {
             const oldIndex = keyedOld[key];
             delete keyedOld[key];
 
-            const [diffPatch, diffChanges] = diff(oldVChildren[oldIndex].virtualNode, newVChildren[newIndex]);
+            const childPatch = diff(oldVChildren[oldIndex].virtualNode, newVChildren[newIndex]);
 
-            if(diffChanges) {
+            if(childPatch) {
 
                 childPatches.push(function(node) {
 
                     newVChildren[newIndex] = {
-                        virtualNode: diffPatch(node),
+                        virtualNode: childPatch(node),
                         realDOM: node
                     };
     
@@ -66,7 +66,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
         childPatches.push(function(node) {
 
-            diff(oldVChildren[oldIndex].virtualNode, undefined)[0](node);
+            diff(oldVChildren[oldIndex].virtualNode, undefined)(node);
 
         });
 
@@ -84,9 +84,9 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
             if(isArray(oldItem)) {
 
-                const [recursionPatch, recursionChanges] = diffChildren(oldItem, newVChildren[index])
+                const recursionPatch = diffChildren(oldItem, newVChildren[index])
 
-                if(recursionChanges) {
+                if(recursionPatch) {
 
                     additionalPatches.push(recursionPatch);
 
@@ -94,14 +94,14 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
             } else {
 
-                const [patch, changes] = diff(oldItem.virtualNode, newVChildren[index]);
+                const childPatch = diff(oldItem.virtualNode, newVChildren[index]);
 
-                if(changes) {
+                if(childPatch) {
                     
                     childPatches.push(function(node) {
 
                         newVChildren[index] = {
-                            virtualNode: patch(node),
+                            virtualNode: childPatch(node),
                             realDOM: node
                         };
     
@@ -130,7 +130,13 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
     }
 
-    return [function (parent) {
+    if(additionalPatches.length + childPatches.length === 0) {
+
+        return null;
+
+    }
+
+    return function (parent) {
 
         //zipping method is algorithm that sort patch and child to create a pair for patch the exact child
 
@@ -150,7 +156,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
  
         return newVChildren;
         
-    }, additionalPatches.length + childPatches.length];
+    }
 
 }
 

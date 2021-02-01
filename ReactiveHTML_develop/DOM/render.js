@@ -45,7 +45,15 @@ export default function render(virtualNode) {
 
     if (isArray(virtualNode)) {
 
-        return virtualNode.map(singleVirtualNode => render(singleVirtualNode));
+        const res = [];
+
+        for(let i = 0; i < virtualNode.length; i++) {
+
+            res.push(render(virtualNode[i]));
+
+        }
+
+        return res;
     
     }
 
@@ -57,7 +65,6 @@ export default function render(virtualNode) {
 
         virtualNode = createComponentInstance(virtualNode);
         //component
-
         const newNodeDefinition = render(virtualNode._internals.virtualNode);
         virtualNode._internals = newNodeDefinition;
 
@@ -81,14 +88,14 @@ export default function render(virtualNode) {
      */
 
     const newRealNode = createDomElement(virtualNode);
+    const __ref = virtualNode._ref;
+    if (__ref) {
 
-    if (virtualNode._ref) {
+        Object.assign(__ref, resolveRef(__ref, newRealNode));
 
-        Object.assign(virtualNode._ref, resolveRef(virtualNode._ref, newRealNode));
+        if(__ref._onresolve) {
 
-        if(virtualNode._ref._onresolve) {
-
-            virtualNode._ref._onresolve(virtualNode._ref);
+            __ref._onresolve(__ref);
 
         }
 

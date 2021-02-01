@@ -8,24 +8,20 @@ export default function diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isV
      *   if both are not a virtual node, it is text node, so replace its value 
      */ 
 
-    let changes = false;
-
      if (!isVOldNodeObject && !isVNewNodeObject) {
 
         if (vOldNode !== vNewNode) {
 
-            changes = true;
-
-            return [function (node) {
+            return function (node) {
 
                 node.nodeValue = vNewNode;
                 return vNewNode;
 
-            }, changes]
+            }
 
         } else {
 
-            return [() => vOldNode, changes];
+            return null;
 
         }
 
@@ -34,9 +30,8 @@ export default function diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isV
     /*
      *   if one of virtualNodes is not virtualNode (means Number or String) replace it as textNode
      */
-    changes = true;
-
-    return [function (node) {
+    
+    return function (node) {
 
         const newNodeDefinition = render(vNewNode);
 
@@ -44,6 +39,6 @@ export default function diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isV
 
         return newNodeDefinition.virtualNode;
 
-    }, changes];
+    }
 
 }

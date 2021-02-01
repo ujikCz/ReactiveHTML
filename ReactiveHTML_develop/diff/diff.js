@@ -22,13 +22,9 @@ export default function diff(vOldNode, vNewNode) {
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
      */
 
-    let changes = false;
-
     if (vNewNode === undefined) {
 
-        changes = true;
-
-        return [function (node) {
+        return function (node) {
 
             willUnMount({
                 virtualNode: vOldNode
@@ -38,7 +34,7 @@ export default function diff(vOldNode, vNewNode) {
 
             return undefined;
 
-        }, changes];
+        }
 
     }
 
@@ -50,8 +46,15 @@ export default function diff(vOldNode, vNewNode) {
 
     if (!isVOldNodeObject || !isVNewNodeObject) {
 
-        return diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isVNewNodeObject);
+        const nonObjectPatches = diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isVNewNodeObject);
 
+        if(!nonObjectPatches) {
+
+            return null;
+
+        }
+
+        return nonObjectPatches;
     }
 
     const isVOldNodeComponent = isComponent(vOldNode.type), isVNewNodeComponent = isComponent(vNewNode.type);
@@ -70,9 +73,7 @@ export default function diff(vOldNode, vNewNode) {
 
     if (vOldNode.type !== vNewNode.type) {
 
-        changes = true;
-
-        return [function (node) {
+        return function (node) {
 
             const newNodeDefinition = render(vNewNode);
 
@@ -80,34 +81,33 @@ export default function diff(vOldNode, vNewNode) {
 
             return newNodeDefinition.virtualNode;
 
-        }, changes];
+        }
 
     }
-
+    
     const attrPatches = diffAttrs(vOldNode.attrs || {}, vNewNode.attrs || {});
 
-    const [childrenPatches, childrenChanges] = diffChildren(vOldNode.children, vNewNode.children);
+    const childrenPatches = diffChildren(vOldNode.children, vNewNode.children);
 
-    if(childrenChanges || attrPatches) {
+    if(!childrenPatches && !attrPatches) {
 
-        changes = true;
+        return null;
 
     }
 
-    return [function (node) {
+    return function (node) {
 
         if (attrPatches) {
             vOldNode.attrs = attrPatches(node);
         }
 
-        if(childrenChanges) {
+        if(childrenPatches) {
 
             vOldNode.children = childrenPatches(node);
 
         }
 
-
         return vOldNode;
 
-    }, changes];
+    }
 };

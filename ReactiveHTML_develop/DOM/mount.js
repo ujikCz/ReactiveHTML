@@ -2,7 +2,6 @@
 
 import isArray from "../isArray.js";
 import isComponent from "../isComponent.js";
-import isNullOrUndef from "../isNullOrUndef.js";
 import isObject from "../isObject.js";
 import mountLifecycle from "../vnode/component/lifecycles/mountLifecycle.js";
 import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle.js";
@@ -16,17 +15,6 @@ import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle
  */
 
 export default function mount(newNodedef, container, method, ...args) {
-
-    if(isArray(newNodedef)) {
-
-        for(let i = 0; i < newNodedef.length; i++) {
-
-            mount(newNodedef[i], container, 'appendChild');
-
-        }
-
-        return newNodedef;
-    }
 
     const virtualNode = newNodedef.virtualNode;
     const realDOM = newNodedef.realDOM;

@@ -1,3 +1,4 @@
+import isArray from "../isArray.js";
 import isNullOrUndef from "../isNullOrUndef.js";
 import isObject from "../isObject.js";
 import mount from "./mount.js";
@@ -61,7 +62,23 @@ export default function createDomElement(vnode) {
 
         for(let i = 0; i < children.length; i++) {
 
-            children[i] = mount(render(children[i]), el, 'appendChild');
+            const elementDef = render(children[i]);
+
+            if(isArray(elementDef)) {
+
+                for(let i = 0; i < elementDef.length; i++) {
+
+                    mount(elementDef[i], el, 'appendChild');
+
+                }
+
+            } else {
+
+                mount(elementDef, el, 'appendChild');
+
+            }
+
+            children[i] = elementDef;
 
         }
 

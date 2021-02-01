@@ -6,7 +6,6 @@
 
 import createElement from './vnode/createVnodeElement.js';
 import Component from './vnode/component/component.js';
-import memo from './memo.js';
 import mount from './DOM/mount.js';
 import isComponent from './isComponent.js';
 import render from './DOM/render.js';
@@ -33,19 +32,16 @@ import shedule from './shedule.js';
         render: function(virtualElement, container) {
 
             shedule(() => {
-                console.time('renderSH');
+
                 if(!container || container.nodeType !== Node.ELEMENT_NODE) {
 
                     throw TypeError(`render(...) container must be valid Element that is already rendered on page, try to use DOMContentLoaded event on window to wait for all Elements load`);
     
                 }
-    
-                virtualElement = render(virtualElement);
-                
-                mount(virtualElement, container, 'appendChild');
-                console.timeEnd('renderSH');
+                    
+                mount(render(virtualElement), container, 'appendChild');
 
-            });
+           });
 
         },
 
@@ -66,8 +62,6 @@ import shedule from './shedule.js';
             }
 
         },
-
-        memo,
 
         ref: function(callback) {
             

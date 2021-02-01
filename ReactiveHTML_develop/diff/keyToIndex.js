@@ -1,6 +1,5 @@
 import isArray from "../isArray.js";
 import isNullOrUndef from "../isNullOrUndef.js";
-import isObject from "../isObject.js";
 
 
 export default function keyToIndex(arr, ...prop) {
@@ -13,13 +12,6 @@ export default function keyToIndex(arr, ...prop) {
         let arrItem = arr[i];
 
         if(isArray(arrItem)) {
-
-            free.push(i);
-            continue;
-
-        }
-
-        if(!isObject(arrItem)) {
 
             free.push(i);
             continue;
