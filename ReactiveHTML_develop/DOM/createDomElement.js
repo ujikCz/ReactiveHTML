@@ -1,6 +1,7 @@
 import isArray from "../isArray.js";
 import isNullOrUndef from "../isNullOrUndef.js";
 import isObject from "../isObject.js";
+import ElementDefinition from "./elementDefinition.js";
 import mount from "./mount.js";
 import render from "./render.js";
 
@@ -10,41 +11,39 @@ import render from "./render.js";
  * @param { Object } vnode 
  */
 
-export default function createDomElement(vnode) {
+export default function createDomElement(tagName, props, children) {
 
     /**
      * create element
      */
 
-    const el = document.createElement(vnode.type);
+    const el = document.createElement(tagName);
 
     /**
      * add attributes, but like element properties for easy manipulation
      */
 
-    const vNodeProps = vnode.props;
-
-    for(const key in vNodeProps) {
+    for(const key in props) {
 
         if (key.startsWith('on')) {
 
-            el.addEventListener(key.replace('on', ''), vNodeProps[key]);
+            el.addEventListener(key.replace('on', ''), props[key]);
 
-        } else if (isObject(vNodeProps[key])) { //cannot be null or undef cause isObject!!!
+        } else if (isObject(props[key])) { //cannot be null or undef cause isObject!!!
 
-            Object.assign(el[key], vNodeProps[key]);
+            Object.assign(el[key], props[key]);
 
         } else {
 
-            if (!isNullOrUndef(vNodeProps[key])) {
+            if (!isNullOrUndef(props[key])) {
 
                 if (key in el) {
 
-                    el[key] = vNodeProps[key];
+                    el[key] = props[key];
 
                 } else {
 
-                    el.setAttribute(key, vNodeProps[key]);
+                    el.setAttribute(key, props[key]);
 
                 }
 
@@ -54,7 +53,6 @@ export default function createDomElement(vnode) {
 
     }
 
-    const children = vnode.children;
 
     for (let i = 0; i < children.length; i++) {
 
@@ -70,21 +68,24 @@ export default function createDomElement(vnode) {
 
                 mount(singleElementDef, el, 'appendChild');
 
-                child[j] = singleElementDef.virtualNode;
             }
 
         } else {
 
             mount(elementDef, el, 'appendChild');
 
-            children[i] = elementDef.virtualNode;
-
         }
+
+        children[i] = elementDef;
 
     }
 
-    return {
-        realDOM: el,
-        virtualNode: vnode
-    };
+    return new ElementDefinition({
+        virtualNode: {
+            type: tagName, 
+            props,
+            children
+        },
+        realDOM: el
+    });
 }

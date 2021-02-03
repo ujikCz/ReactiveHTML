@@ -77,4 +77,6 @@ function VirtualNode(type, props, children, key, ref) {
     this._key = key;
     this._ref = ref;
 
+    return this;
+
 }

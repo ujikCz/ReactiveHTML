@@ -12,30 +12,15 @@ import keyToIndex from './keyToIndex.js';
  * @param { Array } newVChildren - new virtual node children
  */
 
-function zip(arr1, arr2) {
-
-    const res = [];
-
-    const minLen = Math.min(arr1.length, arr2.length);
-    for(let i = 0; i < minLen; i++) {
-        
-        res.push([
-            arr1[i],
-            arr2[i]
-        ]);
-
-    }
-
-    return res;
-
-}
 
 export default function diffChildren(oldVChildren, newVChildren) {
 
+    const updatedVChildren = [];
     const childPatches = [];
-    const childPatchesIndexes = [];
+
     const additionalPatches = [];
-    const newVChildrenPatches = Object.keys(newVChildren);
+    const newVChildrenSkips = Object.keys(newVChildren);
+
     let skippedPatchesIterator = 0;
 
     const keyedNew = keyToIndex(newVChildren);
@@ -48,7 +33,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
             const recursionPatch = diffChildren(vOldNode, newVChildren[i]);
 
-            newVChildrenPatches.splice(i - skippedPatchesIterator++, 1);
+            newVChildrenSkips.splice(i - skippedPatchesIterator++, 1);
 
             if (recursionPatch) {
 
@@ -61,62 +46,62 @@ export default function diffChildren(oldVChildren, newVChildren) {
             const key = vOldNode._key;
             const inNewKeyed = keyedNew[key];         
             
-            newVChildrenPatches.splice(inNewKeyed - skippedPatchesIterator++, 1);
+            newVChildrenSkips.splice(inNewKeyed - skippedPatchesIterator++, 1);
 
-            const childPatch = diff(vOldNode, newVChildren[inNewKeyed]);
+            const childPatch = diff(vOldNode.virtualNode, newVChildren[inNewKeyed]);
 
             if (childPatch) {
 
-                childPatches.push(function (node) {
+                vOldNode.patch = function (node) {
 
-                    newVChildren[inNewKeyed] = childPatch(node).virtualNode;
+                    updatedVChildren[inNewKeyed] = childPatch(node);
 
-                });
+                };
 
-                childPatchesIndexes.push(i);
+                childPatches.push(i);
 
             } else {
 
-                newVChildren[inNewKeyed] = vOldNode;
+                updatedVChildren[inNewKeyed] = vOldNode;
 
             }
 
         } else {
 
-            const childPatch = diff(vOldNode, newVChildren[i]);
+            const childPatch = diff(vOldNode.virtualNode, newVChildren[i]);
 
             if (childPatch) {
 
-                childPatches.push(function (node) {
+                vOldNode.patch = function (node) {
 
-                    newVChildren[i] = childPatch(node).virtualNode;
+                    updatedVChildren[i] = childPatch(node);
 
-                });
+                };
 
-                childPatchesIndexes.push(i);
+                childPatches.push(i);
 
             } else {
 
-                newVChildren[i] = vOldNode;
+                updatedVChildren[i] = vOldNode;
 
             }
 
-            newVChildrenPatches.splice(i - skippedPatchesIterator++, 1);
+            newVChildrenSkips.splice(i - skippedPatchesIterator++, 1);
 
         }
 
     }
 
-    for (let i = 0; i < newVChildrenPatches.length; i++) {
+    for (let i = 0; i < newVChildrenSkips.length; i++) {
 
-        const newVNode = newVChildren[newVChildrenPatches[i]];
+        const newVNode = updatedVChildren[newVChildrenSkips[i]];
 
         if (newVNode._key) {
 
             const indexFromKey = keyedNew[newVNode._key];
 
             const newNodeDef = render(newVNode);
-            newVChildren[indexFromKey] = newNodeDef.virtualNode;
+            updatedVChildren[indexFromKey] = newNodeDef;
 
             additionalPatches.push(function (parent) {
 
@@ -127,7 +112,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
         } else {
 
             const newNodeDef = render(newVNode);
-            newVChildren[i] = newNodeDef.virtualNode;
+            updatedVChildren[i] = newNodeDef;
 
             additionalPatches.push(function (parent) {
 
@@ -148,12 +133,13 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
     return function (parent) {
 
-        //zipping method is algorithm that sort patch and child to create a pair for patch the exact child
-        zip(parent.childNodes, childPatches).forEach(([child, patch]) => {
+        for(let i = 0; i < childPatches.length; i++) {
 
-            patch(child);
+            const oldVChild = oldVChildren[childPatches[i]];
 
-        });
+            oldVChild.patch(oldVChild.realDOM);
+
+        }
 
         for (let i = 0; i < additionalPatches.length; i++) {
 
@@ -161,7 +147,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
         }
 
-        return newVChildren;
+        return updatedVChildren;
 
     }
 

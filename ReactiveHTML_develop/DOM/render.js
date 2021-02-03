@@ -6,7 +6,7 @@ import createComponentInstance from "../vnode/component/createComponentInstance.
 import renderLifecycle from "../vnode/component/lifecycles/renderLifecycle.js";
 import createDomElement from "./createDomElement.js";
 import resolveRef from "./resolveRef.js";
-
+import ElementDefinition from './elementDefinition.js';
 /**
  * render function convert virtual dom to real dom
  * @param { Object } virtualNode - virtual dom representation of real dom
@@ -39,7 +39,7 @@ export default function render(virtualNode) {
         return {
             realDOM: document.createTextNode(virtualNode),
             virtualNode
-        }
+        };
 
     }
 
@@ -84,9 +84,8 @@ export default function render(virtualNode) {
     /**
      * creates basic elements
      */
-    const newRealNode = createDomElement(virtualNode);
 
-    virtualNode = newRealNode.virtualNode;
+    const newRealNode = createDomElement(virtualNode.type, {...virtualNode.props}, [...virtualNode.children]);
 
     if (virtualNode._ref) {
 

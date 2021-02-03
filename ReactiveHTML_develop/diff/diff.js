@@ -22,7 +22,6 @@ export default function diff(vOldNode, vNewNode) {
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
      */
 
-
     if (vNewNode === undefined) {
 
         return function (node) {
@@ -98,25 +97,25 @@ export default function diff(vOldNode, vNewNode) {
 
         if (attrPatches) {
 
-            vNewNode.props = attrPatches(node);
+            vOldNode.props = attrPatches(node);
 
         } else {
 
-            vNewNode.props = vOldNode.props;
+            vOldNode.props = vOldNode.props;
 
         }
 
         if(childrenPatches) {
 
-            vNewNode.children = childrenPatches(node);
+            vOldNode.children = [...childrenPatches(node)];
 
         } else {
 
-            vNewNode.children = vOldNode.children;
+            vOldNode.children = vOldNode.children;
 
         }
 
-        return { virtualNode: vNewNode, realDOM: node };
+        return { virtualNode: vOldNode, realDOM: node };
 
     }
 };
