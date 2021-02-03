@@ -26,7 +26,7 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
-            willUnMount(vOldNode);
+            //willUnMount(vOldNode);
 
             node.remove();
 
@@ -99,19 +99,11 @@ export default function diff(vOldNode, vNewNode) {
 
             vOldNode.props = attrPatches(node);
 
-        } else {
-
-            vOldNode.props = vOldNode.props;
-
         }
 
         if(childrenPatches) {
 
-            vOldNode.children = [...childrenPatches(node)];
-
-        } else {
-
-            vOldNode.children = vOldNode.children;
+            vOldNode.children = childrenPatches(node);
 
         }
 

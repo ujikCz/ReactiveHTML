@@ -15,6 +15,8 @@ import keyToIndex from './keyToIndex.js';
 
 export default function diffChildren(oldVChildren, newVChildren) {
 
+    console.log(oldVChildren, newVChildren);
+
     const updatedVChildren = [];
     const childPatches = [];
 
@@ -37,18 +39,23 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
             if (recursionPatch) {
 
-                additionalPatches.push(recursionPatch);
+                additionalPatches.push(function(parent) {
+                    
+                    updatedVChildren[i] = recursionPatch(parent);
+
+                });
 
             }
 
-        } else if (vOldNode._key) {
+        } else if (vOldNode.virtualNode._key) {
 
-            const key = vOldNode._key;
+            const oldVirtualNode = vOldNode.virtualNode
+            const key = oldVirtualNode._key;
             const inNewKeyed = keyedNew[key];         
             
             newVChildrenSkips.splice(inNewKeyed - skippedPatchesIterator++, 1);
 
-            const childPatch = diff(vOldNode.virtualNode, newVChildren[inNewKeyed]);
+            const childPatch = diff(oldVirtualNode, newVChildren[inNewKeyed]);
 
             if (childPatch) {
 
@@ -94,7 +101,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
     for (let i = 0; i < newVChildrenSkips.length; i++) {
 
-        const newVNode = updatedVChildren[newVChildrenSkips[i]];
+        const newVNode = newVChildren[newVChildrenSkips[i]];
 
         if (newVNode._key) {
 
@@ -146,6 +153,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
             additionalPatches[i](parent);
 
         }
+
 
         return updatedVChildren;
 
