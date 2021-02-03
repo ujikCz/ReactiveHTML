@@ -22,17 +22,16 @@ export default function diff(vOldNode, vNewNode) {
      *   if new virtualNode is undefined (doesn't exists) and old virtualNode exists, remove the realNode
      */
 
+
     if (vNewNode === undefined) {
 
         return function (node) {
 
-            willUnMount({
-                virtualNode: vOldNode
-            });
+            willUnMount(vOldNode);
 
             node.remove();
 
-            return undefined;
+            return { virtualNode: undefined, realDOM: undefined };
 
         }
 
@@ -79,13 +78,13 @@ export default function diff(vOldNode, vNewNode) {
 
             mount(newNodeDefinition, node, 'replaceWith');
 
-            return newNodeDefinition.virtualNode;
+            return newNodeDefinition;
 
         }
 
     }
     
-    const attrPatches = diffAttrs(vOldNode.attrs || {}, vNewNode.attrs || {});
+    const attrPatches = diffAttrs(vOldNode.props || {}, vNewNode.props || {});
 
     const childrenPatches = diffChildren(vOldNode.children, vNewNode.children);
 
@@ -98,16 +97,26 @@ export default function diff(vOldNode, vNewNode) {
     return function (node) {
 
         if (attrPatches) {
-            vOldNode.attrs = attrPatches(node);
+
+            vNewNode.props = attrPatches(node);
+
+        } else {
+
+            vNewNode.props = vOldNode.props;
+
         }
 
         if(childrenPatches) {
 
-            vOldNode.children = childrenPatches(node);
+            vNewNode.children = childrenPatches(node);
+
+        } else {
+
+            vNewNode.children = vOldNode.children;
 
         }
 
-        return vOldNode;
+        return { virtualNode: vNewNode, realDOM: node };
 
     }
 };

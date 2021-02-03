@@ -1,42 +1,21 @@
-import isArray from "../isArray.js";
-import isNullOrUndef from "../isNullOrUndef.js";
 
 
-export default function keyToIndex(arr, ...prop) {
+export default function keyToIndex(arr) {
 
     const keyed = {};
-    const free = [];
 
     for(let i = 0; i < arr.length; i++) {
 
-        let arrItem = arr[i];
+        const arrItem = arr[i];
 
-        if(isArray(arrItem)) {
+        if(arrItem._key) {
 
-            free.push(i);
-            continue;
-
-        }
-
-        const objItem = prop[1] ? arrItem[prop[0]][prop[1]] : arrItem[prop[0]];
-
-        if(!isNullOrUndef(objItem)) {
-
-            keyed[objItem] = i;
-            continue;
-
-        } else {
-
-            free.push(i);
-            continue;
+            keyed[arrItem._key] = i;
 
         }
 
     }
 
-    return [
-        keyed,
-        free
-    ];
+    return keyed;
 
 }

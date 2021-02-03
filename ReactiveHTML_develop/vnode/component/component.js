@@ -13,7 +13,7 @@ export default function Component(props) {
     this._internals = {
 
         realDOM: null,
-        virtual: null
+        virtualNode: null
 
     };
 

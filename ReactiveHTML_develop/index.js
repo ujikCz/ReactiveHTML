@@ -9,7 +9,7 @@ import Component from './vnode/component/component.js';
 import mount from './DOM/mount.js';
 import isComponent from './isComponent.js';
 import render from './DOM/render.js';
-import shedule from './shedule.js';
+import rAF from './rAF.js';
 
 /**
  * whole library is in container funciton for use library in node.js, js, as modules, ...
@@ -31,15 +31,18 @@ import shedule from './shedule.js';
 
         render: function(virtualElement, container) {
 
-            shedule(() => {
+            rAF(() => {
 
                 if(!container || container.nodeType !== Node.ELEMENT_NODE) {
 
                     throw TypeError(`render(...) container must be valid Element that is already rendered on page, try to use DOMContentLoaded event on window to wait for all Elements load`);
     
                 }
+
+                const newNodeDef = render(virtualElement);
+                virtualElement = newNodeDef.virtualNode;
                     
-                mount(render(virtualElement), container, 'appendChild');
+                mount(newNodeDef, container, 'appendChild');
 
            });
 
@@ -63,15 +66,12 @@ import shedule from './shedule.js';
 
         },
 
-        ref: function(callback) {
+        ref: function() {
             
-            const refPayload = {
+            return {
                 node: null,
-                resolved: false,
-                _onresolve: callback
+                resolved: false
             };  
-
-            return refPayload;
 
         }
 

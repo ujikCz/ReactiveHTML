@@ -39,7 +39,7 @@ export default function render(virtualNode) {
         return {
             realDOM: document.createTextNode(virtualNode),
             virtualNode
-        };
+        }
 
     }
 
@@ -64,16 +64,14 @@ export default function render(virtualNode) {
     if (isComponent(virtualNode.type)) {
 
         virtualNode = createComponentInstance(virtualNode);
-        //component
+        //component 
         const newNodeDefinition = render(virtualNode._internals.virtualNode);
         virtualNode._internals = newNodeDefinition;
-
 
         /**
          * means if virtual is not element but component, it become Class.Component from {type, props, _key}
          * we must overwrite the virtal beacause of this
          */
-
         renderLifecycle(virtualNode);
 
         return {
@@ -86,25 +84,17 @@ export default function render(virtualNode) {
     /**
      * creates basic elements
      */
-
     const newRealNode = createDomElement(virtualNode);
-    const __ref = virtualNode._ref;
-    if (__ref) {
 
-        Object.assign(__ref, resolveRef(__ref, newRealNode));
+    virtualNode = newRealNode.virtualNode;
 
-        if(__ref._onresolve) {
+    if (virtualNode._ref) {
 
-            __ref._onresolve(__ref);
-
-        }
+        virtualNode._ref = resolveRef(newRealNode.realDOM);
 
     }
 
     //virtualNode
-    return {
-        realDOM: newRealNode,
-        virtualNode
-    };
+    return newRealNode;
 
 }

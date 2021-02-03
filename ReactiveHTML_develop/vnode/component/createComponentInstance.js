@@ -5,16 +5,12 @@
  * @param { Object } component 
  */
 
-import checkVirtual from "./checkVirtualOfComponent.js";
-
 
 export default function createComponentInstance(component) {
     
     const instance = new component.type(component.props);
 
-    instance._internals.virtualNode = checkVirtual(
-        instance.Element()
-    );
+    instance._internals.virtualNode = instance.Element();
 
     instance._key = component._key;
 

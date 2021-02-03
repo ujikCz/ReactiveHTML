@@ -1,6 +1,5 @@
 
 
-import isArray from "../isArray.js";
 import isComponent from "../isComponent.js";
 import isObject from "../isObject.js";
 import mountLifecycle from "../vnode/component/lifecycles/mountLifecycle.js";

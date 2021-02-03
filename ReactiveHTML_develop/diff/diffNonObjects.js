@@ -15,7 +15,7 @@ export default function diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isV
             return function (node) {
 
                 node.nodeValue = vNewNode;
-                return vNewNode;
+                return { virtualNode: vNewNode, realDOM: node };
 
             }
 
@@ -37,7 +37,7 @@ export default function diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isV
 
         mount(newNodeDefinition, node, 'replaceWith');
 
-        return newNodeDefinition.virtualNode;
+        return newNodeDefinition;
 
     }
 

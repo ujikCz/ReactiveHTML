@@ -5,9 +5,7 @@
  * @param  { Array of vnodes } children 
  */
 
-import keyToIndex from "../diff/keyToIndex.js";
 import isComponent from "../isComponent.js";
-import isFunction from "../isFunction.js";
 
 export default function createVnodeElement(type, props = null, ...children) {
 
@@ -42,52 +40,41 @@ export default function createVnodeElement(type, props = null, ...children) {
     }
 
     props = props || {};
-   
-        /**
-         * if element is component
-         */
-
-        if (isComponent(type)) {
-
-            /**
-             * returning children as props we can create components like this:
-             * <Component>${ 4 + 1 }</Component>
-             * in this example our children prop is (5)
-             */
-
-            if (children.length) {
-
-                props = {
-                    children,
-                    ...props
-                }
-
-            }
-
-            return {
-                type,
-                props,
-                _key
-            }
-
-        }
-
-    if (isFunction(type) || !(typeof type === 'string' || type instanceof String)) {
-
-        throw TypeError(`createElement(...) type can be only Component or String as tag of Element`);
-
-    }
 
     /**
-     * if element is basic virtual node element
+     * if element is component
      */
 
-    return {
-        type,
-        attrs: props,
-        children,
-        _key,
-        _ref
+
+    return new VirtualNode(type, props, children, _key, _ref);
+
+}
+
+function VirtualNode(type, props, children, key, ref) {
+
+    if(isComponent(type)) {
+
+        if(children.length) {
+
+            props = {
+                children,
+                ...props
+            };
+
+        }
+        
+
+    } else {
+
+        this.children = children;
+
     }
+
+    this.props = props;
+
+    this.type = type;
+
+    this._key = key;
+    this._ref = ref;
 
 }

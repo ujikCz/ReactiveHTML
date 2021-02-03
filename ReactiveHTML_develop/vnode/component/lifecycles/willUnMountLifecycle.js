@@ -10,8 +10,6 @@ import isObject from "../../../isObject.js";
 
 export default function willUnMount(component) {
 
-    component = component.virtualNode;
-
     if (isObject(component)) {
 
         if (isComponent(component.type)) {

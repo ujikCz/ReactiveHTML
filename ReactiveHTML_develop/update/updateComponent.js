@@ -1,6 +1,5 @@
 import diff from '../diff/diff.js';
 import assignNewPropsAndStates from '../vnode/component/assignNewPropsAndStates.js';
-import checkVirtual from '../vnode/component/checkVirtualOfComponent.js';
 import getSnapshotBeforeUpdateLifecycle from '../vnode/component/lifecycles/getSnapshotBeforeUpdate.js';
 
 /**
@@ -48,14 +47,12 @@ export default function updateComponent(oldComponent, nextProps, nextStates) {
 
     oldComponent.onComponentWillUpdate(snapshot);
 
-    const newVNode = checkVirtual(
-        oldComponent.Element()
-    );
+    const newVNode = oldComponent.Element();
 
     /**
      * using diffChildren we can manipulate with appendChild and insertBefore
      */
-
+    
      return [diff(oldComponent._internals.virtualNode, newVNode), snapshot];
 
 }

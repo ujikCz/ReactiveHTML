@@ -22,27 +22,29 @@ export default function createDomElement(vnode) {
      * add attributes, but like element properties for easy manipulation
      */
 
-    for (const key in vnode.attrs) {
+    const vNodeProps = vnode.props;
+
+    for(const key in vNodeProps) {
 
         if (key.startsWith('on')) {
 
-            el.addEventListener(key.replace('on', ''), vnode.attrs[key]);
+            el.addEventListener(key.replace('on', ''), vNodeProps[key]);
 
-        } else if (isObject(vnode.attrs[key])) { //cannot be null or undef cause isObject!!!
+        } else if (isObject(vNodeProps[key])) { //cannot be null or undef cause isObject!!!
 
-            Object.assign(el[key], vnode.attrs[key]);
+            Object.assign(el[key], vNodeProps[key]);
 
         } else {
 
-            if (!isNullOrUndef(vnode.attrs[key])) {
+            if (!isNullOrUndef(vNodeProps[key])) {
 
                 if (key in el) {
 
-                    el[key] = vnode.attrs[key];
+                    el[key] = vNodeProps[key];
 
                 } else {
 
-                    el.setAttribute(key, vnode.attrs[key]);
+                    el.setAttribute(key, vNodeProps[key]);
 
                 }
 
@@ -52,43 +54,37 @@ export default function createDomElement(vnode) {
 
     }
 
-    /**
-     * do everything again recursively for all children
-     */
+    const children = vnode.children;
 
-     if (vnode.children.length) {
+    for (let i = 0; i < children.length; i++) {
 
-        const children = vnode.children;
+        const child = children[i];
 
-        for(let i = 0; i < children.length; i++) {
+        const elementDef = render(child);
 
-            const elementDef = render(children[i]);
+        if (isArray(elementDef)) {
 
-            if(isArray(elementDef)) {
+            for (let j = 0; j < elementDef.length; j++) {
 
-                for(let i = 0; i < elementDef.length; i++) {
+                const singleElementDef = elementDef[j];
 
-                    mount(elementDef[i], el, 'appendChild');
+                mount(singleElementDef, el, 'appendChild');
 
-                }
-
-            } else {
-
-                mount(elementDef, el, 'appendChild');
-
+                child[j] = singleElementDef.virtualNode;
             }
 
-            children[i] = elementDef;
+        } else {
+
+            mount(elementDef, el, 'appendChild');
+
+            children[i] = elementDef.virtualNode;
 
         }
 
     }
 
-
-    /**
-     * return final element
-     */
-
-    return el;
-
+    return {
+        realDOM: el,
+        virtualNode: vnode
+    };
 }

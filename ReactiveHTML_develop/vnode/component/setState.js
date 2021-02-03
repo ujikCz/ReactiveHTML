@@ -35,7 +35,7 @@ export default function setState(component, setter, setStateSyncPropsUpdate) {
 
                 if(patch) {
 
-                    component._internals.virtualNode = patch(component._internals.realDOM);
+                    component._internals = patch(component._internals.realDOM);
 
                 }
 

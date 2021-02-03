@@ -40,15 +40,15 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
                 attrsPatches.push(function (node) {
 
-                    node.removeAttribute(key === 'className' ? 'class' : key);
+                    if(key in node) {
 
-                });
+                        node[key] = newAttrs[key];
 
-            } else if(key in node) {
+                    } else {
 
-                attrsPatches.push(function (node) {
+                        node.removeAttribute(key === 'className' ? 'class' : key);
 
-                    node[key] = newAttrs[key];
+                    }
 
                 });
 
@@ -56,7 +56,15 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
                 attrsPatches.push(function (node) {
 
-                    node.setAttribute(key, newAttrs[key]);
+                    if(key in node) {
+
+                        node[key] = newAttrs[key];
+
+                    } else {
+
+                        node.setAttribute(key, newAttrs[key]);
+
+                    }
 
                 });
 
