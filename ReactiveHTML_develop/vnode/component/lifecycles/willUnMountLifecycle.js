@@ -1,3 +1,4 @@
+import isArray from "../../../isArray.js";
 import isComponent from "../../../isComponent.js";
 import isObject from "../../../isObject.js";
 
@@ -29,8 +30,8 @@ export default function willUnMount(component) {
             willUnMount(component._internals.virtualNode);
 
         } else {
-            
-            const children = component.children;
+
+            const children = isArray(component) ? component : component.children;
 
             for (let i = 0; i < children.length; i++) {
 

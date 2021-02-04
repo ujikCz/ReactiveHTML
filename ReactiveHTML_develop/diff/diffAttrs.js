@@ -44,11 +44,9 @@ export default function diffAttrs(oldAttrs, newAttrs) {
 
                         node[key] = newAttrs[key];
 
-                    } else {
+                    } 
 
-                        node.removeAttribute(key === 'className' ? 'class' : key);
-
-                    }
+                    node.removeAttribute(key === 'className' ? 'class' : key);
 
                 });
 

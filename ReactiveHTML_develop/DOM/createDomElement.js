@@ -1,7 +1,6 @@
 import isArray from "../isArray.js";
 import isNullOrUndef from "../isNullOrUndef.js";
 import isObject from "../isObject.js";
-import ElementDefinition from "./elementDefinition.js";
 import mount from "./mount.js";
 import render from "./render.js";
 
@@ -11,17 +10,19 @@ import render from "./render.js";
  * @param { Object } vnode 
  */
 
-export default function createDomElement(tagName, props, children) {
+export default function createDomElement(virtualNode) {
 
     /**
      * create element
      */
 
-    const el = document.createElement(tagName);
+    const el = document.createElement(virtualNode.type);
 
     /**
      * add attributes, but like element properties for easy manipulation
      */
+
+    const props = virtualNode.props;
 
     for(const key in props) {
 
@@ -53,12 +54,12 @@ export default function createDomElement(tagName, props, children) {
 
     }
 
+    const children = virtualNode.children;
+    const resChildren = [];
 
     for (let i = 0; i < children.length; i++) {
 
-        const child = children[i];
-
-        const elementDef = render(child);
+        const elementDef = render(children[i]);
 
         if (isArray(elementDef)) {
 
@@ -76,16 +77,18 @@ export default function createDomElement(tagName, props, children) {
 
         }
 
-        children[i] = elementDef;
+        resChildren.push(elementDef);
 
     }
 
-    return new ElementDefinition({
+    return {
         virtualNode: {
-            type: tagName, 
-            props,
-            children
+            type: virtualNode.type,
+            props: virtualNode.props,
+            children: resChildren,
+            _key: virtualNode._key,
+            _ref: virtualNode._ref
         },
         realDOM: el
-    });
+    };
 }

@@ -15,17 +15,15 @@ import keyToIndex from './keyToIndex.js';
 
 export default function diffChildren(oldVChildren, newVChildren) {
 
-    console.log(oldVChildren, newVChildren);
-
     const updatedVChildren = [];
     const childPatches = [];
 
     const additionalPatches = [];
-    const newVChildrenSkips = Object.keys(newVChildren);
-
-    let skippedPatchesIterator = 0;
+    const additionalNewVChildrenIndexes = Object.keys(newVChildren);
+    let skipIndexIterator = 0;
 
     const keyedNew = keyToIndex(newVChildren);
+
 
     for (let i = 0; i < oldVChildren.length; i++) {
 
@@ -35,8 +33,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
             const recursionPatch = diffChildren(vOldNode, newVChildren[i]);
 
-            newVChildrenSkips.splice(i - skippedPatchesIterator++, 1);
-
             if (recursionPatch) {
 
                 additionalPatches.push(function(parent) {
@@ -45,16 +41,20 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                 });
 
+            } else {
+
+                updatedVChildren[i] = vOldNode;
+
             }
+
+            additionalNewVChildrenIndexes.splice(i - skipIndexIterator++, 1);
 
         } else if (vOldNode.virtualNode._key) {
 
-            const oldVirtualNode = vOldNode.virtualNode
+            const oldVirtualNode = vOldNode.virtualNode;
             const key = oldVirtualNode._key;
             const inNewKeyed = keyedNew[key];         
             
-            newVChildrenSkips.splice(inNewKeyed - skippedPatchesIterator++, 1);
-
             const childPatch = diff(oldVirtualNode, newVChildren[inNewKeyed]);
 
             if (childPatch) {
@@ -72,6 +72,8 @@ export default function diffChildren(oldVChildren, newVChildren) {
                 updatedVChildren[inNewKeyed] = vOldNode;
 
             }
+
+            additionalNewVChildrenIndexes.splice(inNewKeyed - skipIndexIterator++, 1);
 
         } else {
 
@@ -93,15 +95,16 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
             }
 
-            newVChildrenSkips.splice(i - skippedPatchesIterator++, 1);
+            additionalNewVChildrenIndexes.splice(i - skipIndexIterator++, 1);
 
         }
 
     }
 
-    for (let i = 0; i < newVChildrenSkips.length; i++) {
+    for (let i = 0; i < additionalNewVChildrenIndexes.length; i++) {
 
-        const newVNode = newVChildren[newVChildrenSkips[i]];
+        const indexFromIndexArray = additionalNewVChildrenIndexes[i];
+        const newVNode = newVChildren[indexFromIndexArray];
 
         if (newVNode._key) {
 
@@ -109,6 +112,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
             const newNodeDef = render(newVNode);
             updatedVChildren[indexFromKey] = newNodeDef;
+
 
             additionalPatches.push(function (parent) {
 
@@ -119,7 +123,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
         } else {
 
             const newNodeDef = render(newVNode);
-            updatedVChildren[i] = newNodeDef;
+            updatedVChildren[indexFromIndexArray] = newNodeDef;
 
             additionalPatches.push(function (parent) {
 
@@ -138,6 +142,7 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
     }
 
+
     return function (parent) {
 
         for(let i = 0; i < childPatches.length; i++) {
@@ -153,7 +158,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
             additionalPatches[i](parent);
 
         }
-
 
         return updatedVChildren;
 

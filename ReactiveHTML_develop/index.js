@@ -20,12 +20,12 @@ import rAF from './rAF.js';
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
         typeof define === 'function' && define.amd ? define(factory) :
-        (global = global || self, global.ReactiveHTML = factory());
+        (global = global || self, global.Ocean = factory());
 }(this, function () {
 
     "use strict";
 
-    const ReactiveHTML = {
+    const Ocean = {
 
         Component,
 
@@ -40,7 +40,6 @@ import rAF from './rAF.js';
                 }
 
                 const newNodeDef = render(virtualElement);
-                virtualElement = newNodeDef.virtualNode;
                     
                 mount(newNodeDef, container, 'appendChild');
 
@@ -48,36 +47,11 @@ import rAF from './rAF.js';
 
         },
 
-        createElement,
-
-        createFactory: function(component) {
-
-            if(isComponent(component)) {
-
-                throw TypeError(`createFactory(...) expecting first parameter as component Class, you give ${ typeof component }`);
-
-            }
-
-            return function(props = {}, ...children) {
-
-                return createElement(component, props, ...children);
-
-            }
-
-        },
-
-        ref: function() {
-            
-            return {
-                node: null,
-                resolved: false
-            };  
-
-        }
+        createElement
 
     };
 
 
-    return ReactiveHTML;
+    return Ocean;
 
 }));

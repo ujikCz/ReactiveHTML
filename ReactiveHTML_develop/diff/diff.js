@@ -26,7 +26,7 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
-            //willUnMount(vOldNode);
+            willUnMount(vOldNode.virtualNode);
 
             node.remove();
 

@@ -5,8 +5,6 @@ import isObject from "../isObject.js";
 import createComponentInstance from "../vnode/component/createComponentInstance.js";
 import renderLifecycle from "../vnode/component/lifecycles/renderLifecycle.js";
 import createDomElement from "./createDomElement.js";
-import resolveRef from "./resolveRef.js";
-import ElementDefinition from './elementDefinition.js';
 /**
  * render function convert virtual dom to real dom
  * @param { Object } virtualNode - virtual dom representation of real dom
@@ -85,15 +83,16 @@ export default function render(virtualNode) {
      * creates basic elements
      */
 
-    const newRealNode = createDomElement(virtualNode.type, {...virtualNode.props}, [...virtualNode.children]);
+    const newNodeDef = createDomElement(virtualNode);
+    virtualNode = newNodeDef.virtualNode;
 
     if (virtualNode._ref) {
 
-        virtualNode._ref = resolveRef(newRealNode.realDOM);
+        virtualNode._ref(newNodeDef.realDOM);
 
     }
 
     //virtualNode
-    return newRealNode;
+    return newNodeDef;
 
 }
