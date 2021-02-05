@@ -24,7 +24,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
     const keyedNew = keyToIndex(newVChildren);
 
-
     for (let i = 0; i < oldVChildren.length; i++) {
 
         const vOldNode = oldVChildren[i];

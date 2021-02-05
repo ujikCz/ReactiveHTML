@@ -61,20 +61,20 @@ export default function render(virtualNode) {
 
     if (isComponent(virtualNode.type)) {
 
-        virtualNode = createComponentInstance(virtualNode);
+        const component = createComponentInstance(virtualNode);
         //component 
-        const newNodeDefinition = render(virtualNode._internals.virtualNode);
-        virtualNode._internals = newNodeDefinition;
+        const newNodeDefinition = render(component._internals.virtualNode);
+        component._internals = newNodeDefinition;
 
         /**
          * means if virtual is not element but component, it become Class.Component from {type, props, _key}
          * we must overwrite the virtal beacause of this
          */
-        renderLifecycle(virtualNode);
+        renderLifecycle(component);
 
         return {
-            realDOM: newNodeDefinition.realDOM,
-            virtualNode
+            virtualNode: component,
+            realDOM: newNodeDefinition.realDOM
         };
 
     }

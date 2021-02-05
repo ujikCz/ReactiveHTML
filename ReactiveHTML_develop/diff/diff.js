@@ -44,15 +44,8 @@ export default function diff(vOldNode, vNewNode) {
 
     if (!isVOldNodeObject || !isVNewNodeObject) {
 
-        const nonObjectPatches = diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isVNewNodeObject);
+        return diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isVNewNodeObject);
 
-        if(!nonObjectPatches) {
-
-            return null;
-
-        }
-
-        return nonObjectPatches;
     }
 
     const isVOldNodeComponent = isComponent(vOldNode.type), isVNewNodeComponent = isComponent(vNewNode.type);
