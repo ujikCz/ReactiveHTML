@@ -4,7 +4,7 @@ import createComponentInstance from "../vnode/component/createComponentInstance.
 import mountLifecycle from "../vnode/component/lifecycles/mountLifecycle.js";
 import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle.js";
 import willReceiveProps from "../vnode/component/lifecycles/willReceiveProps.js";
-import willUnMount from "../vnode/component/lifecycles/willUnMountLifecycle.js";
+import componentWillUnMount from "../vnode/component/lifecycles/willUnMount/willUnMountLifecycle.js";
 import diff from "./diff.js";
 
 export default function diffComponents(oldComponent, newComponent, isVOldNodeComponent, isVNewNodeComponent) {
@@ -56,7 +56,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         const diffPatch = diff(vOldNodeInstanceInternals.virtualNode, vNewNodeInstance._internals.virtualNode);
 
-        willUnMount(oldComponent);
+        componentWillUnMount(oldComponent);
 
         return function (node) {
 
@@ -89,7 +89,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         const diffPatch = diff(vOldNodeInstanceInternals.virtualNode, newComponent);
 
-        willUnMount(oldComponent);
+        componentWillUnMount(oldComponent);
 
         if(diffPatch) {
 

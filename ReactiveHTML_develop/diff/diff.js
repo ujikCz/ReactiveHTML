@@ -4,9 +4,9 @@ import isComponent from '../isComponent.js';
 import mount from '../DOM/mount.js';
 import diffComponents from './diffComponents.js';
 import render from '../DOM/render.js';
-import willUnMount from '../vnode/component/lifecycles/willUnMountLifecycle.js';
 import diffNonObjects from './diffNonObjects.js';
 import diffProps from './diffProps.js';
+import treeWillUnMount from '../vnode/component/lifecycles/willUnMount/treeWillUnMount.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -26,7 +26,7 @@ export default function diff(vOldNode, vNewNode) {
 
         return function (node) {
 
-            willUnMount(vOldNode.virtualNode);
+            treeWillUnMount(vOldNode.virtualNode);
 
             node.remove();
 
