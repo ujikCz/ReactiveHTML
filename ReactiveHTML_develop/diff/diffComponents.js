@@ -99,19 +99,20 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
             const diffPatch = diff(oldComponent._internals.virtualNode, newComponent);
 
+            willUnMount(oldComponent);
+
             if (diffPatch) {
 
-                newComponent = diffPatch(node);
+                return diffPatch(node);
 
             } else {
 
-                newComponent = oldComponent._internals.virtualNode;
+                return {
+                    virtualNode: oldComponent._internals.virtualNode,
+                    realDOM: node
+                };
 
             }
-
-            willUnMount(oldComponent);
-
-            return newComponent;
 
         }
 
@@ -130,7 +131,8 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         if(!diffPatch) {
 
-            vNewNodeInstance._internals = oldComponent;
+            vNewNodeInstance._internals.virtualNode = oldComponent;
+            vNewNodeInstance._internals.realDOM = node;
 
             return {
                 virtualNode: vNewNodeInstance,
