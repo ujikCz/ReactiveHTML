@@ -83,16 +83,16 @@ export default function render(virtualNode) {
      * creates basic elements
      */
 
-    const newNodeDef = createDomElement(virtualNode);
-    virtualNode = newNodeDef.virtualNode;
+    const newNodeDefinition = createDomElement(virtualNode);
+    const newVirtualNode = newNodeDefinition.virtualNode;
 
-    if (virtualNode._ref) {
+    if (newVirtualNode._ref) {
 
-        virtualNode._ref(newNodeDef.realDOM);
+        newVirtualNode._ref(newNodeDefinition.realDOM);
 
     }
 
     //virtualNode
-    return newNodeDef;
+    return newNodeDefinition;
 
 }

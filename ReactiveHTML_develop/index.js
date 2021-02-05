@@ -4,10 +4,9 @@
     !This version is not recomended for production use
 */
 
-import createElement from './vnode/createVnodeElement.js';
+import createElement from './vnode/createElement.js';
 import Component from './vnode/component/component.js';
 import mount from './DOM/mount.js';
-import isComponent from './isComponent.js';
 import render from './DOM/render.js';
 import rAF from './rAF.js';
 

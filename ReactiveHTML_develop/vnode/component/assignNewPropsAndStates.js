@@ -7,7 +7,7 @@ import isObject from "../../isObject.js";
  * @param { Object } nextStates 
  */
 
-export default function assignNewPropsAndStates(oldComponent, nextProps, nextStates) {
+export default function assignNewPropsAndStates(oldComponent, nextProps, nextState) {
 
     if(isObject(nextProps)) {
 
@@ -15,10 +15,10 @@ export default function assignNewPropsAndStates(oldComponent, nextProps, nextSta
 
     }
 
-    if(isObject(nextStates)) {
+    if(isObject(nextState)) {
 
 
-        Object.assign(oldComponent.states, nextStates);
+        Object.assign(oldComponent.state, nextState);
 
     }
 

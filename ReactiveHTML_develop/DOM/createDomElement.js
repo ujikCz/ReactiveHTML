@@ -1,6 +1,7 @@
 import isArray from "../isArray.js";
-import isNullOrUndef from "../isNullOrUndef.js";
 import isObject from "../isObject.js";
+import isEvent from "./helpers/isEvent.js";
+import isProperty from "./helpers/isProperty.js";
 import mount from "./mount.js";
 import render from "./render.js";
 
@@ -21,71 +22,67 @@ export default function createDomElement(virtualNode) {
     /**
      * add attributes, but like element properties for easy manipulation
      */
-
     const props = virtualNode.props;
+    const newProps = {};
 
-    for(const key in props) {
+    Object.keys(props)
+        .filter(isProperty)
+        .forEach(key => {
 
-        if (key.startsWith('on')) {
+            newProps[key] = props[key];
 
-            el.addEventListener(key.replace('on', ''), props[key]);
+            if (isEvent(key)) {
 
-        } else if (isObject(props[key])) { //cannot be null or undef cause isObject!!!
+                return el.addEventListener(getEventName(key), props[key]);
 
-            Object.assign(el[key], props[key]);
+            }
 
-        } else {
+            if (isObject(props[key])) {
 
-            if (!isNullOrUndef(props[key])) {
+                return Object.assign(el[key], props[key]);
 
-                if (key in el) {
+            }
 
-                    el[key] = props[key];
+            return el[key] = props[key];
 
-                } else {
+        });
 
-                    el.setAttribute(key, props[key]);
+    const children = props.children;
+    const resChildren = [];
+
+    if (children) {
+
+        for (let i = 0; i < children.length; i++) {
+
+            const elementDefinition = render(children[i]);
+
+            if (isArray(elementDefinition)) {
+
+                for (let j = 0; j < elementDefinition.length; j++) {
+
+                    mount(elementDefinition[j], el, 'appendChild');
 
                 }
 
-            }
+            } else {
 
-        }
-
-    }
-
-    const children = virtualNode.children;
-    const resChildren = [];
-
-    for (let i = 0; i < children.length; i++) {
-
-        const elementDef = render(children[i]);
-
-        if (isArray(elementDef)) {
-
-            for (let j = 0; j < elementDef.length; j++) {
-
-                const singleElementDef = elementDef[j];
-
-                mount(singleElementDef, el, 'appendChild');
+                mount(elementDefinition, el, 'appendChild');
 
             }
 
-        } else {
-
-            mount(elementDef, el, 'appendChild');
+            resChildren.push(elementDefinition);
 
         }
-
-        resChildren.push(elementDef);
 
     }
 
     return {
         virtualNode: {
             type: virtualNode.type,
-            props: virtualNode.props,
-            children: resChildren,
+            props: {
+                children: resChildren,
+                ...newProps
+            },
             _key: virtualNode._key,
             _ref: virtualNode._ref
         },

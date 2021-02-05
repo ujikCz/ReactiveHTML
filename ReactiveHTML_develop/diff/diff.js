@@ -1,5 +1,4 @@
-import diffAttrs from './diffAttrs.js';
-import diffChildren from './diffChildren.js';
+
 import isObject from '../isObject.js';
 import isComponent from '../isComponent.js';
 import mount from '../DOM/mount.js';
@@ -7,6 +6,7 @@ import diffComponents from './diffComponents.js';
 import render from '../DOM/render.js';
 import willUnMount from '../vnode/component/lifecycles/willUnMountLifecycle.js';
 import diffNonObjects from './diffNonObjects.js';
+import diffProps from './diffProps.js';
 
 /**
  * check basic differences between old virtualNode and new one
@@ -76,11 +76,9 @@ export default function diff(vOldNode, vNewNode) {
 
     }
     
-    const attrPatches = diffAttrs(vOldNode.props || {}, vNewNode.props || {});
+    const propsPatches = diffProps(vOldNode.props, vNewNode.props);
 
-    const childrenPatches = diffChildren(vOldNode.children, vNewNode.children);
-
-    if(!childrenPatches && !attrPatches) {
+    if(!propsPatches) {
 
         return null;
 
@@ -88,15 +86,9 @@ export default function diff(vOldNode, vNewNode) {
 
     return function (node) {
 
-        if (attrPatches) {
+        if (propsPatches) {
 
-            vOldNode.props = attrPatches(node);
-
-        }
-
-        if(childrenPatches) {
-
-            vOldNode.children = childrenPatches(node);
+            vOldNode.props = propsPatches(node);
 
         }
 

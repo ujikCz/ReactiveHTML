@@ -8,7 +8,7 @@ import setState from './setState.js';
 export default function Component(props) {
 
     this.props = props;
-    this.states = {};
+    this.state = {};
 
     this._internals = {
 
@@ -42,7 +42,7 @@ Component.prototype.setState = function(setter) {
 
     return setState(this, setter, false);
 
-};
+} 
 
 Component.prototype.onComponentRender =
 

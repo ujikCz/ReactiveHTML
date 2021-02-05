@@ -2,6 +2,8 @@ import updateComponent from '../../update/updateComponent.js';
 import isFunction from '../../isFunction.js';
 import isObject from '../../isObject.js';
 import assignNewPropsAndStates from './assignNewPropsAndStates.js';
+import applyComponentUpdate from '../../update/applyComponentUpdate.js';
+
 
 export default function setState(component, setter, setStateSyncPropsUpdate) {
 
@@ -29,22 +31,20 @@ export default function setState(component, setter, setStateSyncPropsUpdate) {
             const update = updateComponent(component, null, setter);
             //update component return patch which is function and snapshot that is given from getSnapshotBeforeUpdate
 
-            if (update) {
-                
-                const [patch, snapshot] = update;
+            applyComponentUpdate(update, (patch, snapshot) => {
 
-                if(patch) {
+                const componentInternals = component._internals;
 
-                    component._internals = patch(component._internals.realDOM);
+                const patchedChild = patch(componentInternals.realDOM);
 
-                }
-
-                //patch the virtual dom and the real dom connected to component
+                Object.assign(componentInternals, {
+                    virtualNode: patchedChild.virtualNode,
+                    realDOM: patchedChild.realDOM
+                });
 
                 component.onComponentUpdate(snapshot);
-                //call update lifecycle in the component
 
-            }
+            }, null);
 
             return component;
 
