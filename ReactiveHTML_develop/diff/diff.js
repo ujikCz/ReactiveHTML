@@ -30,7 +30,7 @@ export default function diff(vOldNode, vNewNode) {
 
             node.remove();
 
-            return { virtualNode: undefined, realDOM: undefined };
+            return undefined;
 
         }
 

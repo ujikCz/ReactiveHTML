@@ -35,7 +35,7 @@ export default function willUnMount(component) {
 
             for (let i = 0; i < children.length; i++) {
 
-                willUnMount(children[i]);
+                willUnMount(children[i].virtualNode);
     
             }
 

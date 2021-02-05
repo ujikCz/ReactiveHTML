@@ -61,13 +61,19 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                 vOldNode.patch = function (node) {
 
-                    updatedVChildren[inNewKeyed] = childPatch(node);
+                    const childAfterPatch = childPatch(node);
+
+                    if(childAfterPatch !== undefined) {
+
+                        updatedVChildren[inNewKeyed] = childAfterPatch;
+
+                    }
 
                 };
 
                 childPatches.push(i);
 
-            } else {
+            } else { 
 
                 updatedVChildren[inNewKeyed] = vOldNode;
 
@@ -83,7 +89,13 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
                 vOldNode.patch = function (node) {
 
-                    updatedVChildren[i] = childPatch(node);
+                    const childAfterPatch = childPatch(node);
+
+                    if(childAfterPatch !== undefined) {
+
+                        updatedVChildren[i] = childAfterPatch;
+
+                    }
 
                 };
 
@@ -141,7 +153,6 @@ export default function diffChildren(oldVChildren, newVChildren) {
         return null;
 
     }
-
 
     return function (parent) {
 
