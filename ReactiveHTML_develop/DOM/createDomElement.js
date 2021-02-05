@@ -48,6 +48,7 @@ export default function createDomElement(virtualNode) {
 
         });
 
+
     const children = props.children;
     const resChildren = [];
 

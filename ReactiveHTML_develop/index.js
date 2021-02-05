@@ -19,12 +19,12 @@ import rAF from './rAF.js';
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
         typeof define === 'function' && define.amd ? define(factory) :
-        (global = global || self, global.Ocean = factory());
+        (global = global || self, global.ReactiveHTML = factory());
 }(this, function () {
 
     "use strict";
 
-    const Ocean = {
+    const ReactiveHTML = {
 
         Component,
 
@@ -37,12 +37,10 @@ import rAF from './rAF.js';
                     throw TypeError(`render(...) container must be valid Element that is already rendered on page, try to use DOMContentLoaded event on window to wait for all Elements load`);
     
                 }
-
-                const newNodeDef = render(virtualElement);
                     
-                mount(newNodeDef, container, 'appendChild');
+                mount(render(virtualElement), container, 'appendChild');
 
-           });
+            });
 
         },
 
@@ -51,6 +49,6 @@ import rAF from './rAF.js';
     };
 
 
-    return Ocean;
+    return ReactiveHTML;
 
 }));
