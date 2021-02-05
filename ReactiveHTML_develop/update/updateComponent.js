@@ -2,13 +2,7 @@ import diff from '../diff/diff.js';
 import assignNewPropsAndStates from '../vnode/component/assignNewPropsAndStates.js';
 import getSnapshotBeforeUpdateLifecycle from '../vnode/component/lifecycles/getSnapshotBeforeUpdate.js';
 
-/**
- * updates virtualNode and its realNode (update whole component)
- * @param { Class } oldComponent - updated component instance
- * @param { Object } nextStates - next state of states
- */
-
-export default function updateComponent(oldComponent, nextProps, nextStates) {
+export default function updateComponent(oldComponent, nextProps, nextState) {
 
     /**
      * newComponent is plain javascript object { type, props, _key }
@@ -19,9 +13,9 @@ export default function updateComponent(oldComponent, nextProps, nextStates) {
      * should component update, if return false, component will be never updated
      */
 
-    if(!oldComponent.shouldComponentUpdate(nextProps, nextStates)) {
+    if(!oldComponent.shouldComponentUpdate(nextProps, nextState)) {
 
-        oldComponent = assignNewPropsAndStates(oldComponent, nextProps, nextStates);
+        oldComponent = assignNewPropsAndStates(oldComponent, nextProps, nextState);
 
         oldComponent.onComponentCancelUpdate();
 
@@ -39,7 +33,7 @@ export default function updateComponent(oldComponent, nextProps, nextStates) {
      * if should component update return true, component will be updated as normally
      */
 
-    oldComponent = assignNewPropsAndStates(oldComponent, nextProps, nextStates);
+    assignNewPropsAndStates(oldComponent, nextProps, nextState);
 
     /**
      * instead of creating new instance of component, create only new virual element of component and diff it with old one

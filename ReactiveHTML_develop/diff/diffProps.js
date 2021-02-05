@@ -5,6 +5,8 @@
  * @param { Object } newProps - new virtual node attributes
  */
 
+import getEventName from '../DOM/helpers/getEventName.js';
+import isEvent from '../DOM/helpers/isEvent.js';
 import isProperty from '../DOM/helpers/isProperty.js';
 import isObject from '../isObject.js';
 import diffChildren from './diffChildren.js';
@@ -28,15 +30,23 @@ export default function diffProps(oldProps, newProps) {
 
                 });
 
+            } else {
+
+                newProps[key] = oldVChildren;
+
             }
 
-        } else if (key.startsWith('on') && !(key in oldProps)) {
+        } else if (isEvent(key)) {
 
-            propsPatches.push(function (node) {
+            if(!(key in oldProps)) {
 
-                node.addEventListener(key.replace('on', ''), newProps[key]);
+                propsPatches.push(function (node) {
 
-            });
+                    node.addEventListener(getEventName(key), newProps[key]);
+    
+                });
+
+            }
 
         } else if (isObject(newProps[key])) { // if is object set property by object assign
 
@@ -63,7 +73,7 @@ export default function diffProps(oldProps, newProps) {
 
         if (!(k in newProps) && isProperty(k)) {
 
-            if (k.startsWith('on')) { // is event, remove event listener
+            if (isEvent(k)) { // is event, remove event listener
 
                 propsPatches.push(function (node) {
 

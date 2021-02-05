@@ -1,5 +1,6 @@
 import isArray from "../isArray.js";
 import isObject from "../isObject.js";
+import getEventName from "./helpers/getEventName.js";
 import isEvent from "./helpers/isEvent.js";
 import isProperty from "./helpers/isProperty.js";
 import mount from "./mount.js";

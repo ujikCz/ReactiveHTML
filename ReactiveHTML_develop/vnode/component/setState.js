@@ -17,8 +17,8 @@ export default function setState(component, setter, setStateSyncPropsUpdate) {
 
     if (isObject(setter) || isFunction(setter)) {
 
-        setter = isFunction(setter) ? setter.bind(component)(component.props, component.states) : setter;
-        //get the new states and save them in setter variable
+        setter = isFunction(setter) ? setter.bind(component)(component.props, component.state) : setter;
+        //get the new state and save them in setter variable
 
         if (!isObject(setter) || Object.keys(setter).length === 0) {
 

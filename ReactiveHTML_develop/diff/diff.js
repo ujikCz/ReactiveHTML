@@ -86,11 +86,7 @@ export default function diff(vOldNode, vNewNode) {
 
     return function (node) {
 
-        if (propsPatches) {
-
-            vOldNode.props = propsPatches(node);
-
-        }
+        vOldNode.props = propsPatches(node);
 
         return { virtualNode: vOldNode, realDOM: node };
 

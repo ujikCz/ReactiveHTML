@@ -33,9 +33,9 @@ Component.prototype.Element = function () {
 }
 
 /**
- * setState method for set new states of component and update it
+ * setState method for set new state of component and update it
  * real dom will react on state changes
- * @param { Object || Function } setter - set the new states of component
+ * @param { Object || Function } setter - set the new state of component
  */
 
 Component.prototype.setState = function(setter) {

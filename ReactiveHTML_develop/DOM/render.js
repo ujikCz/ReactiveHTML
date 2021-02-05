@@ -62,9 +62,10 @@ export default function render(virtualNode) {
     if (isComponent(virtualNode.type)) {
 
         const component = createComponentInstance(virtualNode);
+        const componentInternals = component._internals;
         //component 
-        const newNodeDefinition = render(component._internals.virtualNode);
-        component._internals = newNodeDefinition;
+        const newNodeDefinition = render(componentInternals.virtualNode);
+        Object.assign(componentInternals, newNodeDefinition);
 
         /**
          * means if virtual is not element but component, it become Class.Component from {type, props, _key}
