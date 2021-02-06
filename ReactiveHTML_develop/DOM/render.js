@@ -36,7 +36,8 @@ export default function render(virtualNode) {
         //text node
         return {
             realDOM: document.createTextNode(virtualNode),
-            virtualNode
+            virtualNode,
+            _key: virtualNode._key
         };
 
     }
@@ -75,7 +76,8 @@ export default function render(virtualNode) {
 
         return {
             virtualNode: component,
-            realDOM: newNodeDefinition.realDOM
+            realDOM: newNodeDefinition.realDOM,
+            _key: component._key
         };
 
     }
@@ -93,6 +95,7 @@ export default function render(virtualNode) {
 
     }
 
+    newNodeDefinition._key = virtualNode._key;
     //virtualNode
     return newNodeDefinition;
 

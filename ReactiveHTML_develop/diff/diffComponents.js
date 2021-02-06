@@ -36,7 +36,8 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
                 return {
                     virtualNode: oldComponent,
-                    realDOM: node
+                    realDOM: node,
+                    _key: oldComponent._key
                 };
 
             }, null);
@@ -67,12 +68,13 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
                 realDOM: patchedChild.realDOM
             });
 
-            const realDOMofComponent = vNewNodeInstanceInternals.realDOM;
-            vNewNodeInstance.onComponentMount(realDOMofComponent, realDOMofComponent.parentNode);
+            const realDOMofNewComponent = vNewNodeInstanceInternals.realDOM;
+            vNewNodeInstance.onComponentMount(realDOMofNewComponent, realDOMofNewComponent.parentNode);
 
             return {
                 virtualNode: vNewNodeInstance,
-                realDOM: realDOMofComponent
+                realDOM: realDOMofNewComponent,
+                _key: vNewNodeInstance._key
             };
         }
 
@@ -98,7 +100,8 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
             return node => ({
                 virtualNode: vOldNodeInstanceInternals.virtualNode,
-                realDOM: node
+                realDOM: node,
+                _key: newComponent._key
             });
 
         }
@@ -131,7 +134,8 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         return {
             virtualNode: vNewNodeInstance,
-            realDOM: realDOMofComponent
+            realDOM: realDOMofComponent,
+            _key: vNewNodeInstance._key
         };
 
     }

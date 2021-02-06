@@ -74,7 +74,7 @@ export default function diff(vOldNode, vNewNode) {
                     node.replaceWith(newNodeDefinition.realDOM);
                 });
 
-            return newNodeDefinition;
+            return { ...newNodeDefinition, _key: vNewNode._key };
 
         }
 
@@ -92,7 +92,7 @@ export default function diff(vOldNode, vNewNode) {
 
         vOldNode.props = propsPatches(node);
 
-        return { virtualNode: vOldNode, realDOM: node };
+        return { virtualNode: vOldNode, realDOM: node, _key: vNewNode._key };
 
     }
 };
