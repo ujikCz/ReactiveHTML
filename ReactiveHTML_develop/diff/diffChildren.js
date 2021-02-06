@@ -121,24 +121,32 @@ export default function diffChildren(oldVChildren, newVChildren) {
 
             const indexFromKey = keyedNew[newVNode._key];
 
-            const newNodeDef = render(newVNode);
-            updatedVChildren[indexFromKey] = newNodeDef;
+            const newNodeDefinition = render(newVNode);
+            updatedVChildren[indexFromKey] = newNodeDefinition;
 
 
             additionalPatches.push(function (parent) {
 
-                mount(newNodeDef, parent, 'insertBefore', parent.childNodes[indexFromKey]);
+                mount(newNodeDefinition, 
+                    parent, 
+                    () => { 
+                        parent.insertBefore(newNodeDefinition.realDOM, parent.childNodes[indexFromKey]);
+                    });
 
             });
 
         } else {
 
-            const newNodeDef = render(newVNode);
-            updatedVChildren[indexFromIndexArray] = newNodeDef;
+            const newNodeDefinition = render(newVNode);
+            updatedVChildren[indexFromIndexArray] = newNodeDefinition;
 
             additionalPatches.push(function (parent) {
 
-                mount(newNodeDef, parent, 'appendChild');
+                mount(newNodeDefinition,
+                    parent,
+                    () => {
+                        parent.appendChild(newNodeDefinition.realDOM);
+                    });
 
             });
 

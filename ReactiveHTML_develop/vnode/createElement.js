@@ -14,13 +14,13 @@ export default function createElement(type, props = null, ...children) {
     let _key = null;
     let _ref = null;
 
-    if(_key in props) {
+    if("_key" in props) {
 
         _key = props._key.toString();
 
     }
 
-    if(_ref in props) {
+    if("_ref" in props) {
 
         _ref = props._ref;
 

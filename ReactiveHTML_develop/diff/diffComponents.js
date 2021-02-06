@@ -1,8 +1,6 @@
 import applyComponentUpdate from "../update/applyComponentUpdate.js";
 import updateComponent from "../update/updateComponent.js";
 import createComponentInstance from "../vnode/component/createComponentInstance.js";
-import mountLifecycle from "../vnode/component/lifecycles/mountLifecycle.js";
-import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle.js";
 import willReceiveProps from "../vnode/component/lifecycles/willReceiveProps.js";
 import componentWillUnMount from "../vnode/component/lifecycles/willUnMount/willUnMountLifecycle.js";
 import diff from "./diff.js";
@@ -60,6 +58,8 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         return function (node) {
 
+            vNewNodeInstance.onComponentWillMount(node, node.parentNode);
+
             const patchedChild = diffPatch ? diffPatch(node) : vOldNodeInstanceInternals;
 
             Object.assign(vNewNodeInstanceInternals, {
@@ -67,13 +67,12 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
                 realDOM: patchedChild.realDOM
             });
 
-            willMountLifecycle(vNewNodeInstance, node.parentNode);
-
-            mountLifecycle(vNewNodeInstance, node.parentNode);
+            const realDOMofComponent = vNewNodeInstanceInternals.realDOM;
+            vNewNodeInstance.onComponentMount(realDOMofComponent, realDOMofComponent.parentNode);
 
             return {
                 virtualNode: vNewNodeInstance,
-                realDOM: vNewNodeInstanceInternals.realDOM
+                realDOM: realDOMofComponent
             };
         }
 
@@ -118,6 +117,8 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
     return function (node) {
 
+        vNewNodeInstance.onComponentWillMount(node, node.parentNode);
+
         const patchedChild = diffPatch ? diffPatch(node) : { virtualNode: oldComponent, realDOM: node };
 
         Object.assign(vNewNodeInstanceInternals, {
@@ -125,13 +126,12 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
             realDOM: patchedChild.realDOM
         });
 
-        willMountLifecycle(vNewNodeInstance, node.parentNode);
-
-        mountLifecycle(vNewNodeInstance, node.parentNode);
+        const realDOMofComponent = vNewNodeInstanceInternals.realDOM;
+        vNewNodeInstance.onComponentMount(realDOMofComponent, realDOMofComponent.parentNode);
 
         return {
             virtualNode: vNewNodeInstance,
-            realDOM: vNewNodeInstanceInternals.realDOM
+            realDOM: realDOMofComponent
         };
 
     }

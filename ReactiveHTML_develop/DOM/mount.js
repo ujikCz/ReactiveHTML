@@ -1,9 +1,5 @@
-
-
 import isComponent from "../isComponent.js";
 import isObject from "../isObject.js";
-import mountLifecycle from "../vnode/component/lifecycles/mountLifecycle.js";
-import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle.js";
 
 /**
  * used to mount element to webpage
@@ -13,31 +9,22 @@ import willMountLifecycle from "../vnode/component/lifecycles/willMountLifecycle
  * @param  {...any} args 
  */
 
-export default function mount(newNodedef, container, method, ...args) {
+export default function mount(newNodeDefinition, container, callback) {
 
-    const virtualNode = newNodedef.virtualNode;
-    const realDOM = newNodedef.realDOM;
+    const virtualNode = newNodeDefinition.virtualNode;
 
-    const isComponentCache = isObject(virtualNode) && isComponent(virtualNode.type);
+    if (isObject(virtualNode) && isComponent(virtualNode.type)) {
 
-    if(realDOM !== undefined) { //if rendered return no null value
+        const componentIntarnals = virtualNode._internals;
+        virtualNode.onComponentWillMount(componentIntarnals.realDOM, container);
 
-        if(isComponentCache) {
+        callback();
 
-            willMountLifecycle(virtualNode, container);
+        virtualNode.onComponentMount(componentIntarnals.realDOM, container);
 
-        }
+    } else {
 
-        container[method](realDOM, ...args);
-            
-        if(isComponentCache) {
-            
-            mountLifecycle(virtualNode, container);
-
-        }
-
+        callback();
     }
-
-    return newNodedef;
 
 }

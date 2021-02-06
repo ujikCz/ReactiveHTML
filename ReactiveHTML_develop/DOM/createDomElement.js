@@ -62,13 +62,22 @@ export default function createDomElement(virtualNode) {
 
                 for (let j = 0; j < elementDefinition.length; j++) {
 
-                    mount(elementDefinition[j], el, 'appendChild');
+                    const singleElementDefinition = elementDefinition[j];
+                    mount(singleElementDefinition,
+                        el,
+                        () => {
+                            el.appendChild(singleElementDefinition.realDOM);
+                        });
 
                 }
 
             } else {
 
-                mount(elementDefinition, el, 'appendChild');
+                mount(elementDefinition,
+                    el,
+                    () => {
+                        el.appendChild(elementDefinition.realDOM);
+                    });
 
             }
 

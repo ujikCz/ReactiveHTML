@@ -68,7 +68,11 @@ export default function diff(vOldNode, vNewNode) {
 
             const newNodeDefinition = render(vNewNode);
 
-            mount(newNodeDefinition, node, 'replaceWith');
+            mount(newNodeDefinition, 
+                node.parentNode, 
+                () => { 
+                    node.replaceWith(newNodeDefinition.realDOM);
+                });
 
             return newNodeDefinition;
 

@@ -37,8 +37,14 @@ import rAF from './rAF.js';
                     throw TypeError(`render(...) container must be valid Element that is already rendered on page, try to use DOMContentLoaded event on window to wait for all Elements load`);
     
                 }
-                    
-                mount(render(virtualElement), container, 'appendChild');
+                
+                const newNodeDefinition = render(virtualElement);
+
+                mount(newNodeDefinition.virtualNode,
+                    container,
+                    () => {
+                        container.appendChild(newNodeDefinition.realDOM);
+                    });
 
             });
 

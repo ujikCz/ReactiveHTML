@@ -35,7 +35,11 @@ export default function diffNonObjects(vOldNode, vNewNode, isVOldNodeObject, isV
 
         const newNodeDefinition = render(vNewNode);
 
-        mount(newNodeDefinition, node, 'replaceWith');
+        mount(newNodeDefinition, 
+            node.parentNode, 
+            () => { 
+                node.replaceWith(newNodeDefinition.realDOM);
+            });
 
         return newNodeDefinition;
 

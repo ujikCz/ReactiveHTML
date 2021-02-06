@@ -14,6 +14,7 @@ import diffChildren from './diffChildren.js';
 export default function diffProps(oldProps, newProps) {
 
     const propsPatches = [];
+    const updatedProps = {};
 
     for (const key in newProps) {
 
@@ -24,9 +25,13 @@ export default function diffProps(oldProps, newProps) {
 
                 propsPatches.push(function(parent) {
 
-                    oldProps[key] = childrenPatches(parent);
+                    updatedProps[key] = childrenPatches(parent);
 
                 });
+
+            } else {
+
+                updatedProps[key] = oldProps[key];
 
             }
 
@@ -40,7 +45,7 @@ export default function diffProps(oldProps, newProps) {
     
                 });
 
-                oldProps[key] = newProps[key];
+                updatedProps[key] = newProps[key];
 
             }
 
@@ -52,7 +57,7 @@ export default function diffProps(oldProps, newProps) {
 
             });
 
-            oldProps[key] = newProps[key];
+            updatedProps[key] = newProps[key];
 
         } else if (newProps[key] !== oldProps[key] || !(key in oldProps)) {
 
@@ -62,7 +67,7 @@ export default function diffProps(oldProps, newProps) {
 
             });
 
-            oldProps[key] = newProps[key];
+            updatedProps[key] = newProps[key];
 
         }
 
@@ -92,8 +97,6 @@ export default function diffProps(oldProps, newProps) {
 
             }
 
-            delete oldProps[k];
-
         }
 
     }
@@ -108,7 +111,7 @@ export default function diffProps(oldProps, newProps) {
 
         }
 
-        return oldProps;
+        return updatedProps;
 
     };
 
