@@ -9,7 +9,7 @@ import isObject from "../isObject.js";
  * @param  {...any} args 
  */
 
-export default function mount(newNodeDefinition, container, callback) {
+export default function mount(newNodeDefinition, container, mounterFunction) {
 
     const virtualNode = newNodeDefinition.virtualNode;
 
@@ -18,13 +18,13 @@ export default function mount(newNodeDefinition, container, callback) {
         const componentIntarnals = virtualNode._internals;
         virtualNode.onComponentWillMount(componentIntarnals.realDOM, container);
 
-        callback();
+        mounterFunction();
 
         virtualNode.onComponentMount(componentIntarnals.realDOM, container);
 
     } else {
 
-        callback();
+        mounterFunction();
     }
 
 }

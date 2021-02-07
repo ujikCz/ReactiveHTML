@@ -74,7 +74,7 @@ export default function diff(vOldNode, vNewNode) {
                     node.replaceWith(newNodeDefinition.realDOM);
                 });
 
-            return { ...newNodeDefinition, _key: vNewNode._key };
+            return newNodeDefinition;
 
         }
 

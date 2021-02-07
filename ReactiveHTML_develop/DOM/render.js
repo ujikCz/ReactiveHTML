@@ -36,8 +36,7 @@ export default function render(virtualNode) {
         //text node
         return {
             realDOM: document.createTextNode(virtualNode),
-            virtualNode,
-            _key: virtualNode._key
+            virtualNode
         };
 
     }
@@ -77,7 +76,7 @@ export default function render(virtualNode) {
         return {
             virtualNode: component,
             realDOM: newNodeDefinition.realDOM,
-            _key: component._key
+            _key: virtualNode._key
         };
 
     }
@@ -87,15 +86,13 @@ export default function render(virtualNode) {
      */
 
     const newNodeDefinition = createDomElement(virtualNode);
-    const newVirtualNode = newNodeDefinition.virtualNode;
 
-    if (newVirtualNode._ref) {
+    if (newNodeDefinition._ref) {
 
-        newVirtualNode._ref(newNodeDefinition.realDOM);
+        newNodeDefinition._ref(newNodeDefinition.realDOM);
 
     }
 
-    newNodeDefinition._key = virtualNode._key;
     //virtualNode
     return newNodeDefinition;
 

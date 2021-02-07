@@ -87,6 +87,8 @@ export default function createDomElement(virtualNode) {
 
     }
 
+    const key = virtualNode._key;
+
     return {
         virtualNode: {
             type: virtualNode.type,
@@ -94,9 +96,10 @@ export default function createDomElement(virtualNode) {
                 children: resChildren,
                 ...newProps
             },
-            _key: virtualNode._key,
-            _ref: virtualNode._ref
+            _key: key
         },
-        realDOM: el
+        realDOM: el,
+        _key: key,
+        _ref: virtualNode._ref
     };
 }

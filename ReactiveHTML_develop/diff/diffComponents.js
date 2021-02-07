@@ -1,7 +1,7 @@
 import applyComponentUpdate from "../update/applyComponentUpdate.js";
 import updateComponent from "../update/updateComponent.js";
 import createComponentInstance from "../vnode/component/createComponentInstance.js";
-import willReceiveProps from "../vnode/component/lifecycles/willReceiveProps.js";
+import willGetPropsLifecycle from "../vnode/component/lifecycles/willGetPropsLifecycle.js";
 import componentWillUnMount from "../vnode/component/lifecycles/willUnMount/willUnMountLifecycle.js";
 import diff from "./diff.js";
 
@@ -19,9 +19,9 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
         if (oldComponent.type === newComponent.type) {
 
-            willReceiveProps(oldComponent, newComponent.props);
+            const nextState = willGetPropsLifecycle(oldComponent, newComponent.props);
 
-            const update = updateComponent(oldComponent, newComponent.props, null);
+            const update = updateComponent(oldComponent, newComponent.props, nextState);
 
             return applyComponentUpdate(update, (patch, snapshot) => function (node) {
 

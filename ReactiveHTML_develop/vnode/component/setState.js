@@ -1,11 +1,11 @@
 import updateComponent from '../../update/updateComponent.js';
 import isFunction from '../../isFunction.js';
 import isObject from '../../isObject.js';
-import assignNewPropsAndStates from './assignNewPropsAndStates.js';
 import applyComponentUpdate from '../../update/applyComponentUpdate.js';
+import rAF from '../../rAF.js';
 
 
-export default function setState(component, setter, setStateSyncPropsUpdate) {
+export default function setState(component, setter, callback) {
 
     //setter can be object or function that returns object
 
@@ -26,14 +26,14 @@ export default function setState(component, setter, setStateSyncPropsUpdate) {
 
         }
 
-        if (!setStateSyncPropsUpdate) {
+        const update = updateComponent(component, null, setter);
+        //update component return patch which is function and snapshot that is given from getSnapshotBeforeUpdate
 
-            const update = updateComponent(component, null, setter);
-            //update component return patch which is function and snapshot that is given from getSnapshotBeforeUpdate
+        applyComponentUpdate(update, (patch, snapshot) => {
 
-            applyComponentUpdate(update, (patch, snapshot) => {
+            const componentInternals = component._internals;
 
-                const componentInternals = component._internals;
+            rAF(() => {
 
                 const patchedChild = patch(componentInternals.realDOM);
 
@@ -44,13 +44,15 @@ export default function setState(component, setter, setStateSyncPropsUpdate) {
 
                 component.onComponentUpdate(snapshot);
 
-            }, null);
+                if(callback) {
 
-            return component;
+                    callback();
 
-        }
+                }
 
-        assignNewPropsAndStates(component, null, setter);
+            });
+
+        }, null);
 
         return component;
 

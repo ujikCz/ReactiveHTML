@@ -12,8 +12,6 @@ export default function createComponentInstance(component) {
 
     instance._internals.virtualNode = instance.Element();
 
-    instance._key = component._key;
-
     instance.type = component.type;
 
     return instance;

@@ -38,9 +38,9 @@ Component.prototype.Element = function () {
  * @param { Object || Function } setter - set the new state of component
  */
 
-Component.prototype.setState = function(setter) {
+Component.prototype.setState = function(setter, callback) {
 
-    return setState(this, setter, false);
+    return setState(this, setter, callback);
 
 } 
 
@@ -56,7 +56,7 @@ Component.prototype.onComponentRender =
 
     Component.prototype.getSnapshotBeforeUpdate =
 
-    Component.prototype.componentWillReceiveProps =
+    Component.prototype.componentWillGetProps =
 
     Component.prototype.onComponentWillUnMount = function () {};
 

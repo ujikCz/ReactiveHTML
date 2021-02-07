@@ -28,7 +28,7 @@ import rAF from './rAF.js';
 
         Component,
 
-        render: function(virtualElement, container) {
+        render: function(virtualElement, container, callback) {
 
             rAF(() => {
 
@@ -45,6 +45,12 @@ import rAF from './rAF.js';
                     () => {
                         container.appendChild(newNodeDefinition.realDOM);
                     });
+
+                if(callback) {
+
+                    callback();
+
+                }
 
             });
 
