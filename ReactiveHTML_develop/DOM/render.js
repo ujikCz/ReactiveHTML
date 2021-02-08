@@ -3,6 +3,7 @@ import isComponent from "../isComponent.js";
 import isNullOrUndef from "../isNullOrUndef.js";
 import isObject from "../isObject.js";
 import createComponentInstance from "../vnode/component/createComponentInstance.js";
+import setState from "../vnode/component/setState.js";
 import createDomElement from "./createDomElement.js";
 /**
  * render function convert virtual dom to real dom
@@ -71,6 +72,8 @@ export default function render(virtualNode) {
          * we must overwrite the virtal beacause of this
          */
         component.onComponentRender(newNodeDefinition.realDOM);
+
+        component.setState = (setter) => setState(component, setter);
 
         return {
             virtualNode: component,

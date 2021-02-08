@@ -18,12 +18,14 @@ export default function diffProps(oldProps, newProps) {
 
     for (const key in newProps) {
 
-        if(!isProperty(key)) {
+        let propChange = false;
+
+        if (!isProperty(key)) {
 
             const childrenPatches = diffChildren(oldProps[key], newProps[key]);
-            if(childrenPatches) {
+            if (childrenPatches) {
 
-                propsPatches.push(function(parent) {
+                propsPatches.push(function (parent) {
 
                     updatedProps[key] = childrenPatches(parent);
 
@@ -37,15 +39,15 @@ export default function diffProps(oldProps, newProps) {
 
         } else if (isEvent(key)) {
 
-            if(!(key in oldProps)) {
+            if (!(key in oldProps)) {
 
                 propsPatches.push(function (node) {
 
                     node.addEventListener(getEventName(key), newProps[key]);
-    
+
                 });
 
-                updatedProps[key] = newProps[key];
+                propChange = true;
 
             }
 
@@ -57,7 +59,7 @@ export default function diffProps(oldProps, newProps) {
 
             });
 
-            updatedProps[key] = newProps[key];
+            propChange = true;
 
         } else if (newProps[key] !== oldProps[key] || !(key in oldProps)) {
 
@@ -67,39 +69,49 @@ export default function diffProps(oldProps, newProps) {
 
             });
 
+            propChange = true;
+
+        }
+
+
+        if(propChange) {
+
             updatedProps[key] = newProps[key];
 
+        } else {
+
+            updatedProps[key] = oldProps[key];
+
         }
 
     }
 
-    // remove old attributes
-    for (const k in oldProps) {
+    Object.keys(oldProps)
+        .filter(isProperty)
+        .forEach(key => {
+            if (!(key in newProps)) {
 
-        if (!(k in newProps) && isProperty(k)) {
+                if (isEvent(key)) { // is event, remove event listener
 
-            if (isEvent(k)) { // is event, remove event listener
+                    propsPatches.push(function (node) {
 
-                propsPatches.push(function (node) {
+                        node.removeEventListener(getEventName(key), oldProps[key]);
 
-                    node.removeEventListener(k.replace('on', ''), oldProps[k]);
+                    });
 
-                });
+                } else { // else remove attribute from element
 
-            } else { // else remove attribute from element
+                    propsPatches.push(function (node) {
 
-                propsPatches.push(function (node) {
+                        node[key] = null;
+                        node.removeAttribute(key);
 
-                    node[k] = null;
-                    node.removeAttribute(k);
+                    });
 
-                });
+                }
 
             }
-
-        }
-
-    }
+        });
 
     if (!propsPatches.length) return null;
 

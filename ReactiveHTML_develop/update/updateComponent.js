@@ -41,7 +41,7 @@ export default function updateComponent(oldComponent, nextProps, nextState) {
 
     oldComponent.onComponentWillUpdate(snapshot);
 
-    const newVNode = oldComponent.Element();
+    const newVNode = oldComponent.Element(oldComponent.props, oldComponent.state);
 
     /**
      * using diffChildren we can manipulate with appendChild and insertBefore

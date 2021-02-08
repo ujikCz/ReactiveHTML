@@ -8,7 +8,6 @@ import createElement from './vnode/createElement.js';
 import Component from './vnode/component/component.js';
 import mount from './DOM/mount.js';
 import render from './DOM/render.js';
-import rAF from './rAF.js';
 
 /**
  * whole library is in container funciton for use library in node.js, js, as modules, ...
@@ -24,20 +23,20 @@ import rAF from './rAF.js';
 
     "use strict";
 
-    const ReactiveHTML = {
+    return {
 
         Component,
 
-        render: function(virtualElement, container, callback) {
+        render: function (virtualElement, container, callback) {
 
-            rAF(() => {
+            window.requestAnimationFrame(() => {
 
-                if(!container || container.nodeType !== Node.ELEMENT_NODE) {
+                if (!container || container.nodeType !== Node.ELEMENT_NODE) {
 
                     throw TypeError(`render(...) container must be valid Element that is already rendered on page, try to use DOMContentLoaded event on window to wait for all Elements load`);
-    
+
                 }
-                
+
                 const newNodeDefinition = render(virtualElement);
 
                 mount(newNodeDefinition.virtualNode,
@@ -46,7 +45,7 @@ import rAF from './rAF.js';
                         container.appendChild(newNodeDefinition.realDOM);
                     });
 
-                if(callback) {
+                if (callback) {
 
                     callback();
 
@@ -59,8 +58,5 @@ import rAF from './rAF.js';
         createElement
 
     };
-
-
-    return ReactiveHTML;
 
 }));

@@ -38,11 +38,17 @@ Component.prototype.Element = function () {
  * @param { Object || Function } setter - set the new state of component
  */
 
-Component.prototype.setState = function(setter, callback) {
+Component.prototype.setState = function() {
 
-    return setState(this, setter, callback);
+    throw Error(`setState(...) can be called only if component is rendered, will be mounted or is mounted`);
 
 } 
+
+Component.prototype.grapple = function(callbackOnSet) {
+
+
+
+}
 
 Component.prototype.onComponentRender =
 

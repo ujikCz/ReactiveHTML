@@ -1,3 +1,5 @@
+
+
 export default function applyComponentUpdate(updateObject, resolve, reject) {
 
     if (!updateObject) return reject;
