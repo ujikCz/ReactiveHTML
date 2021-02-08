@@ -22,20 +22,30 @@ export default function diffProps(oldProps, newProps) {
 
         if (!isProperty(key)) {
 
-            const childrenPatches = diffChildren(oldProps[key], newProps[key]);
-            if (childrenPatches) {
-
-                propsPatches.push(function (parent) {
-
-                    updatedProps[key] = childrenPatches(parent);
-
-                });
-
-            } else {
+            if (oldProps[key].length + newProps[key].length === 0) {
 
                 updatedProps[key] = oldProps[key];
 
+            } else {
+
+                const childrenPatches = diffChildren(oldProps[key], newProps[key]);
+                if (childrenPatches) {
+
+                    propsPatches.push(function (parent) {
+
+                        updatedProps[key] = childrenPatches(parent);
+
+                    });
+
+                } else {
+
+                    updatedProps[key] = oldProps[key];
+
+                }
+
             }
+
+            continue;
 
         } else if (isEvent(key)) {
 
@@ -73,8 +83,7 @@ export default function diffProps(oldProps, newProps) {
 
         }
 
-
-        if(propChange) {
+        if (propChange) {
 
             updatedProps[key] = newProps[key];
 
