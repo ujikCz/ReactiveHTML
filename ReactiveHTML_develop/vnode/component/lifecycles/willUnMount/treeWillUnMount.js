@@ -1,6 +1,6 @@
-import isArray from "../../../../../update/ReactiveHTML_develop/isArray.js";
-import isComponent from "../../../../../update/ReactiveHTML_develop/isComponent.js";
-import isObject from "../../../../../update/ReactiveHTML_develop/isObject.js";
+import isArray from "../../../../isArray.js";
+import isComponent from "../../../../isComponent.js";
+import isObject from "../../../../isObject.js";
 import componentWillUnMount from "./willUnMountLifecycle.js";
 
 

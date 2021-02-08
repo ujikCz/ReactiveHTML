@@ -3,7 +3,6 @@ import isComponent from "../isComponent.js";
 import isNullOrUndef from "../isNullOrUndef.js";
 import isObject from "../isObject.js";
 import createComponentInstance from "../vnode/component/createComponentInstance.js";
-import renderLifecycle from "../vnode/component/lifecycles/renderLifecycle.js";
 import createDomElement from "./createDomElement.js";
 /**
  * render function convert virtual dom to real dom
@@ -71,7 +70,7 @@ export default function render(virtualNode) {
          * means if virtual is not element but component, it become Class.Component from {type, props, _key}
          * we must overwrite the virtal beacause of this
          */
-        renderLifecycle(component);
+        component.onComponentRender(newNodeDefinition.realDOM);
 
         return {
             virtualNode: component,

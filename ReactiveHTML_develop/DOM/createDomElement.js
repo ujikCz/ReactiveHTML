@@ -60,16 +60,7 @@ export default function createDomElement(virtualNode) {
 
             if (isArray(elementDefinition)) {
 
-                for (let j = 0; j < elementDefinition.length; j++) {
-
-                    const singleElementDefinition = elementDefinition[j];
-                    mount(singleElementDefinition,
-                        el,
-                        () => {
-                            el.appendChild(singleElementDefinition.realDOM);
-                        });
-
-                }
+                mountArrays(elementDefinition, el);
 
             } else {
 
@@ -95,11 +86,33 @@ export default function createDomElement(virtualNode) {
             props: {
                 children: resChildren,
                 ...newProps
-            },
-            _key: key
+            }
         },
         realDOM: el,
         _key: key,
         _ref: virtualNode._ref
     };
+}
+
+function mountArrays(elementDefinition, el) {
+
+    for (let j = 0; j < elementDefinition.length; j++) {
+        const singleElementDefinition = elementDefinition[j];
+
+        if (isArray(singleElementDefinition)) {
+
+            mountArrays(singleElementDefinition, el);
+
+        } else {
+
+            mount(singleElementDefinition,
+                el,
+                () => {
+                    el.appendChild(singleElementDefinition.realDOM);
+                });
+
+        }
+
+    }
+
 }

@@ -72,7 +72,7 @@ Component.prototype.shouldComponentUpdate = function () {
  * for recognize ReactiveHTML component
  */
 
-Component.prototype.isReactiveHTMLComponent = true;
+Component.prototype.isKiqComponent = true;
 
 /**
  * this function will trigger the update of component

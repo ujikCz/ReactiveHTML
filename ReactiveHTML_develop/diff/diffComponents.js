@@ -27,7 +27,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
 
                 const patchedChild = patch(node);
 
-                Object.assign(vNewNodeInstanceInternals, {
+                Object.assign(oldComponent._internals, {
                     virtualNode: patchedChild.virtualNode,
                     realDOM: patchedChild.realDOM
                 });
@@ -37,7 +37,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
                 return {
                     virtualNode: oldComponent,
                     realDOM: node,
-                    _key: oldComponent._key
+                    _key: newComponent._key
                 };
 
             }, null);
@@ -74,7 +74,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
             return {
                 virtualNode: vNewNodeInstance,
                 realDOM: realDOMofNewComponent,
-                _key: vNewNodeInstance._key
+                _key: newComponent._key
             };
         }
 
@@ -135,7 +135,7 @@ export default function diffComponents(oldComponent, newComponent, isVOldNodeCom
         return {
             virtualNode: vNewNodeInstance,
             realDOM: realDOMofComponent,
-            _key: vNewNodeInstance._key
+            _key: newComponent._key
         };
 
     }
