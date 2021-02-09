@@ -71,7 +71,7 @@ export default function diffProps(oldProps, newProps) {
         });
 
 
-    if (oldProps.children.length + newProps.children.length === 0) {
+    if ((oldProps.children.length + newProps.children.length) === 0) {
 
         updatedProps.children = oldProps.children;
 

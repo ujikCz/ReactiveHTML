@@ -8,10 +8,15 @@ export default function keyToIndex(arr) {
     for(let i = 0; i < arr.length; i++) {
 
         const arrItem = arr[i];
+        const key = arrItem._key;
 
-        if(arrItem._key) {
+        if(key) {
 
-            keyed[arrItem._key] = i;
+            if(!(key in keyed)) {
+                
+                keyed[key] = i;
+
+            }
 
         } else {
 
