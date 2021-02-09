@@ -16,44 +16,41 @@ export default function diffProps(oldProps, newProps) {
     const propsPatches = [];
     const updatedProps = {};
 
-    for (const key in newProps) {
+    Object.keys(newProps)
+        .filter(isProperty)
+        .forEach(key => {
 
-        let propChange = false;
+            let propChange = false;
 
-        if (!isProperty(key)) {
+            if (isEvent(key)) {
 
-            if (oldProps[key].length + newProps[key].length === 0) {
+                if (!(key in oldProps)) {
 
-                updatedProps[key] = oldProps[key];
+                    propsPatches.push(function (node) {
 
-            } else {
-
-                const childrenPatches = diffChildren(oldProps[key], newProps[key]);
-                if (childrenPatches) {
-
-                    propsPatches.push(function (parent) {
-
-                        updatedProps[key] = childrenPatches(parent);
+                        node.addEventListener(getEventName(key), newProps[key]);
 
                     });
 
-                } else {
-
-                    updatedProps[key] = oldProps[key];
+                    propChange = true;
 
                 }
 
-            }
-
-            continue;
-
-        } else if (isEvent(key)) {
-
-            if (!(key in oldProps)) {
+            } else if (isObject(newProps[key])) { // if is object set property by object assign
 
                 propsPatches.push(function (node) {
 
-                    node.addEventListener(getEventName(key), newProps[key]);
+                    Object.assign(node[key], newProps[key]);
+
+                });
+
+                propChange = true;
+
+            } else if (newProps[key] !== oldProps[key] || !(key in oldProps)) {
+
+                propsPatches.push(function (node) {
+
+                    node[key] = newProps[key];
 
                 });
 
@@ -61,35 +58,37 @@ export default function diffProps(oldProps, newProps) {
 
             }
 
-        } else if (isObject(newProps[key])) { // if is object set property by object assign
+            if (propChange) {
 
-            propsPatches.push(function (node) {
+                updatedProps[key] = newProps[key];
 
-                Object.assign(node[key], newProps[key]);
+            } else {
+
+                updatedProps[key] = oldProps[key];
+
+            }
+
+        });
+
+
+    if (oldProps.children.length + newProps.children.length === 0) {
+
+        updatedProps.children = oldProps.children;
+
+    } else {
+
+        const childrenPatches = diffChildren(oldProps.children, newProps.children);
+        if (childrenPatches) {
+
+            propsPatches.push(function (parent) {
+
+                updatedProps.children = childrenPatches(parent);
 
             });
-
-            propChange = true;
-
-        } else if (newProps[key] !== oldProps[key] || !(key in oldProps)) {
-
-            propsPatches.push(function (node) {
-
-                node[key] = newProps[key];
-
-            });
-
-            propChange = true;
-
-        }
-
-        if (propChange) {
-
-            updatedProps[key] = newProps[key];
 
         } else {
 
-            updatedProps[key] = oldProps[key];
+            updatedProps.children = oldProps.children;
 
         }
 
