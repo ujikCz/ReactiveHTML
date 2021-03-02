@@ -1,5 +1,5 @@
 
-# Newest verion is in Kiq.js repository!
+# Newest version is in Kiq.js repository!
 
 # ReactiveHTML
 Simple reactive Virtual DOM elements for building complex reactive UI
